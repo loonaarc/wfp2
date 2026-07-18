@@ -1,0 +1,24 @@
+# Information-condition contrast: all-cooperative agents WITHOUT visibility of
+# the shared stock (private information). Cooperators must act on assumed
+# ecology (R = K/2) instead of the true stock. Compare against
+# all_cooperative_global.yaml to isolate the effect of information availability.
+name: all_cooperative_private
+rounds: 100
+information_model: private
+seeds: [1, 2, 3, 4, 5]
+record_history: true
+
+resource:
+  initial_level: 50.0
+  capacity: 100.0
+  regeneration_rate: 0.4
+  regeneration_rule: logistic
+  collapse_threshold: 1.0
+
+agents:
+  - strategy: cooperative
+    count: 8
+    params:
+      regeneration_rate: 0.4
+      capacity: 100.0
+      restraint: 1.0

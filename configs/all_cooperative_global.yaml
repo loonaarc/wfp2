@@ -1,0 +1,23 @@
+# Baseline: an all-cooperative population with full (global) information.
+# Expected outcome: agents harvest only the regeneration surplus, so the stock
+# holds roughly steady and harvest is sustained across all rounds.
+name: all_cooperative_global
+rounds: 100
+information_model: global
+seeds: [1, 2, 3, 4, 5]
+record_history: true
+
+resource:
+  initial_level: 50.0
+  capacity: 100.0
+  regeneration_rate: 0.4
+  regeneration_rule: logistic
+  collapse_threshold: 1.0
+
+agents:
+  - strategy: cooperative
+    count: 8
+    params:
+      regeneration_rate: 0.4
+      capacity: 100.0
+      restraint: 1.0

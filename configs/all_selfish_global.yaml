@@ -1,0 +1,21 @@
+# Baseline: an all-selfish population with full (global) information.
+# Expected outcome: over-extraction drives the stock toward collapse
+# (the tragedy of the commons), high early harvest then near-zero.
+name: all_selfish_global
+rounds: 100
+information_model: global
+seeds: [1, 2, 3, 4, 5]
+record_history: true
+
+resource:
+  initial_level: 50.0
+  capacity: 100.0
+  regeneration_rate: 0.4
+  regeneration_rule: logistic
+  collapse_threshold: 1.0
+
+agents:
+  - strategy: selfish
+    count: 8
+    params:
+      greed: 1.0

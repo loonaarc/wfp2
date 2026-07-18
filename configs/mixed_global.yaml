@@ -1,0 +1,27 @@
+# Mixed population: half cooperative, half selfish, with global information.
+# Research interest: do a few selfish agents free-ride and destabilise the pool,
+# and how is payoff distributed (fairness) between the two groups?
+name: mixed_global
+rounds: 100
+information_model: global
+seeds: [1, 2, 3, 4, 5]
+record_history: true
+
+resource:
+  initial_level: 50.0
+  capacity: 100.0
+  regeneration_rate: 0.4
+  regeneration_rule: logistic
+  collapse_threshold: 1.0
+
+agents:
+  - strategy: cooperative
+    count: 4
+    params:
+      regeneration_rate: 0.4
+      capacity: 100.0
+      restraint: 1.0
+  - strategy: selfish
+    count: 4
+    params:
+      greed: 1.0

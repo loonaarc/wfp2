@@ -1,0 +1,16 @@
+# Architecture Decision Records (ADRs)
+
+Lightweight records of significant decisions: context, options, decision,
+rationale, consequences, status. Start new ones from [`_template.md`](_template.md)
+and number them sequentially.
+
+Before any major architectural change, write (or update) an ADR describing the
+proposed decision and its trade-offs.
+
+## Index
+
+| ADR | Title | Status |
+| --- | ----- | ------ |
+| [0001](0001-custom-simulation-core.md) | Custom lightweight simulation core instead of Mesa | Accepted |
+| [0002](0002-round-order-and-cooperative-rule.md) | Round order (regenerate→harvest) and target-based cooperative rule | Accepted |
+| [0003](0003-information-models-before-communication.md) | Start with information models; defer explicit communication | Accepted |
