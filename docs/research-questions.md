@@ -51,9 +51,12 @@ current front-runner for the project's specific focus — not yet locked.
 - **SQ-4** 🟢 As the fraction of selfish agents in a mixed population rises from 0
   to 1, how do total harvest, collapse probability, and payoff inequality (Gini)
   change? Is there a threshold fraction at which the resource collapses?
-- **SQ-5** 🟡 Does a `conditional-cooperator` (harvest cooperatively unless others
+- **SQ-5** 🟢 Does a `conditional_cooperator` (harvest cooperatively unless others
   over-consume) protect the resource against a minority of selfish agents better
-  than unconditional cooperators do?
+  than unconditional cooperators do? **→ Answered (E2): No.** Reciprocity protects
+  *fairness* (starves free-riders) but collapses the *resource* faster; unconditional
+  restraint protects the resource but is heavily exploited. Neither protects both —
+  motivating sanctioning. Caveat: depends on retaliation severity (`defection_greed`).
 
 ### Communication (RQ-A)
 - **SQ-6** 🔵 Does broadcasting intended consumption before acting reduce collapse

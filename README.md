@@ -21,7 +21,7 @@ application area (traffic, energy, epidemics, etc.).
 
 - deterministic simulation core (regenerate → observe → harvest);
 - a renewable resource with logistic/linear regeneration;
-- two baseline strategies: `selfish` and `cooperative`;
+- three strategies: `selfish`, `cooperative`, and `conditional_cooperator` (reciprocity);
 - two information conditions: `global` and `private`;
 - controlled random seeds with independent per-agent RNG streams;
 - configuration-driven experiments (YAML) with a seed sweep;
@@ -133,14 +133,29 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 └── references/               Bibliography material
 ```
 
+## Results so far
+
+Two reproducible experiments are documented in [docs/experiments/](docs/experiments/):
+
+- **[E1 — information & knowledge](docs/experiments/E1-information-and-knowledge.md):**
+  cooperation sustains the resource *only* when agents have information (can observe
+  the stock) **or** accurate ecological knowledge; blind and misinformed cooperation
+  collapses it.
+- **[E2 — reciprocity](docs/experiments/E2-reciprocity.md):** conditional cooperation
+  protects *fairness* (starves free-riders) but not the *commons* — it can collapse
+  the resource faster than unconditional restraint. Neither protects both, motivating
+  sanctioning.
+
 ## Next steps
 
-1. Sensitivity/robustness sweeps over seeds, group size, and regeneration rate.
-2. A `conditional-cooperator` (reciprocity) strategy as a third baseline.
-3. The first **communication** model (broadcast of intentions) — see
-   [docs/decisions/](docs/decisions/).
-4. The first **disturbance** (sudden resource loss / agent failure) for resilience.
-5. Analysis notebook + plots comparing the baselines.
+1. A `sanctioning` strategy (targeted, costly punishment) — can it protect the
+   resource *and* fairness where reciprocity cannot?
+2. Sweep retaliation severity (`defection_greed`) and add forgiveness to the
+   conditional cooperator.
+3. Sensitivity/robustness sweeps over group size and regeneration rate.
+4. The first **communication** model (trust/reputation) — see
+   [docs/decisions/](docs/decisions/) and the Janssen et al. paper-note.
+5. The first **disturbance** (sudden resource loss / agent failure) for resilience.
 
 See [docs/research-questions.md](docs/research-questions.md) for the prioritised
 question backlog.

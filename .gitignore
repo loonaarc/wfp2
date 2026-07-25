@@ -23,9 +23,11 @@ htmlcov/
 results/**
 !results/.gitkeep
 !results/README.md
-# Exception: committed deliberately because it backs a figure/claim in docs/experiments/
+# Exception: committed deliberately because they back figures/claims in docs/experiments/
 !results/E1_information_knowledge/
 !results/E1_information_knowledge/**
+!results/E2_reciprocity/
+!results/E2_reciprocity/**
 
 # OS / editor
 .DS_Store

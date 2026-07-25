@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from .base import Strategy
+from .conditional import ConditionalCooperatorStrategy
 from .cooperative import CooperativeStrategy
 from .selfish import SelfishStrategy
 
@@ -54,3 +55,4 @@ def available_strategies() -> list[str]:
 
 register_strategy(SelfishStrategy)
 register_strategy(CooperativeStrategy)
+register_strategy(ConditionalCooperatorStrategy)
