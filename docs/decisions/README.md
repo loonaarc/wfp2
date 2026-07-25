@@ -14,3 +14,4 @@ proposed decision and its trade-offs.
 | [0001](0001-custom-simulation-core.md) | Custom lightweight simulation core instead of Mesa | Accepted |
 | [0002](0002-round-order-and-cooperative-rule.md) | Round order (regenerate→harvest) and target-based cooperative rule | Accepted |
 | [0003](0003-information-models-before-communication.md) | Start with information models; defer explicit communication | Accepted |
+| [0004](0004-separate-cooperation-from-knowledge.md) | Separate cooperation (social preference) from ecological knowledge | **Proposed** |

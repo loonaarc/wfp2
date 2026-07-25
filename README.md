@@ -11,6 +11,10 @@ resource and each round decide how much to consume — because it captures the
 core cooperation-versus-sustainability tension without committing to any single
 application area (traffic, energy, epidemics, etc.).
 
+> **New here? Start with the hands-on walkthrough:
+> [docs/getting-started.md](docs/getting-started.md)** — run it, change one setting,
+> and watch cooperation succeed or collapse (~20 min).
+
 ## Status
 
 **Early foundation (v0.1.0).** Working and tested:
@@ -110,6 +114,8 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 │   ├── research-direction.md Chosen direction and roadmap
 │   ├── research-questions.md Broad questions, testable subquestions, hypotheses
 │   ├── terminology.md        Definitions of key terms
+│   ├── getting-started.md    Hands-on walkthrough (run it, tweak it)
+│   ├── code-walkthrough.md   Guided tour of the Python code, with diagrams
 │   ├── architecture.md       Components, interfaces, data flow
 │   ├── experiment-design.md  Variables, baselines, seeds, reproducibility
 │   ├── metrics.md            Metric definitions, formulas, limitations

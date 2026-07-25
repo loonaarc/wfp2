@@ -23,6 +23,9 @@ htmlcov/
 results/**
 !results/.gitkeep
 !results/README.md
+# Exception: committed deliberately because it backs a figure/claim in docs/experiments/
+!results/E1_information_knowledge/
+!results/E1_information_knowledge/**
 
 # OS / editor
 .DS_Store

@@ -22,5 +22,11 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 
 ## Index
 
-_None completed yet._ Candidate leads and reading priorities are in
+| Note | One-line relevance |
+| ---- | ------------------ |
+| [2016-schill-cooperation-not-enough](2016-schill-cooperation-not-enough.md) | Cooperation ≠ sustainability; you also need ecological knowledge (reframes our info axis) |
+| [2022-janssen-communication-trust-inequality](2022-janssen-communication-trust-inequality.md) | Communication→trust→restraint; conditional cooperators dominate; Gini standard |
+| [2024-piatti-govsim-cooperate-or-collapse](2024-piatti-govsim-cooperate-or-collapse.md) | CPR benchmark; survival/efficiency/over-usage metrics; communication cuts over-usage ~21% |
+
+More candidate leads and reading priorities are in
 [../literature-review.md](../literature-review.md).

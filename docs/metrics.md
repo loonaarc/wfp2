@@ -43,6 +43,30 @@ carrying capacity, `g` = regeneration rate.
   undefined-then-defined-as-0 for zero total; pair it with per-strategy payoff
   breakdowns for interpretation.
 
+### Survival time — `survival_time`
+- **Definition:** rounds sustained before the first collapse (all rounds if it never
+  collapses). Standard in CPR simulations (GovSim).
+- **Formula:** `collapse_round` if collapsed, else `T`.
+- **Good for:** a graded resilience/time-to-failure signal (finer than the binary
+  `collapsed`).
+
+### Efficiency — `efficiency`
+- **Definition:** total harvest relative to the optimal *sustainable* harvest.
+- **Formula:** `total_harvest / (MSY · T)` with `MSY = g·K/4` (logistic).
+  `1.0` = extracted exactly the sustainable yield each round; `>1` = out-harvested it
+  by drawing down stock; `<1` = under-harvested. `None` if `g`/`K` unknown or the
+  rule is non-logistic.
+- **Good for:** distinguishing "sustained but wastefully under-using" from "optimally
+  sustainable" — e.g. an under-confident cooperator scores <1 (see E1).
+
+### Over-usage rate — `over_usage_rate`
+- **Definition:** fraction of *active* rounds (regrown stock above the collapse
+  threshold) whose total harvest exceeded the sustainable yield MSY (GovSim).
+- **Formula:** `|{active rounds: total_harvested > MSY}| / |active rounds|`; `None`
+  if MSY unknown, `0.0` if no active rounds.
+- **Good for:** directly measuring *over-extraction* — separates cooperative intent
+  from sustainable behaviour (the ADR-0004 / Schill et al. distinction).
+
 ## Candidate (planned)
 
 ### Cooperation rate

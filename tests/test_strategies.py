@@ -57,6 +57,24 @@ def test_cooperative_blind_fallback_claims_share_of_msy():
     assert request == pytest.approx(1.25)
 
 
+def test_cooperative_knowledge_bias_scales_blind_estimate():
+    # Overconfident blind cooperator claims proportionally more than the true share.
+    strat = make_strategy(
+        "cooperative", {"regeneration_rate": 0.4, "capacity": 100.0, "knowledge_bias": 1.5}
+    )
+    request = strat.decide(_obs(None, n=8), np.random.default_rng(0))
+    assert request == pytest.approx(1.5 * 1.25)
+
+
+def test_cooperative_knowledge_bias_ignored_under_global_info():
+    # With the stock observed, the self-correcting rule ignores knowledge_bias.
+    accurate = make_strategy("cooperative", {"capacity": 100.0, "knowledge_bias": 1.0})
+    biased = make_strategy("cooperative", {"capacity": 100.0, "knowledge_bias": 2.0})
+    obs = _obs(60.0, n=4)
+    rng = np.random.default_rng(0)
+    assert accurate.decide(obs, rng) == biased.decide(obs, rng)
+
+
 def test_cooperative_is_more_restrained_than_selfish_at_same_state():
     obs = _obs(60.0, n=4)
     selfish = make_strategy("selfish").decide(obs, np.random.default_rng(0))

@@ -8,6 +8,21 @@ prioritised, testable backlog.
 Status legend: 🟢 answerable with the current v0.1.0 code · 🟡 needs a small
 extension (Phase 1) · 🔵 needs communication/disturbance modules (Phase 2–3).
 
+## Primary candidate question (literature-grounded, added 2026-07-25)
+
+Emerging from the literature review (esp. Schill et al. 2016, *"Cooperation Is Not
+Enough"*):
+
+> **Under what information conditions does cooperative *intent* produce sustainable
+> *outcomes* in a decentralized CPR system — and (later) can communication substitute
+> for missing ecological knowledge?**
+
+This separates *cooperation* (a social preference to restrain/share) from *ecological
+knowledge* (knowing the sustainable yield), which our current model conflates (see
+[decisions/0004](decisions/0004-separate-cooperation-from-knowledge.md)). It uses the
+information axis we can already study and sets up the communication phase. It is the
+current front-runner for the project's specific focus — not yet locked.
+
 ## Broad research questions
 
 - **RQ-A.** How does communication influence emergent cooperation, and under which
@@ -72,6 +87,11 @@ extension (Phase 1) · 🔵 needs communication/disturbance modules (Phase 2–3
 - **H5.** Fairness (low Gini) and sustainability are positively associated across
   strategy mixes, but not perfectly — some regimes sustain the resource while
   distributing payoffs unequally.
+- **H6** *(from Schill et al. 2016).* Cooperative *intent* alone does not guarantee
+  sustainability: with biased or absent ecological knowledge, cooperators over- or
+  under-exploit. Sustainability requires cooperation **plus** sufficiently accurate
+  knowledge (or information that supplies it). *(Our `private` cooperator collapse is
+  the "absent knowledge" corner of this; see H1.)*
 
 ## Postponed questions
 

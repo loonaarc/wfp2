@@ -48,13 +48,21 @@ def run_experiment(config: ExperimentConfig) -> ExperimentOutcome:
     Returns:
         The in-memory outcome; use :func:`export_outcome` to persist it.
     """
-    capacity = config.simulation.resource.capacity
+    resource = config.simulation.resource
     results: list[RunResult] = []
     rows: list[dict] = []
     for seed in config.seeds:
         result = run_simulation(config.simulation, seed=seed)
         results.append(result)
-        rows.append(compute_metrics(result, capacity=capacity))
+        rows.append(
+            compute_metrics(
+                result,
+                capacity=resource.capacity,
+                regeneration_rate=resource.regeneration_rate,
+                collapse_threshold=resource.collapse_threshold,
+                regeneration_rule=resource.regeneration_rule,
+            )
+        )
 
     provenance = Provenance(seeds=tuple(config.seeds), status="completed")
     return ExperimentOutcome(
