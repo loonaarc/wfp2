@@ -21,8 +21,8 @@ application area (traffic, energy, epidemics, etc.).
 
 - deterministic simulation core (regenerate → observe → harvest);
 - a renewable resource with logistic/linear regeneration;
-- four strategies: `selfish`, `cooperative`, `conditional_cooperator` (reciprocity),
-  and `sanctioning` (monitoring + enforced harvest quota);
+- five strategies: `selfish`, `cooperative`, `conditional_cooperator` (reciprocity),
+  `sanctioning` (monitoring + enforced quota), `compensating_cooperator` (restraint);
 - two information conditions: `global` and `private`;
 - controlled random seeds with independent per-agent RNG streams;
 - configuration-driven experiments (YAML) with a seed sweep;

@@ -152,9 +152,19 @@ two remaining axes:
   is destructive. Communication's value depends on what agents do with it.
   *(Answers SQ-6, SQ-7, SQ-8.)*
 
-The throughline: cooperation needs *information* (E1, E6) and its outcome is decided by
-the *mechanism/response* (E2, E3, E6); enforcement fixes the commons but is itself
-fragile (E5); and the qualitative results are robust (E4).
+- **[E7 — response rules](experiments/E7-response-rules.md):** given perfect
+  communication, *only enforcement* saves the commons. Both peer responses to detected
+  over-extraction fail — retaliation (E6) protects fairness not the resource, and
+  *restraint* (withholding) protects neither and is the most exploited. Enforcement is
+  the only mechanism in the "good corner" (sustainable **and** fair), because it
+  converts information into a **binding constraint** rather than a reactive choice.
+
+The throughline: cooperation needs *information* (E1, E6); its outcome is decided by
+the *mechanism/response* (E2, E3, E7); **communication informs but does not
+coordinate — only a binding rule (enforcement) does** (E7); enforcement fixes the
+commons but is itself fragile when voluntary (E5); and the qualitative results are
+robust (E4). This mirrors Ostrom: enduring commons need monitoring **and** graduated
+sanctions, not talk alone.
 
 ## Relation to the literature
 

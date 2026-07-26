@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from .base import Strategy
+from .compensating import CompensatingCooperatorStrategy
 from .conditional import ConditionalCooperatorStrategy
 from .cooperative import CooperativeStrategy
 from .sanctioning import SanctioningStrategy
@@ -58,3 +59,4 @@ register_strategy(SelfishStrategy)
 register_strategy(CooperativeStrategy)
 register_strategy(ConditionalCooperatorStrategy)
 register_strategy(SanctioningStrategy)
+register_strategy(CompensatingCooperatorStrategy)

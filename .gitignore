@@ -38,6 +38,8 @@ results/**
 !results/E5_voluntary_monitoring/**
 !results/E6_communication/
 !results/E6_communication/**
+!results/E7_response_rules/
+!results/E7_response_rules/**
 
 # OS / editor
 .DS_Store
