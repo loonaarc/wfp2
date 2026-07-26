@@ -62,6 +62,7 @@ src/emergent_cooperation/
 │   ├── selfish.py       Grab a big share now
 │   ├── cooperative.py   Take only the sustainable surplus (+ knowledge_bias)
 │   ├── conditional.py   Reciprocity: cooperate until others over-extract, then retaliate
+│   ├── compensating.py  Restraint: on over-extraction, withhold to let the pool recover
 │   ├── sanctioning.py   Cooperate AND enforce a sustainable harvest quota
 │   └── registry.py      Name → strategy class lookup (the extension point)
 ├── metrics/
@@ -71,7 +72,8 @@ src/emergent_cooperation/
 │   └── provenance.py    Record code version, git commit, timestamp, seeds
 ├── cli/
 │   └── main.py          The `emergent-coop` terminal command
-├── communication/       (stub) future message-passing between agents
+├── communication/       CommunicationModel protocol (stub); a first broadcast model
+│                         is live via SimulationConfig.broadcast_reliability + Observation.signal
 └── disturbances/        (stub) future shocks for resilience experiments
 ```
 
@@ -185,8 +187,9 @@ give each agent its own stable sequence, so results stay reproducible even if yo
 change the number or order of agents.
 
 > Our current strategies happen to be deterministic (they don't draw random
-> numbers), but the machinery is there so future strategies can be random *without*
-> breaking reproducibility.
+> numbers), but two things already use the per-agent RNG — `decision_noise` (a
+> configurable perturbation of each request) and broadcast message loss — so the
+> seed genuinely matters, *without* breaking reproducibility. See experiment E4.
 
 ---
 
@@ -269,8 +272,9 @@ flowchart TB
     S["Strategy (abstract)<br/>decide(obs, rng) → float<br/>sanction_policy() → SanctionPolicy | None"] --> Se["SelfishStrategy"]
     S --> Co["CooperativeStrategy"]
     S --> Cc["ConditionalCooperatorStrategy"]
+    S --> Cp["CompensatingCooperatorStrategy"]
     S --> Sa["SanctioningStrategy"]
-    R["registry: name → class"] -.builds.-> Se & Co & Cc & Sa
+    R["registry: name → class"] -.builds.-> Se & Co & Cc & Cp & Sa
 ```
 
 **Selfish** (`selfish.py`) — grab an equal share of the *visible* stock, scaled by
@@ -329,8 +333,13 @@ can say `strategy: cooperative` and the code can build it:
 
 ```python
 make_strategy("cooperative", {"capacity": 100.0})   # → CooperativeStrategy(capacity=100.0)
-available_strategies()  # → ["conditional_cooperator", "cooperative", "sanctioning", "selfish"]
+available_strategies()  # → ["compensating_cooperator", "conditional_cooperator",
+                        #    "cooperative", "sanctioning", "selfish"]
 ```
+
+The full set of five strategies (and what each does) is defined in
+[terminology.md](terminology.md#cooperation-mechanisms-the-strategies); this section
+walks through `selfish` and `cooperative` as the core contrast.
 
 **To add a new strategy** you subclass `Strategy`, set its `name`, and call
 `register_strategy(...)`. Nothing else in the codebase needs to change — that's the
@@ -519,16 +528,16 @@ collapse.** That's the phenomenon this whole codebase exists to study.
 
 ---
 
-## 10. Where the stubs fit (future work)
+## 10. Communication and the remaining stub
 
-Two packages are interfaces only, so the engine can adopt them later without redesign
-(see [decisions/0003-...](decisions/0003-information-models-before-communication.md)):
-
-- **`communication/`** — a `CommunicationModel` that would let agents exchange
-  messages before deciding (broadcast, peer-to-peer, with limits/loss). A future
-  `step()` would add an "exchange messages" stage between *observe* and *decide*.
-- **`disturbances/`** — a `Disturbance` that would perturb the world at a round
-  boundary (a resource shock, an agent failing) to test **resilience**.
+- **`communication/`** — the full `CommunicationModel` protocol (per-agent messages,
+  topology, budget, delay) is still a stub, but a **first broadcast model is
+  implemented** (ADR-0007): `SimulationConfig.broadcast_reliability` makes the engine
+  deliver an aggregate `signal` (the group's total harvest last round) into each
+  agent's `Observation` with a per-round probability. Studied in experiments E6–E7.
+- **`disturbances/`** — still an interface only: a `Disturbance` would perturb the
+  world at a round boundary (a resource shock, an agent failing) to test
+  **resilience**. This is the main remaining axis.
 
 ---
 

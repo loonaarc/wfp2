@@ -17,21 +17,25 @@ application area (traffic, energy, epidemics, etc.).
 
 ## Status
 
-**Early foundation (v0.1.0).** Working and tested:
+**Working and tested:**
 
-- deterministic simulation core (regenerate → observe → harvest);
+- deterministic simulation core (regenerate → observe → decide → ration → enforce →
+  harvest), with an optional `decision_noise` stochastic knob;
 - a renewable resource with logistic/linear regeneration;
-- five strategies: `selfish`, `cooperative`, `conditional_cooperator` (reciprocity),
-  `sanctioning` (monitoring + enforced quota), `compensating_cooperator` (restraint);
-- two information conditions: `global` and `private`;
+- **five strategies** (`selfish`, `cooperative`, `conditional_cooperator`,
+  `sanctioning`, `compensating_cooperator`) — defined in
+  [docs/terminology.md](docs/terminology.md#cooperation-mechanisms);
+- two information conditions (`global` / `private`) plus a **broadcast communication**
+  channel (`broadcast_reliability`);
 - controlled random seeds with independent per-agent RNG streams;
-- configuration-driven experiments (YAML) with a seed sweep;
-- basic metrics (performance, sustainability, collapse, fairness/Gini);
+- configuration-driven experiments (YAML) with seed sweeps and a grid runner;
+- metrics: performance, efficiency, sustainability, collapse, survival time,
+  over-usage, and fairness (Gini);
 - reproducible result export (config + metrics + history + provenance);
-- a CLI and 28 passing tests.
+- a CLI, seven experiments (E1–E7), and 62 passing tests.
 
-Not yet implemented (planned extension points, interfaces stubbed): explicit
-**communication** models and environmental **disturbances**. See
+Not yet implemented: environmental **disturbances** (interface stubbed), and the full
+per-agent `CommunicationModel` (a first broadcast model is implemented). See
 [docs/research-direction.md](docs/research-direction.md) for the roadmap.
 
 ## Research direction
@@ -90,20 +94,21 @@ Cooperators sustain the resource at the maximum-sustainable-yield stock; a fully
 selfish population collapses it (tragedy of the commons); a mixed population also
 collapses but with unequal payoffs (selfish agents free-ride on cooperators).
 
-## Planned architecture
+## Architecture
 
 ```
 config (YAML) ─► ExperimentConfig ─► Simulation(seed) ─► RunResult ─► metrics ─► export
                                          │
                     ┌────────────────────┼─────────────────────┐
                     ▼                    ▼                     ▼
-              ResourcePool           Agents              (future) Communication
-             (regeneration)      (Strategy each)         + Disturbances
+              ResourcePool           Agents              Communication (broadcast)
+             (regeneration)      (Strategy each)         + Disturbances (future)
 ```
 
 Each round: the resource regenerates, agents observe (subject to the information
-model), agents request consumption, requests are scaled to fit the stock, harvest
-is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architecture.md).
+model and any communicated signal), agents request consumption, requests are scaled
+to fit the stock, sanctioners enforce a quota, harvest is assigned, payoffs update.
+Full detail in [docs/architecture.md](docs/architecture.md).
 
 ## Repository structure
 
@@ -111,19 +116,22 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 ├── README.md                 This file
 ├── pyproject.toml            Project + tooling (pytest, ruff) configuration
 ├── docs/                     Documentation — see docs/README.md for the index
-│   ├── project-overview.md   The problem in accessible language
-│   ├── research-direction.md Chosen direction and roadmap
-│   ├── research-questions.md Broad questions, testable subquestions, hypotheses
-│   ├── terminology.md        Definitions of key terms
+│   ├── README.md             Documentation index + recommended reading path
 │   ├── getting-started.md    Hands-on walkthrough (run it, tweak it)
+│   ├── findings-summary.md   The E1–E7 results in one page (the writeup spine)
+│   ├── project-overview.md   The problem in accessible language
+│   ├── research-direction.md Chosen direction and roadmap (canonical)
+│   ├── research-questions.md Broad questions, testable subquestions, hypotheses
+│   ├── terminology.md        Definitions of key terms (incl. the strategies)
 │   ├── code-walkthrough.md   Guided tour of the Python code, with diagrams
 │   ├── architecture.md       Components, interfaces, data flow
 │   ├── experiment-design.md  Variables, baselines, seeds, reproducibility
 │   ├── metrics.md            Metric definitions, formulas, limitations
+│   ├── experiments/          One report per experiment E1–E7 (+ index)
 │   ├── contribution-opportunities.md
 │   ├── literature-review.md  Structured overview of the field
 │   ├── paper-notes/          One analysed note per paper (+ template)
-│   ├── decisions/            Architecture decision records (ADRs)
+│   ├── decisions/            Architecture decision records (ADRs 0001–0007)
 │   └── meeting-notes/
 ├── src/emergent_cooperation/ Library (see docs/architecture.md)
 ├── tests/                    pytest suite
@@ -137,30 +145,21 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 ## Results so far
 
 **➜ Read the [findings summary](docs/findings-summary.md)** — the whole story
-(E1–E3) in one page, with the combined overview figure. The individual reports live
-in [docs/experiments/](docs/experiments/):
+(experiments **E1–E7**) in one page, with the overview figure. The per-experiment
+reports and a one-line index live in [docs/experiments/](docs/experiments/).
 
-- **[E1 — information & knowledge](docs/experiments/E1-information-and-knowledge.md):**
-  cooperation sustains the resource *only* when agents have information (can observe
-  the stock) **or** accurate ecological knowledge; blind and misinformed cooperation
-  collapses it.
-- **[E2 — reciprocity](docs/experiments/E2-reciprocity.md):** conditional cooperation
-  protects *fairness* (starves free-riders) but not the *commons* — it can collapse
-  the resource faster than unconditional restraint. Neither protects both.
-- **[E3 — sanctioning](docs/experiments/E3-sanctioning.md):** enforcement (monitoring +
-  a harvest quota) protects *both* the resource and fairness — the only mechanism that
-  does — but the monitors bear a cost the others don't (the **second-order free-rider**
-  problem).
+The throughline: cooperation needs *information* (E1, E6); its outcome is decided by
+the *mechanism/response* (E2, E3, E7); **communication informs but does not
+coordinate — only a binding rule (enforcement) protects both the resource and
+fairness** (E7); enforcement is itself fragile when voluntary (E5); and the results
+are robust to noise (E4).
 
 ## Next steps
 
-1. Make monitoring **voluntary/adaptive** — does sanctioning survive its own
-   second-order free-rider problem?
-2. Sweep retaliation severity (`defection_greed`) and monitoring cost; add forgiveness.
-3. Sensitivity/robustness sweeps over group size and regeneration rate.
-4. The first **communication** model (trust/reputation) — see
-   [docs/decisions/](docs/decisions/) and the Janssen et al. paper-note.
-5. The first **disturbance** (sudden resource loss / agent failure) for resilience.
+The roadmap lives in [docs/research-direction.md](docs/research-direction.md). The
+standout open thread is a **binding agreement / collective-choice** mechanism (can
+communication produce a consented quota and fund the monitoring to uphold it?), plus
+the **disturbance** axis (resource shocks / agent failure) for resilience.
 
 See [docs/research-questions.md](docs/research-questions.md) for the prioritised
 question backlog.

@@ -55,14 +55,15 @@ we get a reproducible testbed others can extend and compare against.
 
 ## Scope
 
-**Wahlfachprojekt 2:** the minimal engine, four strategies (selfish, cooperative,
-conditional/reciprocity, sanctioning), the information/knowledge conditions, seeds,
-metrics, reproducible export, and three documented experiments (E1–E3; see the
-[findings summary](findings-summary.md)) — largely done. Remaining first-scope work
-is sensitivity sweeps and stochastic strategies.
+**Wahlfachprojekt 2:** the engine, five strategies, the information/knowledge
+conditions, a broadcast communication channel, seeds + `decision_noise`, metrics,
+reproducible export, and seven documented experiments (E1–E7; see the
+[findings summary](findings-summary.md)) — done. This already reaches into thesis
+territory.
 
-**Bachelor's thesis (later):** communication models, disturbance scenarios, more
-strategies, statistical evaluation, scalability, and possibly one small original
+**Bachelor's thesis (later):** a binding-agreement / collective-choice mechanism,
+disturbance scenarios (resilience), richer communication, statistical evaluation,
+scalability, and possibly one small original
 strategy or measurement method.
 
 See [research-direction.md](research-direction.md) for the reasoning behind this

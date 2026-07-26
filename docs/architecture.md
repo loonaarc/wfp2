@@ -32,7 +32,8 @@ src/emergent_cooperation/
 │   ├── base.py         Strategy (ABC) + SanctionPolicy
 │   ├── selfish.py      SelfishStrategy
 │   ├── cooperative.py  CooperativeStrategy (+ knowledge_bias)
-│   ├── conditional.py  ConditionalCooperatorStrategy (reciprocity)
+│   ├── conditional.py  ConditionalCooperatorStrategy (reciprocity / retaliate)
+│   ├── compensating.py CompensatingCooperatorStrategy (restraint / withhold)
 │   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
 │   └── registry.py     name → class registry (extension point)
 ├── communication/      CommunicationModel protocol (stubbed; Phase 2)

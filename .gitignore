@@ -19,6 +19,11 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 
+# Local copies of papers (legitimately obtained; never committed — copyright)
+references/papers/*
+!references/papers/README.md
+!references/papers/.gitkeep
+
 # Experiment outputs (results are reproducible from configs; keep the tree, ignore bulk data)
 results/**
 !results/.gitkeep

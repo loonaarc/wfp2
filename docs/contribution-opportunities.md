@@ -20,8 +20,9 @@ communication, and disturbance models, and reproducible experiment tooling.
 - **Risks:** over-engineering; scope creep into a "framework". Mitigate by growing
   from concrete experiments.
 - **Dependencies:** none. **Evaluation:** tests + demonstrated experiments.
-- **Verdict:** ✅ The safe backbone contribution; **built** (engine, 4 strategies,
-  sweep tooling, reproducible export) — communication/disturbance models still stubbed.
+- **Verdict:** ✅ The safe backbone contribution; **built** (engine, 5 strategies,
+  broadcast communication, sweep + replicator tooling, reproducible export) — only the
+  disturbance model and the full per-agent communication protocol remain.
 
 ## C2. Systematic comparison of known strategies under controlled conditions *(primary target)*
 Compare selfish / cooperative / conditional-cooperative (and mixes) across
@@ -35,9 +36,10 @@ information conditions and group sizes, with proper seed statistics.
   novelty. Manage expectations accordingly.
 - **Dependencies:** one more strategy (conditional cooperator); sweep tooling.
 - **Evaluation:** distributions across ≥20 seeds; effect sizes; sensitivity sweeps.
-- **Verdict:** ✅ Strongest bachelor-appropriate target — **substantially realized**
-  in experiments E1–E3 ([findings-summary.md](findings-summary.md)). Remaining:
-  larger seed sets *once strategies are stochastic*, and group-size/`g` sensitivity.
+- **Verdict:** ✅ Strongest bachelor-appropriate target — **realized** across
+  experiments E1–E7 ([findings-summary.md](findings-summary.md)), including robustness
+  and sensitivity (E4). Remaining: larger seed sets once a genuinely *stochastic
+  strategy* exists.
 
 ## C3. Benchmark / collection of reproducible cooperation scenarios
 A curated, documented set of scenarios + expected outcomes others can reproduce

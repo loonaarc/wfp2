@@ -46,28 +46,36 @@ resilience** (see [metrics.md](metrics.md)).
 
 ## Roadmap
 
-### Phase 0 — Foundation (done, v0.1.0)
+*This is the single, canonical roadmap; other docs link here rather than keep their
+own next-steps lists.*
+
+### Phase 0 — Foundation — ✅ done
 Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
 `global`/`private` information; seeds; metrics; reproducible export; CLI; tests.
 
-### Phase 1 — First-scope completion (Wahlfachprojekt 2) — largely done
-- ✅ Split cooperation from ecological knowledge (`knowledge_bias`; ADR-0004) after a
+### Phase 1 — Mechanisms & robustness (Wahlfachprojekt 2) — ✅ done
+- Split cooperation from ecological knowledge (`knowledge_bias`; ADR-0004) after a
   literature review (Schill et al.).
-- ✅ Two more strategies: `conditional_cooperator` (reciprocity) and `sanctioning`
-  (enforcement; ADR-0005).
-- ✅ Parameter-sweep tooling (`experiments.sweep`) and three documented experiments
-  (E1–E3) with figures — see [findings-summary.md](findings-summary.md).
-- ✅ Deepened documentation and ADRs 0001–0005.
-- ⏳ Remaining: sensitivity sweeps over group size / regeneration rate; stochastic
-  strategies (so between-seed variance becomes meaningful).
+- Five strategies total: added `conditional_cooperator` (reciprocity),
+  `sanctioning` (enforcement; ADR-0005), and `compensating_cooperator` (restraint).
+- Parameter-sweep tooling (`experiments.sweep`) and experiments **E1–E3** (the
+  mechanism ladder) with figures — see [findings-summary.md](findings-summary.md).
+- Robustness & sensitivity: added `decision_noise`; **E4** (robust to noise;
+  sensitivity to `g` and `N`).
+- Deepened documentation and ADRs 0001–0007.
 
-### Phase 2 — Communication (thesis)
-Implement the `CommunicationModel` interface (already stubbed): start with
-broadcast-of-intentions, then range/budget/delay/loss variants. Study when
-communication improves outcomes and when it becomes inefficient or harmful.
+### Phase 2 — Adaptation & communication (thesis, started) — 🔄 in progress
+- ✅ **Voluntary monitoring (E5):** replicator dynamics (ADR-0006) — is monitoring
+  evolutionarily stable? (No.)
+- ✅ **Broadcast communication (E6, ADR-0007):** `broadcast_reliability` +
+  `Observation.signal`; does communication substitute for information? (For fairness.)
+- ✅ **Response rules (E7):** given communication, only enforcement saves the commons.
+- ⏳ Next: a **binding agreement / collective-choice** mechanism (a consented quota,
+  and communication that funds monitoring — unifying E5 + E7); then the fuller
+  `CommunicationModel` (per-agent messages, deception, delay, topology).
 
-### Phase 3 — Disturbances & resilience (thesis)
-Implement the `Disturbance` interface (already stubbed): resource shocks, agent
+### Phase 3 — Disturbances & resilience (thesis) — ⏳ not started
+Implement the `Disturbance` interface (still stubbed): resource shocks, agent
 failure, communication failure, malicious agents. Measure recovery time and
 resilience; identify mechanisms that are efficient under normal conditions but
 fragile under disruption.

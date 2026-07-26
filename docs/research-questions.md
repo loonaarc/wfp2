@@ -114,16 +114,18 @@ current front-runner for the project's specific focus — not yet locked.
   rules miss? *(Deferred: adds large complexity and reproducibility burden.)*
 - How do spatial structure and locality of the resource change results?
   *(Deferred: requires a spatial environment; see ADR-0001.)*
-- Reputation- and sanctioning-based mechanisms. *(Deferred to after communication.)*
-- Endogenous, evolving strategy populations. *(Deferred.)*
+- Reputation-based mechanisms (indirect reciprocity). *(Deferred; sanctioning is now
+  implemented — E3.)*
+- Reinforcement-learning agents. *(Deferred; but rule-based evolutionary/replicator
+  dynamics are used — E5, ADR-0006.)*
 
 ## How questions map to the code
 
 | Subquestion | Needs | Current support |
 | ----------- | ----- | --------------- |
-| SQ-1,2,11,12 | seeds, param sweeps | ✅ runner + configs |
-| SQ-4 | strategy-mix configs | ✅ `mixed_global.yaml` pattern |
+| SQ-1,2,11,12 | seeds, param sweeps, `decision_noise` | ✅ runner + sweep + E1/E4 |
+| SQ-4 | strategy-mix configs | ✅ E2/E3/E7 |
+| SQ-5 | conditional + sanctioning strategies | ✅ E2/E3 |
+| SQ-6–8 | broadcast communication | ✅ `broadcast_reliability` + E6/E7 |
 | SQ-3 | outdated-info model | ➕ small `Observation` extension |
-| SQ-5 | conditional cooperator | ➕ new strategy |
-| SQ-6–8 | communication module | 🔲 `communication` (stubbed) |
 | SQ-9,10 | disturbance module | 🔲 `disturbances` (stubbed) |

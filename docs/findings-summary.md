@@ -1,10 +1,10 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E3. This is the narrative spine for the
+*A consolidated synthesis of experiments E1–E7. This is the narrative spine for the
 Wahlfachprojekt writeup; each claim links to its full experiment report and the code
 that produced it.*
 
-**Status:** 2026-07-26 · 4 strategies · 3 experiments · 48 tests · results
+**Status:** 2026-07-26 · 5 strategies · 7 experiments (E1–E7) · 62 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -49,10 +49,12 @@ Two organizing axes emerged: an **information/knowledge** axis (E1) and a
   A stock driven to 0 cannot recover.
 - **Round:** `regenerate → observe → decide → ration → (enforce) → harvest`. All
   randomness derives from one seed; a run is a pure function of `(config, seed)`.
-- **Agents & strategies:** `selfish` (grab a share of what's visible), `cooperative`
-  (take only the surplus above `K/2`; self-correcting), `conditional_cooperator`
-  (reciprocity: cooperate until the group over-extracts, then retaliate),
-  `sanctioning` (cooperate and enforce a per-capita quota at a monitoring cost).
+- **Agents & strategies (five):** `selfish` (grab a share of what's visible),
+  `cooperative` (take only the surplus above `K/2`; self-correcting),
+  `conditional_cooperator` (reciprocity: retaliate on over-extraction),
+  `compensating_cooperator` (restraint: withhold on over-extraction), `sanctioning`
+  (cooperate and enforce a per-capita quota at a monitoring cost). Definitions:
+  [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
 - **Metrics:** total harvest, sustainability ratio (final stock / K), collapse and
   survival time, efficiency vs. MSY, over-usage rate, and payoff Gini (fairness).
 
@@ -130,7 +132,7 @@ Reading the ladder: each mechanism fixes the previous one's failure but reveals 
 problem, ending at the classic result that *enforced, monitored rules* sustain a
 commons — while raising the question of how monitoring itself is sustained.
 
-## Extensions (E4–E6)
+## Extensions (E4–E7)
 
 Beyond the core mechanism story, three further experiments probe robustness and the
 two remaining axes:
@@ -202,14 +204,16 @@ algorithm. That is an appropriate and defensible bachelor-level contribution
 
 ## Future work
 
-1. **Voluntary/adaptive monitoring:** can sanctioning survive its own second-order
-   free-rider problem?
-2. **Communication (Phase 2):** can trust/reputation ("cheap talk") sustain
-   cooperation without enforcement, or fund monitoring? (Janssen et al.)
-3. **Disturbances (Phase 3):** resource shocks and agent failure — which mechanisms
-   are resilient, and how fast do they recover?
-4. **Sensitivity & robustness:** sweep `N`, `g`, retaliation and monitoring costs;
-   add stochastic strategies so seed variance becomes meaningful.
+The full roadmap is in [research-direction.md](research-direction.md). The standout
+open threads:
+
+1. **Binding agreement / collective choice** — can communication produce a *consented*
+   quota (and fund the monitoring to uphold it), unifying E5 + E7? This is the sharp
+   version of "communication that coordinates, not just informs".
+2. **Disturbances (Phase 3):** resource shocks and agent failure — which mechanisms
+   are resilient, and how fast do they recover? (The main un-started axis.)
+3. **A genuinely stochastic strategy** (not just noisy execution), so between-seed
+   variance becomes substantial and the robustness question sharper.
 
 ## Reproduce everything
 
@@ -219,5 +223,9 @@ python scripts/experiment_information_knowledge.py   # E1
 python scripts/experiment_reciprocity.py             # E2
 python scripts/experiment_sanctioning.py             # E3
 python scripts/make_synthesis_figure.py              # the overview figure
-pytest                                               # 48 tests
+python scripts/experiment_robustness.py              # E4
+python scripts/experiment_voluntary_monitoring.py    # E5
+python scripts/experiment_communication.py           # E6
+python scripts/experiment_response_rules.py          # E7
+pytest                                               # 62 tests
 ```

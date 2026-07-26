@@ -18,13 +18,16 @@ reproducible and comparable. It is the contract every experiment should follow.
 
 ### Independent variables (things we vary)
 - **Information model:** `global` | `private` *(local/aggregated/outdated planned)*.
-- **Strategy composition:** counts of `selfish`, `cooperative`,
-  `conditional_cooperator`, `sanctioning`.
-- **Ecological knowledge:** `knowledge_bias` on the cooperative/sanctioning strategies.
+- **Strategy composition:** counts of the five strategies (`selfish`, `cooperative`,
+  `conditional_cooperator`, `compensating_cooperator`, `sanctioning`) — see
+  [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
+- **Ecological knowledge:** `knowledge_bias` (cooperative / conditional strategies).
+- **Decision noise:** `decision_noise` (stochastic perturbation of requests).
+- **Communication:** `broadcast_reliability` (broadcast channel; message loss).
 - **Group size (N):** total number of agents.
 - **Resource parameters:** `initial_level`, `capacity` (K), `regeneration_rate` (g),
   `regeneration_rule`, `collapse_threshold`.
-- *(Planned)* communication model and parameters; disturbance type and schedule.
+- *(Planned)* per-agent communication (deception, delay, topology); disturbances.
 
 ### Controlled variables (held fixed within a comparison)
 Everything not being studied. E.g. when comparing information models, keep N,
@@ -53,7 +56,7 @@ Any new mechanism (a strategy, a communication model, a disturbance) is evaluate
 **against these baselines**, not in isolation.
 
 Systematic studies use the sweep runner (`experiments.sweep.run_grid`) to cover a
-grid of parameter values; worked examples are the three experiments E1–E3
+grid of parameter values; worked examples are the seven experiments E1–E7
 (`scripts/experiment_*.py`, written up in [experiments/](experiments/) and the
 [findings summary](findings-summary.md)).
 

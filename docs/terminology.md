@@ -65,29 +65,44 @@ name a concrete construct in the code.
 - **Tragedy of the commons** — the outcome where individually rational
   over-consumption destroys a shared resource that restrained use would sustain.
 
-## Cooperation mechanisms
+## Cooperation mechanisms (the strategies)
+
+This is the **canonical list of strategies**; the code is ground truth
+(`src/emergent_cooperation/strategies/`, `emergent-coop strategies`). Other docs
+should link here rather than re-enumerate.
+
+- **Selfish** — grab a large share of whatever is currently visible; ignores the
+  future. An all-selfish population collapses the resource (tragedy of the commons).
+  *(model term: `selfish`.)*
+- **Cooperative restraint** — harvest only the regeneration surplus above a healthy
+  reference stock (`K/2`), so the resource is maintained; self-correcting under
+  observation. *(model term: `cooperative`.)*
+- **Reciprocity / conditional cooperation** — cooperate as long as others do; respond
+  to *detected* over-extraction by **retaliating** (grabbing a selfish share).
+  Protects the individual from exploitation, but can accelerate collapse. *(model
+  term: `conditional_cooperator`.)*
+- **Compensating cooperation** — the restraint counterpart to reciprocity: on detected
+  over-extraction, **withhold** (harvest nothing) to let the pool recover. Tends to be
+  the *most* exploited response. *(model term: `compensating_cooperator`.)*
+- **Sanctioning** — cooperate *and* enforce a rule: over-extraction is confiscated and
+  the enforcer bears a monitoring cost. Caps every agent's harvest at a sustainable
+  quota. *(model term: `sanctioning`, via `SanctionPolicy` + the engine's enforcement
+  step.)*
+
+Related concepts:
 
 - **Ecological knowledge** — an agent's (possibly wrong) estimate of the sustainable
   yield. Distinct from *cooperation* (the willingness to restrain): sustainability
-  needs both. *(model term: `knowledge_bias` on the cooperative/sanctioning
-  strategies; see [research-questions.md](research-questions.md) H6.)*
-- **Cooperative restraint** — harvesting only the regeneration surplus above a healthy
-  reference stock (`K/2`), so the resource is maintained. *(model term:
-  `cooperative`.)*
-- **Reciprocity / conditional cooperation** — cooperate as long as others do; respond
-  to over-extraction by defecting (grabbing a selfish share). Protects the individual
-  from exploitation, but can accelerate collapse. *(model term:
-  `conditional_cooperator`.)*
-- **Sanctioning** — cooperating *and* enforcing a rule: over-extraction is confiscated
-  and the enforcer bears a monitoring cost. Here it caps every agent's harvest at a
-  sustainable quota. *(model term: `sanctioning`, via `SanctionPolicy` + the engine's
-  enforcement step.)*
+  needs both. *(model term: `knowledge_bias`; see [research-questions.md](research-questions.md) H6.)*
 - **Monitoring / enforcement** — observing others' behaviour and applying a
   consequence (here, capping extraction). Ostrom identifies monitoring and graduated
   sanctions as conditions for enduring commons.
 - **Second-order free-rider problem** — because monitoring is costly, agents who
   benefit from enforcement without paying to monitor out-earn those who do, so
   monitoring is itself under-provided — a collective-action problem one level up.
+- **Replicator dynamics** — a rule by which above-average-payoff strategies grow their
+  share of the population over "generations"; used (at the experiment level) to ask
+  whether a costly strategy like monitoring is evolutionarily stable (E5, ADR-0006).
 
 ## Evaluation concepts
 
@@ -110,6 +125,13 @@ name a concrete construct in the code.
 - **Seed** — the integer that determines all randomness in a run; identical seed +
   config ⇒ identical result. *(model term: `SimulationConfig.seed`, swept by
   `ExperimentConfig.seeds`.)*
+- **Decision noise** — an optional stochastic perturbation of each agent's request
+  (factor in `[1−d, 1+d]`), which is what makes the seed consequential and
+  between-seed variance meaningful. *(model term: `SimulationConfig.decision_noise`.)*
+- **Broadcast communication** — a channel by which each agent hears an aggregate
+  signal (the group's total harvest last round) with a per-round *reliability*
+  probability; message loss = silence. *(model terms:
+  `SimulationConfig.broadcast_reliability`, `Observation.signal`; ADR-0007.)*
 - **Provenance** — the metadata recorded with each experiment (software version,
   git commit, platform, timestamp, seeds, status) that makes it reproducible.
   *(model term: `experiments.Provenance`.)*
