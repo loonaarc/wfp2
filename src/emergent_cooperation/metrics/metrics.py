@@ -62,7 +62,10 @@ def compute_metrics(
     Returns:
         A flat dict of metric name to value, suitable for a DataFrame row.
     """
+    # Net payoff per agent (harvest minus sanction penalties); gross resource extracted.
     payoffs = result.total_payoffs()
+    gross_harvest = sum(r.total_harvested for r in result.rounds)
+    total_penalty = sum(r.total_penalty for r in result.rounds)
     if capacity is None:
         capacity = _approx_capacity_from(result)
 
@@ -80,7 +83,7 @@ def compute_metrics(
         if regeneration_rate is not None and capacity and regeneration_rule == "logistic"
         else None
     )
-    efficiency = _efficiency(sum(payoffs), msy, n_rounds)
+    efficiency = _efficiency(gross_harvest, msy, n_rounds)
     over_usage_rate = _over_usage_rate(result, msy, collapse_threshold)
 
     return {
@@ -89,9 +92,10 @@ def compute_metrics(
         "information_model": result.information_model,
         "num_agents": result.num_agents,
         "rounds": n_rounds,
-        # System performance.
-        "total_harvest": sum(payoffs),
+        # System performance: total_harvest is gross resource extracted; payoff is net.
+        "total_harvest": gross_harvest,
         "mean_agent_payoff": (sum(payoffs) / len(payoffs)) if payoffs else 0.0,
+        "total_sanction_penalty": total_penalty,
         "efficiency": efficiency,
         # Sustainability.
         "final_resource_level": result.final_resource_level,

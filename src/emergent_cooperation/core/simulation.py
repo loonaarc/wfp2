@@ -85,6 +85,39 @@ class Simulation:
             harvests = [r * scale for r in requests]
         return harvests, sum(harvests)
 
+    def _enforce(self, harvests: list[float]) -> tuple[list[float], float, list[float]]:
+        """Apply sanctioning: cap harvests at the quota and charge monitoring costs.
+
+        If any agent exposes a :class:`SanctionPolicy`, a per-capita quota
+        (``min(quota_total) / N``) is enforced on *every* agent: harvest above the
+        quota is confiscated (left in the pool, not withdrawn), and each sanctioner
+        forfeits its monitoring cost. With no sanctioner present this is a no-op, so
+        non-sanctioning runs are unchanged (see ADR-0005).
+
+        Args:
+            harvests: Per-agent realised harvests after feasibility scaling.
+
+        Returns:
+            A ``(harvests, total_harvested, penalties)`` triple, where ``penalties``
+            is the per-agent monitoring cost paid this round (0 for non-sanctioners).
+        """
+        policies = [agent.strategy.sanction_policy() for agent in self.agents]
+        active = [p for p in policies if p is not None]
+        penalties = [0.0] * len(self.agents)
+        if not active:
+            return harvests, sum(harvests), penalties
+
+        quota_per_capita = min(p.quota_total for p in active) / len(self.agents)
+        capped = [min(h, quota_per_capita) for h in harvests]
+
+        # Sanctioners pay the ongoing cost of monitoring (a payoff forfeit).
+        for i, policy in enumerate(policies):
+            if policy is not None:
+                penalties[i] = policy.monitoring_cost
+                self.agents[i].total_payoff -= policy.monitoring_cost
+
+        return capped, sum(capped), penalties
+
     def step(self, round_index: int) -> RoundRecord:
         """Advance the simulation by exactly one round and return its record.
 
@@ -102,6 +135,7 @@ class Simulation:
             for i, agent in enumerate(self.agents)
         ]
         harvests, total_harvested = self._allocate(requests)
+        harvests, total_harvested, penalties = self._enforce(harvests)
 
         for agent, amount in zip(self.agents, harvests, strict=True):
             agent.record_harvest(amount)
@@ -116,6 +150,7 @@ class Simulation:
             harvested=tuple(harvests),
             resource_after_harvest=resource_after_harvest,
             collapsed=self.pool.is_collapsed,
+            penalties=tuple(penalties),
         )
 
     def run(self) -> RunResult:

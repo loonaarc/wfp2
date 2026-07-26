@@ -9,10 +9,30 @@ module-level or global generators, so that runs stay reproducible.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 import numpy as np
 
 from ..agents.observation import Observation
+
+
+@dataclass(frozen=True)
+class SanctionPolicy:
+    """A monitoring-and-enforcement rule an agent is willing to uphold.
+
+    A strategy that exposes a policy makes the engine enforce a per-round harvest
+    quota on *every* agent (over-extraction is confiscated back to the pool), in
+    exchange for the sanctioner paying a monitoring cost. See ADR-0005 and
+    :meth:`Strategy.sanction_policy`.
+
+    Attributes:
+        quota_total: The sustainable *total* harvest the quota targets; the engine
+            enforces a per-capita cap of ``quota_total / num_agents``.
+        monitoring_cost: Payoff the sanctioner forfeits each round for monitoring.
+    """
+
+    quota_total: float
+    monitoring_cost: float = 0.0
 
 
 class Strategy(ABC):
@@ -39,3 +59,11 @@ class Strategy(ABC):
             the collective request exceeds the available stock.
         """
         raise NotImplementedError
+
+    def sanction_policy(self) -> SanctionPolicy | None:
+        """Return this strategy's enforcement policy, or ``None`` if it does not sanction.
+
+        The default is ``None`` (no sanctioning). A monitoring strategy overrides
+        this to make the engine enforce a harvest quota (see ADR-0005).
+        """
+        return None

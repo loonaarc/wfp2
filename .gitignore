@@ -28,6 +28,8 @@ results/**
 !results/E1_information_knowledge/**
 !results/E2_reciprocity/
 !results/E2_reciprocity/**
+!results/E3_sanctioning/
+!results/E3_sanctioning/**
 
 # OS / editor
 .DS_Store

@@ -124,8 +124,11 @@ For round `t` (in `Simulation.step`):
 4. **Decide:** each agent returns a non-negative requested consumption.
 5. **Allocate:** if `Σ requests > stock`, scale every request by the same factor
    `stock / Σ requests` (strategy-neutral rationing); otherwise grant requests.
-6. **Harvest:** update per-agent payoffs, withdraw the total, record
-   `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
+6. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, cap every
+   agent's harvest at the per-capita quota (excess stays in the pool) and charge each
+   sanctioner its monitoring cost. No-op when no sanctioner is present (ADR-0005).
+7. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
+   record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
 
 Regenerating **before** harvest makes the all-cooperative equilibrium exactly
 stable (agents harvest exactly the regrowth), which gives clean, interpretable

@@ -12,6 +12,7 @@ from typing import Any
 from .base import Strategy
 from .conditional import ConditionalCooperatorStrategy
 from .cooperative import CooperativeStrategy
+from .sanctioning import SanctioningStrategy
 from .selfish import SelfishStrategy
 
 STRATEGY_REGISTRY: dict[str, type[Strategy]] = {}
@@ -56,3 +57,4 @@ def available_strategies() -> list[str]:
 register_strategy(SelfishStrategy)
 register_strategy(CooperativeStrategy)
 register_strategy(ConditionalCooperatorStrategy)
+register_strategy(SanctioningStrategy)

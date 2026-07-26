@@ -36,6 +36,7 @@ class RoundRecord:
     harvested: tuple[float, ...]
     resource_after_harvest: float
     collapsed: bool
+    penalties: tuple[float, ...] = ()
 
     @property
     def total_requested(self) -> float:
@@ -46,6 +47,11 @@ class RoundRecord:
     def total_harvested(self) -> float:
         """Sum of all agents' realised harvest."""
         return sum(self.harvested)
+
+    @property
+    def total_penalty(self) -> float:
+        """Sum of monitoring/sanction penalties paid this round."""
+        return sum(self.penalties)
 
 
 @dataclass
@@ -77,9 +83,11 @@ class RunResult:
         return self.rounds[-1].resource_after_harvest if self.rounds else 0.0
 
     def total_payoffs(self) -> list[float]:
-        """Accumulated harvest per agent over the whole run."""
+        """Net accumulated payoff per agent (harvest minus sanction penalties)."""
         totals = [0.0] * self.num_agents
         for record in self.rounds:
             for agent_id, amount in enumerate(record.harvested):
                 totals[agent_id] += amount
+            for agent_id, penalty in enumerate(record.penalties):
+                totals[agent_id] -= penalty
         return totals

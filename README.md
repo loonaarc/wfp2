@@ -21,7 +21,8 @@ application area (traffic, energy, epidemics, etc.).
 
 - deterministic simulation core (regenerate → observe → harvest);
 - a renewable resource with logistic/linear regeneration;
-- three strategies: `selfish`, `cooperative`, and `conditional_cooperator` (reciprocity);
+- four strategies: `selfish`, `cooperative`, `conditional_cooperator` (reciprocity),
+  and `sanctioning` (monitoring + enforced harvest quota);
 - two information conditions: `global` and `private`;
 - controlled random seeds with independent per-agent RNG streams;
 - configuration-driven experiments (YAML) with a seed sweep;
@@ -143,15 +144,17 @@ Two reproducible experiments are documented in [docs/experiments/](docs/experime
   collapses it.
 - **[E2 — reciprocity](docs/experiments/E2-reciprocity.md):** conditional cooperation
   protects *fairness* (starves free-riders) but not the *commons* — it can collapse
-  the resource faster than unconditional restraint. Neither protects both, motivating
-  sanctioning.
+  the resource faster than unconditional restraint. Neither protects both.
+- **[E3 — sanctioning](docs/experiments/E3-sanctioning.md):** enforcement (monitoring +
+  a harvest quota) protects *both* the resource and fairness — the only mechanism that
+  does — but the monitors bear a cost the others don't (the **second-order free-rider**
+  problem).
 
 ## Next steps
 
-1. A `sanctioning` strategy (targeted, costly punishment) — can it protect the
-   resource *and* fairness where reciprocity cannot?
-2. Sweep retaliation severity (`defection_greed`) and add forgiveness to the
-   conditional cooperator.
+1. Make monitoring **voluntary/adaptive** — does sanctioning survive its own
+   second-order free-rider problem?
+2. Sweep retaliation severity (`defection_greed`) and monitoring cost; add forgiveness.
 3. Sensitivity/robustness sweeps over group size and regeneration rate.
 4. The first **communication** model (trust/reputation) — see
    [docs/decisions/](docs/decisions/) and the Janssen et al. paper-note.
