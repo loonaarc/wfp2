@@ -102,11 +102,14 @@
 
   .field { margin-bottom: 14px; }
   .field > label {
-    display: flex; justify-content: space-between; align-items: baseline;
+    display: flex; align-items: baseline; gap: 6px;
     font-size: 12px; letter-spacing: .04em; text-transform: uppercase;
     color: var(--muted); font-weight: 600; margin-bottom: 6px;
   }
+  .field > label .val { margin-left: auto; }
+  .field > label .info { text-transform: none; letter-spacing: 0; font-weight: 400; opacity: .55; cursor: help; }
   .field .val { font-family: var(--mono); color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .regime-desc { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 8px 2px 0; min-height: 3.4em; }
   select, input[type="range"] { width: 100%; }
   select {
     font-family: var(--sans); font-size: 14px; color: var(--text);
@@ -126,6 +129,14 @@
   }
   button.run:hover { filter: brightness(1.06); }
   button.run:active { transform: translateY(1px); }
+  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btnrow .run { flex: 1 1 130px; }
+  button.btn2 {
+    flex: 0 0 auto; font-family: var(--sans); font-weight: 600; font-size: 13px;
+    color: var(--text); background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 11px 12px; cursor: pointer;
+  }
+  button.btn2:hover { border-color: var(--accent); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
   .stage { display: flex; flex-direction: column; gap: 16px; }
@@ -177,6 +188,7 @@
         <div class="field regime">
           <label for="regime">Regime</label>
           <select id="regime"></select>
+          <p class="regime-desc" id="regime_desc"></p>
         </div>
         <hr class="divider" />
         <div class="field">
@@ -219,7 +231,11 @@
           <label for="seed">Seed <span class="val" id="seed_v">1</span></label>
           <input type="range" id="seed" min="1" max="10" step="1" value="1" />
         </div>
-        <button class="run" id="run" type="submit">▶ Run &amp; animate</button>
+        <div class="btnrow">
+          <button class="run" id="run" type="submit">▶ Run &amp; animate</button>
+          <button class="btn2" id="play" type="button">⏸ Pause</button>
+          <button class="btn2" id="step" type="button">⏭ Step</button>
+        </div>
       </form>
 
       <!-- ── stage ─────────────────────────────────────── -->
@@ -229,9 +245,8 @@
         </div>
 
         <div class="card playbar">
-          <button id="play" type="button">⏸ Pause</button>
-          <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
           <span class="tcount" id="tcount">round 1 / 40</span>
+          <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
         </div>
 
         <div class="metrics">
@@ -382,8 +397,8 @@
   const els = {
     regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), noise: $("noise"), bcast: $("bcast"), rounds: $("rounds"), seed: $("seed"),
-    run: $("run"), play: $("play"), scrub: $("scrub"), tcount: $("tcount"),
-    ring: $("ring"), traj: $("traj"), legend: $("legend"),
+    run: $("run"), play: $("play"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
+    ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
     m_harvest: $("m_harvest"), m_stock: $("m_stock"),
   };
@@ -393,6 +408,41 @@
   }
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const stratColor = (k) => css("--s-" + k) || "#888";
+
+  // hover help on every control (native tooltip on the field + a visible ⓘ cue)
+  const HELP = {
+    regime: "A preset scenario. Picking one sets the dials below; change any dial to switch to 'custom'.",
+    ctype: "How the non-selfish agents behave. cooperative = take only the surplus above a healthy level; conditional = cooperate until others over-use, then retaliate with a selfish grab; compensating = withhold (take nothing) when others over-use; sanctioning = enforce a shared sustainable quota on everyone (at a small monitoring cost).",
+    nsel: "How many of the 8 agents are selfish — grabbing as large a share as they can each round.",
+    info: "global: agents see the current stock and self-correct. private: agents are blind to the stock and rely on their own estimate.",
+    kb: "How accurate a blind agent's estimate of the sustainable yield is. 1.0 = accurate; >1 = overconfident (over-harvests); <1 = over-cautious. Only matters under private information.",
+    noise: "Random wobble added to each agent's request. 0 = fully deterministic. (With noise on, the browser's randomness differs from the Python engine, so numbers are representative.)",
+    bcast: "Chance each round that agents hear a broadcast of the group's total harvest. off = silent; 1.0 = always heard. Lets blind agents detect over-use.",
+    rounds: "How many rounds to simulate.",
+    seed: "Random seed — only changes the outcome when decision noise or partial communication is on.",
+  };
+  for (const [id, text] of Object.entries(HELP)) {
+    const el = els[id]; if (!el) continue;
+    const field = el.closest(".field"); if (field) field.title = text;
+    const lab = field && field.querySelector("label");
+    if (lab) {
+      const info = document.createElement("span");
+      info.className = "info"; info.textContent = "ⓘ"; info.title = text;
+      lab.insertBefore(info, lab.childNodes[1] || null);
+    }
+  }
+
+  const REGIME_DESC = {
+    "— custom —": "Your own settings — adjust any control below.",
+    "🎣 Tragedy of the commons": "Everyone is selfish: the regrown pool is emptied in the very first round and never recovers — Hardin's classic result.",
+    "🌱 Sustainable cooperation": "All cooperators with full information harvest only the regrowth, so the pool holds steady at half-full, indefinitely.",
+    "🪝 Free-riding erodes it": "A few selfish agents among cooperators. The cooperators keep subsidising them until the pool collapses — and the free-riders get rich (high inequality).",
+    "↩️ Reciprocity collapses it": "Conditional cooperators retaliate when they detect over-use. That starves the free-riders (fairer) but the retaliation spiral collapses the resource.",
+    "🛡️ Enforcement holds": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
+    "🙈 Blind & overconfident": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
+    "📣 Communication → fairness": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
+  };
+  const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
   function syncLabels() {
     els.nsel_v = $("nsel_v"); // noop guard
@@ -414,10 +464,10 @@
     applying = false; syncLabels();
   }
   function toCustom() {
-    if (!applying && els.regime.value !== "— custom —") els.regime.value = "— custom —";
+    if (!applying && els.regime.value !== "— custom —") { els.regime.value = "— custom —"; updateRegimeDesc(); }
     syncLabels();
   }
-  els.regime.addEventListener("change", () => { applyRegime(); run(); });
+  els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
   ["nsel", "kb", "noise", "bcast"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
@@ -448,6 +498,7 @@
     sim.cum = [];
     const acc = new Array(sim.n).fill(0);
     for (const f of sim.frames) { f.harv.forEach((h, i) => (acc[i] += h)); sim.cum.push(acc.slice()); }
+    sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
     const final = sim.frames[sim.frames.length - 1];
     const m = { sustain: final.stock / K, collapsed: sim.frames.some((f) => f.collapsed),
                 gini: gini(sim.payoff), harvest: sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0) };
@@ -496,14 +547,15 @@
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2, cy = size / 2;
     const f = sim.frames[frame], n = sim.n;
-    const ringR = size * 0.36;
+    const ringR = size * 0.34;
     const ratio = f.stock / K;
     const poolR = size * (0.07 + 0.20 * Math.sqrt(Math.max(0, ratio)));
 
     // agent positions
-    const pos = [];
+    const pos = [], angs = [];
     for (let i = 0; i < n; i++) {
       const ang = -Math.PI / 2 + (i / n) * 2 * Math.PI;
+      angs.push(ang);
       pos.push([cx + ringR * Math.cos(ang), cy + ringR * Math.sin(ang)]);
     }
     // faint ring guide
@@ -532,14 +584,21 @@
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(Math.round(f.stock), cx, cy);
 
-    // agents
+    // agents: dot size ∝ payoff-so-far (normalised), with the payoff number alongside
     const cum = sim.cum[frame];
+    const labelR = ringR + size * 0.075;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let i = 0; i < n; i++) {
-      const r = Math.max(6, size * (0.012 + 0.0012 * cum[i]));
+      const r = size * (0.014 + 0.032 * (cum[i] / sim.maxCum));
       ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
-      ctx.fillStyle = stratColor(sim.kinds[i]);
-      ctx.fill();
+      ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = css("--panel"); ctx.stroke();
+      // payoff ("resource collected") number, just outside the ring
+      const lx = cx + labelR * Math.cos(angs[i]), ly = cy + labelR * Math.sin(angs[i]);
+      const txt = Math.round(cum[i]);
+      ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
+      ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
+      ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
     }
 
     els.scrub.value = frame;
@@ -594,13 +653,19 @@
     raf = requestAnimationFrame(loop);
   }
   function setPlayLabel() { els.play.textContent = playing ? "⏸ Pause" : "▶ Play"; }
-  els.play.addEventListener("click", () => { playing = !playing; setPlayLabel(); });
+  els.play.addEventListener("click", () => { if (sim) { playing = !playing; setPlayLabel(); } });
+  els.step.addEventListener("click", () => {
+    if (!sim) return;
+    playing = false; setPlayLabel();
+    frame = (frame + 1) % sim.frames.length;
+    draw();
+  });
   els.scrub.addEventListener("input", () => { playing = false; setPlayLabel(); frame = +els.scrub.value; draw(); });
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
   // ── go ──────────────────────────────────────────────────────────────────
   els.regime.value = "🛡️ Enforcement holds";
-  applyRegime(); syncLabels(); run();
+  applyRegime(); updateRegimeDesc(); syncLabels(); run();
 })();
 </script>
 </body>
