@@ -34,6 +34,8 @@ results/**
 !results/trajectories/**
 !results/E4_robustness/
 !results/E4_robustness/**
+!results/E5_voluntary_monitoring/
+!results/E5_voluntary_monitoring/**
 
 # OS / editor
 .DS_Store
