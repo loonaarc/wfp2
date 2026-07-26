@@ -6,10 +6,11 @@ full analysed note in [paper-notes/](paper-notes/); this file is the map and the
 
 Read status: 🔴 not read · 🟡 skimmed · 🟢 analysed note exists in `paper-notes/`.
 
-> **Citation status (2026-07):** foundational citations below have been verified via
-> web search. The three 🟢 sources have analysed notes taken from the published
-> open-access articles. Page/figure-level claims should still be checked against the
-> originals before they appear in the thesis.
+> **Status (2026-07):** most core sources have now been read from the primary PDFs
+> (obtained via library access, in `references/papers/`, git-ignored) and have full
+> analysed notes. Remaining 🟡: Oliehoek & Amato (intro chapters only — a textbook).
+> Citations verified from the PDFs. A few thematic leads (below) remain 🔴 as
+> candidates.
 
 ## How this maps to the project
 
@@ -82,41 +83,48 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 
 ## 1. Common-pool resources and the commons
 
-- 🔴 **Hardin (1968), "The Tragedy of the Commons", *Science* 162(3859), 1243–1248.**
-  https://doi.org/10.1126/science.162.3859.1243 — foundational framing; our
-  `all_selfish_global` baseline instantiates it. (Read critically: later work shows
-  the "tragedy" is not inevitable.)
-- 🟡 **Ostrom (1990), *Governing the Commons*, Cambridge University Press (280 pp).**
-  → [scaffold note](paper-notes/1990-ostrom-governing-the-commons.md) *(citation +
-  eight design principles verified; full read pending — a book)*. Communities *do*
-  self-organize to sustain commons; her **eight design principles** (boundaries,
-  congruence, collective choice, monitoring, graduated sanctions, conflict
-  resolution, recognition of rights, nested enterprises) directly underpin our
-  sanctioning experiment (E3) and the communication phase.
+- 🟢 **Hardin (1968), "The Tragedy of the Commons", *Science* 162(3859), 1243–1248.**
+  → [note](paper-notes/1968-hardin-tragedy-of-the-commons.md). Our `all_selfish_global`
+  baseline instantiates it. (Read critically: the essay's driving purpose is a
+  coercive anti-overpopulation argument, and "commons" means an *unmanaged, open-access*
+  resource — exactly the case Ostrom shows is not inevitable.)
+- 🟢 **Ostrom (1990), *Governing the Commons*, Cambridge University Press (280 pp).**
+  → [note](paper-notes/1990-ostrom-governing-the-commons.md) *(read ch. 1 + the
+  design-principles portion of ch. 3, incl. Table 3.1)*. Her **eight design
+  principles** underpin our sanctioning experiment (E3). **Key reframe:** the
+  second-order free-rider problem our model hits (E5) is one real commons *routinely
+  solve* via accountable monitoring, graduated sanctions, and collective choice — so
+  E7's "only external enforcement works" reflects our *impoverished* institutions, not
+  a general truth.
 - 🟢 **Schill, Wijermans, Schlüter & Lindahl (2016), "Cooperation Is Not Enough…",
   *PLOS ONE* 11(8), e0157796.** → [note](paper-notes/2016-schill-cooperation-not-enough.md).
   *The most direction-relevant paper we've read* (see Implications above).
 
 ## 2. Evolution and maintenance of cooperation
 
-- 🔴 **Axelrod (1984), *The Evolution of Cooperation*, Basic Books**; **Axelrod &
-  Hamilton (1981), "The Evolution of Cooperation", *Science* 211, 1390–1396.**
-  Tit-for-tat, reciprocity, repeated interaction — motivates the conditional
-  cooperator. *(Verify the 1981 volume number — a source returned 221; 211 is the
-  commonly cited value.)*
-- 🔴 **Nowak (2006), "Five Rules for the Evolution of Cooperation", *Science* 314,
-  1560–1563.** https://doi.org/10.1126/science.1133755 — taxonomy of five mechanisms
-  (kin selection, direct/indirect reciprocity, network reciprocity, group selection);
-  a menu of mechanisms we could implement and compare.
-- 🟡 **Fehr & Gächter (2002), "Altruistic Punishment in Humans", *Nature* 415,
+- 🟢 **Axelrod & Hamilton (1981), "The Evolution of Cooperation", *Science* 211(4489),
+  1390–1396.** → [note](paper-notes/1981-axelrod-hamilton-evolution-of-cooperation.md)
+  *(volume 211 verified from the PDF)*. Tit-for-tat / reciprocity motivates our
+  `conditional_cooperator`; **caveat:** TFT's stability needs *targeted* retaliation,
+  absent in an N-player commons (why E2's reciprocity punishes the resource, not a
+  culprit). (Axelrod's 1984 book expands this; not separately noted.)
+- 🟢 **Nowak (2006), "Five Rules for the Evolution of Cooperation", *Science* 314,
+  1560–1563.** → [note](paper-notes/2006-nowak-five-rules.md). Five mechanisms with
+  their conditions (kin `r>c/b`, direct reciprocity `w>c/b`, indirect reciprocity
+  `q>c/b`, network `b/c>k`, group). Direct reciprocity = our conditional cooperator;
+  **indirect reciprocity (reputation, `q`) is the most promising unexplored strategy**
+  and maps onto our information/communication axes.
+- 🟢 **Fehr & Gächter (2002), "Altruistic Punishment in Humans", *Nature* 415,
   137–140.** → [note](paper-notes/2002-fehr-gaechter-altruistic-punishment.md).
-  Costly punishment sustains cooperation; without it, cooperation breaks down — the
-  empirical backbone for our sanctioning experiment (E3).
-- 🟡 **Hauert, Traulsen, Brandt, Nowak & Sigmund (2007), "Via Freedom to Coercion",
+  Empirical backbone for E3: punishment sustains cooperation, its removal collapses it.
+  Their punishment works via *deterrence* (humans adapt); our fixed agents force
+  *confiscation* instead — a load-bearing distinction.
+- 🟢 **Hauert, Traulsen, Brandt, Nowak & Sigmund (2007), "Via Freedom to Coercion",
   *Science* 316, 1905–1907.** →
-  [note](paper-notes/2007-hauert-via-freedom-to-coercion.md). Optional participation
-  rescues costly punishment from the **second-order free-rider** problem — the
-  theoretical answer to the open question E3 raises (voluntary monitoring).
+  [note](paper-notes/2007-hauert-via-freedom-to-coercion.md). A **loner** opt-out
+  rescues costly punishment from the second-order free-rider problem via cyclic
+  dynamics — a concrete recipe to turn E5's negative result positive (add a loner +
+  make monitoring cost scale with group size).
 
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 
@@ -127,24 +135,33 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 - 🟢 **Piatti et al. (2024), "Cooperate or Collapse" (GovSim), arXiv:2404.16698.** →
   [note](paper-notes/2024-piatti-govsim-cooperate-or-collapse.md). CPR benchmark;
   survival/efficiency/over-usage metrics; communication reduces over-usage ~21%.
-- 🔴 **Dec-POMDP literature (Oliehoek & Amato, 2016, *A Concise Introduction to
-  Decentralized POMDPs*).** Formal framing of decentralized decisions under partial
-  information; useful for *defining* our information models precisely.
+- 🟡 **Oliehoek & Amato (2016), *A Concise Introduction to Decentralized POMDPs*.** →
+  [note](paper-notes/2016-oliehoek-amato-dec-pomdps.md) *(intro + model/complexity
+  chapters)*. Formal tuple for decentralized decisions under partial observability;
+  useful to *precisely define* our `global`/`private` information models and to justify
+  rule-based agents (finite-horizon Dec-POMDPs are NEXP-complete). We do **not** solve
+  Dec-POMDPs — borrow the vocabulary, not the machinery.
 
 ## 4. Resilience and robustness of collective systems
 
-- 🔴 **Socio-ecological resilience (Folke; Walker et al.).** Definitions of
-  resilience, recovery, regime shifts — informs our Phase-3 resilience metrics.
+- 🟢 **Folke (2006), "Resilience: the emergence of a perspective…", *Global Env.
+  Change* 16(3), 253–267.** → [note](paper-notes/2006-folke-resilience.md).
+  Engineering vs. ecological resilience; collapse as a basin shift. Gives Phase-3
+  metrics: return time, absorbed-disturbance magnitude, rising-variance early warning.
+- 🟢 **Walker, Holling, Carpenter & Kinzig (2004), "Resilience, Adaptability and
+  Transformability…", *Ecology & Society* 9(2), 5.** →
+  [note](paper-notes/2004-walker-resilience-adaptability.md). Four aspects of
+  resilience (latitude, resistance, precariousness, panarchy) → measurable in our model
+  (precariousness = distance to the collapse threshold).
 - 🔴 **Robustness of self-organizing/swarm systems.** Tolerance to agent failure and
   perturbation.
 
 ## 5. Method: agent-based modelling and reproducibility
 
-- 🔴 **Grimm et al. (2006; 2020 update), the ODD protocol.** 2020 update:
-  *"The ODD Protocol… A Second Update", JASSS* 23(2), 7
-  (https://www.jasss.org/23/2/7.html). Standard for documenting ABMs reproducibly —
-  **we should structure the model description in `docs/` along ODD** (Overview →
-  Design concepts → Details).
+- 🟢 **Grimm et al. (2020), "The ODD Protocol… A Second Update", *JASSS* 23(2), 7.** →
+  [note](paper-notes/2020-grimm-odd-protocol.md). The standard for documenting ABMs
+  reproducibly — **action: add an ODD-structured model description** so the write-up
+  matches the field standard (much of the material already exists across our docs).
 - 🔴 **Mesa framework docs.** Evaluated and *not* adopted (see ADR-0001); reference
   for conventions and a possible future spatial scenario.
 
@@ -152,13 +169,17 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 
 ## Reading priorities (updated)
 
-1. **Ostrom (1990)** — design principles → directly shapes the communication/
-   monitoring/sanctioning roadmap. *(next to read fully)*
-2. **Axelrod (1984) + Nowak (2006)** — concrete cooperation mechanisms → the
-   conditional cooperator and beyond.
-3. **ODD protocol (Grimm 2020)** — restructure the model description for rigour and
-   comparability.
-4. Resilience sources — before Phase 3.
+The foundational set is now read (Hardin, Ostrom, Axelrod & Hamilton, Nowak, Fehr &
+Gächter, Hauert, Schill, Janssen, Piatti, Folke, Walker, ODD). Next actions from the
+reading:
+
+1. **Act on Hauert (2007)** — add a *loner* opt-out to the E5 replicator to test
+   whether monitoring becomes stable (flip E5's negative result).
+2. **Act on ODD (2020)** — write an ODD-structured model description for the thesis.
+3. **Candidate new strategy from Nowak** — an *indirect-reciprocity / reputation*
+   agent (ties to the information and communication axes).
+4. **Before Phase 3** — operationalise the Folke/Walker resilience metrics
+   (precariousness = distance to collapse; absorbed-disturbance magnitude).
 
 ## Open literature questions
 
