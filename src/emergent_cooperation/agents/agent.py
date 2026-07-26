@@ -25,10 +25,18 @@ class Agent:
         last_harvest: Realised harvest from the most recent round.
     """
 
-    def __init__(self, agent_id: int, strategy: Strategy) -> None:
-        """Create an agent bound to ``strategy``."""
+    def __init__(self, agent_id: int, strategy: Strategy, decision_noise: float = 0.0) -> None:
+        """Create an agent bound to ``strategy``.
+
+        Args:
+            agent_id: Stable index identifying the agent.
+            strategy: The decision rule this agent follows.
+            decision_noise: Fractional noise on the request (see
+                :class:`~emergent_cooperation.core.config.SimulationConfig`).
+        """
         self.agent_id = agent_id
         self.strategy = strategy
+        self.decision_noise = decision_noise
         self.total_payoff: float = 0.0
         self.last_harvest: float = 0.0
 
@@ -40,10 +48,15 @@ class Agent:
     def decide(self, observation: Observation, rng: np.random.Generator) -> float:
         """Return the agent's requested consumption for the round.
 
-        The request is clamped to be non-negative; enforcing feasibility against
-        the shared stock is the engine's responsibility, not the agent's.
+        If ``decision_noise`` is positive, the strategy's request is perturbed by a
+        factor drawn uniformly from ``[1 - noise, 1 + noise]`` using the agent's own
+        RNG, so the outcome depends reproducibly on the seed. The request is clamped
+        to be non-negative; enforcing feasibility against the shared stock is the
+        engine's responsibility, not the agent's.
         """
         request = self.strategy.decide(observation, rng)
+        if self.decision_noise > 0.0:
+            request *= 1.0 + rng.uniform(-self.decision_noise, self.decision_noise)
         return max(0.0, float(request))
 
     def record_harvest(self, amount: float) -> None:

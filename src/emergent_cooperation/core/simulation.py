@@ -50,7 +50,13 @@ class Simulation:
         for spec in config.agents:
             for _ in range(spec.count):
                 strategy = make_strategy(spec.strategy, spec.params)
-                agents.append(Agent(agent_id=len(agents), strategy=strategy))
+                agents.append(
+                    Agent(
+                        agent_id=len(agents),
+                        strategy=strategy,
+                        decision_noise=config.decision_noise,
+                    )
+                )
         return agents
 
     def _observe(self, agent: Agent, round_index: int) -> Observation:

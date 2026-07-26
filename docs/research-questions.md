@@ -73,7 +73,12 @@ current front-runner for the project's specific focus — not yet locked.
 ### Reproducibility & sensitivity (RQ-D)
 - **SQ-11** 🟢 How much do outcome metrics vary across random seeds for a fixed
   config (variance between runs)? Which metrics are stable, which noisy?
+  **→ Answered (E4): very stable.** With `decision_noise=0.1`, between-seed s.d. of
+  sustainability ≤ 0.008 — the mechanism results are robust, not seed-luck.
 - **SQ-12** 🟢 How sensitive are outcomes to group size and regeneration rate?
+  **→ Answered (E4):** higher regeneration rate `g` tolerates more free-riders
+  (collapse threshold ∝ `g`); outcomes depend on the selfish *fraction*, not group
+  size `N` (approximately scale-invariant).
 
 ## Candidate hypotheses
 

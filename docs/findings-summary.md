@@ -145,8 +145,10 @@ commons — while raising the question of how monitoring itself is sustained.
 
 ## Threats to validity (consolidated)
 
-- **Deterministic strategies** → zero between-seed variance; the seed machinery only
-  earns its keep once strategies are stochastic. Reported values are exact, not means.
+- **Deterministic strategies by default** → zero between-seed variance; reported E1–E3
+  values are exact. A `decision_noise` knob adds stochasticity, and **E4 shows the
+  conclusions are robust** to it (between-seed s.d. ≤ 0.008). A genuinely stochastic
+  *strategy* would stress the seed machinery harder (open follow-up).
 - **Single parameterization** `(K=100, g=0.4, N=8)`; no sensitivity sweep over group
   size or regeneration rate yet.
 - **Idealised mechanisms:** reciprocity retaliates at full strength (`defection_greed

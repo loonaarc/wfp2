@@ -74,6 +74,11 @@ class SimulationConfig:
         rounds: Number of discrete time steps to simulate.
         seed: Master seed for this run (may be overridden per repetition).
         information_model: One of :data:`INFORMATION_MODELS`.
+        decision_noise: Fractional noise applied to each agent's request, in
+            ``[0, 1)``. ``0`` is fully deterministic (the historical behaviour);
+            ``d`` perturbs each request by a factor drawn uniformly from
+            ``[1 - d, 1 + d]`` using the agent's own RNG. This is what makes the
+            random seed consequential and between-seed variance meaningful.
         resource: Resource parameters.
         agents: Ordered agent-group specifications.
     """
@@ -82,6 +87,7 @@ class SimulationConfig:
     rounds: int = 100
     seed: int = 0
     information_model: str = "global"
+    decision_noise: float = 0.0
     resource: ResourceConfig = field(default_factory=ResourceConfig)
     agents: tuple[AgentSpec, ...] = field(default_factory=tuple)
 
@@ -93,6 +99,8 @@ class SimulationConfig:
                 f"information_model must be one of {INFORMATION_MODELS}, "
                 f"got {self.information_model!r}"
             )
+        if not 0 <= self.decision_noise < 1:
+            raise ValueError("decision_noise must be in [0, 1)")
 
     @property
     def num_agents(self) -> int:
