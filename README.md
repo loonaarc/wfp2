@@ -110,7 +110,7 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 ```
 ├── README.md                 This file
 ├── pyproject.toml            Project + tooling (pytest, ruff) configuration
-├── docs/                     Research and engineering documentation (start here)
+├── docs/                     Documentation — see docs/README.md for the index
 │   ├── project-overview.md   The problem in accessible language
 │   ├── research-direction.md Chosen direction and roadmap
 │   ├── research-questions.md Broad questions, testable subquestions, hypotheses
