@@ -126,6 +126,20 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   dynamics — a concrete recipe to turn E5's negative result positive (add a loner +
   make monitoring cost scale with group size).
 
+- 🟢 **Nowak & Sigmund (1998), "Evolution of indirect reciprocity by image scoring",
+  *Nature* 393, 573–577.** →
+  [note](paper-notes/1998-nowak-sigmund-indirect-reciprocity.md). Founding model of
+  **indirect reciprocity** (reputation / image score); cooperation is stable when
+  `q > c/b` (probability of knowing a partner's reputation) and collapses as group size
+  grows. Basis for a **reputation-based strategy** that targets individual
+  over-extractors, unlike our collective-punishment conditional cooperator.
+- 🟢 **Sigmund, De Silva, Traulsen & Hauert (2010), "Social learning promotes
+  institutions for governing the commons", *Nature* 466, 861–863.** →
+  [note](paper-notes/2010-sigmund-social-learning-institutions.md). **Pool**
+  (pre-committed) vs **peer** punishment: pool punishment is stable *only* if it also
+  punishes second-order free-riders. A direct one-variable follow-up to flip E5
+  (efficiency-for-stability trade-off).
+
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 
 - 🟢 **Janssen, DeCaro & Lee (2022), "…Inequality, Trust, and Communication in Common
@@ -135,6 +149,20 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 - 🟢 **Piatti et al. (2024), "Cooperate or Collapse" (GovSim), arXiv:2404.16698.** →
   [note](paper-notes/2024-piatti-govsim-cooperate-or-collapse.md). CPR benchmark;
   survival/efficiency/over-usage metrics; communication reduces over-usage ~21%.
+- 🟢 **Ostrom, Walker & Gardner (1992), "Covenants With and Without a Sword: Self-
+  Governance Is Possible", *American Political Science Review* 86(2), 404–417.** →
+  [note](paper-notes/1992-ostrom-walker-gardner-covenants.md). *The* CPR lab
+  experiment on communication vs. sanctioning. **Communication alone** works (it
+  bundles *agreement*); **sanctioning alone** is inefficient (~9% net after fines/
+  errors); **communication + an endogenously chosen sword** is best (~90% net) —
+  empirical backing for our binding-agreement follow-up, and it explains why E6 (a bare
+  signal with no agreement) understates communication's power.
+- 🟢 **Balliet (2010), "Communication and Cooperation in Social Dilemmas: A
+  Meta-Analysis", *J. Conflict Resolution* 54(1), 39–57.** →
+  [note](paper-notes/2010-balliet-communication-meta-analysis.md). Large effect of
+  communication on cooperation (*d* ≈ 1.01), strongest face-to-face. Measures
+  *cooperation*, never *resource survival* — so E6's fairness-vs-resource distinction
+  is a genuine contribution angle.
 - 🟡 **Oliehoek & Amato (2016), *A Concise Introduction to Decentralized POMDPs*.** →
   [note](paper-notes/2016-oliehoek-amato-dec-pomdps.md) *(intro + model/complexity
   chapters)*. Formal tuple for decentralized decisions under partial observability;
