@@ -10,9 +10,17 @@ carrying capacity, `g` = regeneration rate.
 
 ## Implemented (v0.1.0)
 
-### System performance — `total_harvest`, `mean_agent_payoff`
-- **Definition:** total resource harvested over the run; and its mean per agent.
-- **Formula:** `total_harvest = Σ_i P_i`; `mean_agent_payoff = (Σ_i P_i)/N`.
+### System performance — `total_harvest`, `mean_agent_payoff`, `total_sanction_penalty`
+- **Definition:** `total_harvest` is the **gross** resource extracted over the run;
+  `mean_agent_payoff` is the mean **net** payoff per agent (harvest minus sanction
+  penalties); `total_sanction_penalty` is the total monitoring cost paid (0 without
+  sanctioners).
+- **Formula:** `total_harvest = Σ_t H_t` (gross); `mean_agent_payoff = (Σ_i P_i)/N`
+  where `P_i` is agent `i`'s net payoff.
+- **Gross vs. net:** the two coincide unless a sanctioning agent is present; then
+  `total_harvest` (what left the pool) exceeds the summed net payoff (what agents
+  kept) by `total_sanction_penalty`. Fairness (`payoff_gini`) is computed on net
+  payoffs.
 - **Good for:** overall throughput / efficiency of the system.
 - **Limitations:** high short-term harvest can precede collapse — must be read
   together with sustainability. Not comparable across different `T` without

@@ -65,6 +65,30 @@ name a concrete construct in the code.
 - **Tragedy of the commons** — the outcome where individually rational
   over-consumption destroys a shared resource that restrained use would sustain.
 
+## Cooperation mechanisms
+
+- **Ecological knowledge** — an agent's (possibly wrong) estimate of the sustainable
+  yield. Distinct from *cooperation* (the willingness to restrain): sustainability
+  needs both. *(model term: `knowledge_bias` on the cooperative/sanctioning
+  strategies; see [research-questions.md](research-questions.md) H6.)*
+- **Cooperative restraint** — harvesting only the regeneration surplus above a healthy
+  reference stock (`K/2`), so the resource is maintained. *(model term:
+  `cooperative`.)*
+- **Reciprocity / conditional cooperation** — cooperate as long as others do; respond
+  to over-extraction by defecting (grabbing a selfish share). Protects the individual
+  from exploitation, but can accelerate collapse. *(model term:
+  `conditional_cooperator`.)*
+- **Sanctioning** — cooperating *and* enforcing a rule: over-extraction is confiscated
+  and the enforcer bears a monitoring cost. Here it caps every agent's harvest at a
+  sustainable quota. *(model term: `sanctioning`, via `SanctionPolicy` + the engine's
+  enforcement step.)*
+- **Monitoring / enforcement** — observing others' behaviour and applying a
+  consequence (here, capping extraction). Ostrom identifies monitoring and graduated
+  sanctions as conditions for enduring commons.
+- **Second-order free-rider problem** — because monitoring is costly, agents who
+  benefit from enforcement without paying to monitor out-earn those who do, so
+  monitoring is itself under-provided — a collective-action problem one level up.
+
 ## Evaluation concepts
 
 - **Cooperation rate** — the degree to which agents restrain consumption relative

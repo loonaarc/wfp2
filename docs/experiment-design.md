@@ -18,7 +18,9 @@ reproducible and comparable. It is the contract every experiment should follow.
 
 ### Independent variables (things we vary)
 - **Information model:** `global` | `private` *(local/aggregated/outdated planned)*.
-- **Strategy composition:** counts of `selfish`, `cooperative` *(more planned)*.
+- **Strategy composition:** counts of `selfish`, `cooperative`,
+  `conditional_cooperator`, `sanctioning`.
+- **Ecological knowledge:** `knowledge_bias` on the cooperative/sanctioning strategies.
 - **Group size (N):** total number of agents.
 - **Resource parameters:** `initial_level`, `capacity` (K), `regeneration_rate` (g),
   `regeneration_rule`, `collapse_threshold`.
@@ -49,6 +51,11 @@ The four shipped configs form the reference frame:
 
 Any new mechanism (a strategy, a communication model, a disturbance) is evaluated
 **against these baselines**, not in isolation.
+
+Systematic studies use the sweep runner (`experiments.sweep.run_grid`) to cover a
+grid of parameter values; worked examples are the three experiments E1–E3
+(`scripts/experiment_*.py`, written up in [experiments/](experiments/) and the
+[findings summary](findings-summary.md)).
 
 ## Seeds and repetitions
 

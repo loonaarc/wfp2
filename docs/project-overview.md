@@ -55,9 +55,11 @@ we get a reproducible testbed others can extend and compare against.
 
 ## Scope
 
-**Wahlfachprojekt 2:** the minimal engine, two strategies, two information
-conditions, seeds, metrics, and reproducible export — done (v0.1.0). Remaining
-first-scope work is analysis, sensitivity sweeps, and documentation depth.
+**Wahlfachprojekt 2:** the minimal engine, four strategies (selfish, cooperative,
+conditional/reciprocity, sanctioning), the information/knowledge conditions, seeds,
+metrics, reproducible export, and three documented experiments (E1–E3; see the
+[findings summary](findings-summary.md)) — largely done. Remaining first-scope work
+is sensitivity sweeps and stochastic strategies.
 
 **Bachelor's thesis (later):** communication models, disturbance scenarios, more
 strategies, statistical evaluation, scalability, and possibly one small original

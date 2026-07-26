@@ -35,18 +35,26 @@ emergent-coop strategies
 
 ```
 Available strategies:
+  - conditional_cooperator
   - cooperative
+  - sanctioning
   - selfish
 ```
 
 A **strategy** is an agent's decision rule — given what the agent sees, how much
-of the shared resource does it try to take this round? We ship two:
+of the shared resource does it try to take this round? There are four:
 
 - **`selfish`** — grab a large share of whatever is currently available.
 - **`cooperative`** — take only your fair share of what *regrew*, leaving the pool
   healthy.
+- **`conditional_cooperator`** — cooperate *until* others over-extract, then
+  retaliate (reciprocity).
+- **`sanctioning`** — cooperate *and* enforce a sustainable quota on everyone, at a
+  monitoring cost.
 
-That contrast is the heart of the project.
+The first two are the core contrast (and where this walkthrough focuses); the last
+two are studied in experiments E2 and E3 — see the
+[findings summary](findings-summary.md).
 
 ---
 
@@ -236,6 +244,9 @@ real part of the project's contribution, not bookkeeping
 
 You've seen the whole system. Good follow-ups, in order:
 
+0. **[findings-summary.md](findings-summary.md)** — the actual results (experiments
+   E1–E3) in one page, with the overview figure. Read this to see what the tool has
+   *found*, not just how it works.
 1. **[project-overview.md](project-overview.md)** — the problem in plain language,
    now that you've seen it in action.
 2. **[research-questions.md](research-questions.md)** — the backlog of questions we

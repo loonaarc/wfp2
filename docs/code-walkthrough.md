@@ -27,7 +27,7 @@ flowchart TB
     RUN -->|"once per seed"| SIM["core.simulation<br/>Simulation"]
     SIM --> ENV["environment.ResourcePool<br/>(the shared resource)"]
     SIM --> AG["agents.Agent<br/>(the deciders)"]
-    AG --> ST["strategies.Strategy<br/>(selfish / cooperative)"]
+    AG --> ST["strategies.Strategy<br/>(selfish / cooperative /<br/>conditional / sanctioning)"]
     SIM --> RNG["core.rng<br/>(reproducible randomness)"]
     SIM --> RES["core.state.RunResult<br/>(what happened)"]
     RES --> MET["metrics.compute_metrics<br/>(measure it)"]
@@ -58,9 +58,11 @@ src/emergent_cooperation/
 │   ├── observation.py   What an agent is allowed to see (the info boundary)
 │   └── agent.py         An agent: identity + payoff, delegates decisions
 ├── strategies/
-│   ├── base.py          The Strategy interface (what every rule must implement)
+│   ├── base.py          The Strategy interface (+ SanctionPolicy for enforcement)
 │   ├── selfish.py       Grab a big share now
-│   ├── cooperative.py   Take only the sustainable surplus
+│   ├── cooperative.py   Take only the sustainable surplus (+ knowledge_bias)
+│   ├── conditional.py   Reciprocity: cooperate until others over-extract, then retaliate
+│   ├── sanctioning.py   Cooperate AND enforce a sustainable harvest quota
 │   └── registry.py      Name → strategy class lookup (the extension point)
 ├── metrics/
 │   └── metrics.py       Turn a result into numbers (harvest, collapse, fairness)
@@ -182,7 +184,7 @@ else's "randomness" shifts. Independent streams (via NumPy's `SeedSequence.spawn
 give each agent its own stable sequence, so results stay reproducible even if you
 change the number or order of agents.
 
-> Our two baseline strategies happen to be deterministic (they don't draw random
+> Our current strategies happen to be deterministic (they don't draw random
 > numbers), but the machinery is there so future strategies can be random *without*
 > breaking reproducibility.
 
@@ -264,10 +266,11 @@ follow (an *abstract base class*): implement `decide(observation, rng) -> float`
 
 ```mermaid
 flowchart TB
-    S["Strategy (abstract)<br/>decide(obs, rng) → float"] --> Se["SelfishStrategy"]
+    S["Strategy (abstract)<br/>decide(obs, rng) → float<br/>sanction_policy() → SanctionPolicy | None"] --> Se["SelfishStrategy"]
     S --> Co["CooperativeStrategy"]
-    R["registry: name → class"] -.builds.-> Se
-    R -.builds.-> Co
+    S --> Cc["ConditionalCooperatorStrategy"]
+    S --> Sa["SanctioningStrategy"]
+    R["registry: name → class"] -.builds.-> Se & Co & Cc & Sa
 ```
 
 **Selfish** (`selfish.py`) — grab an equal share of the *visible* stock, scaled by
@@ -302,14 +305,31 @@ def decide(self, observation, rng):
 This rule is **self-correcting**: if the stock is at or below the target, `surplus`
 is 0 and the agent takes nothing, letting the pool recover. (The blind `private`
 branch can't do this — it takes a fixed amount regardless — which is exactly why
-blind cooperation is fragile; you saw this in the walkthrough.)
+blind cooperation is fragile; you saw this in the walkthrough.) A `knowledge_bias`
+parameter scales that blind estimate: `> 1` makes the agent overconfident (it
+over-extracts and collapses the pool), separating cooperative *intent* from
+sustainable *outcome* (see experiment E1 and ADR-0004).
+
+**Conditional cooperator** (`conditional.py`) — *reciprocity*. It cooperates like the
+cooperative rule, but watches the stock: if the observed stock *fell* since last
+round (someone over-extracted), it retaliates by grabbing a selfish share. It is
+**stateful** (remembers the previous stock). All-conditional populations cooperate
+happily; a single free-rider triggers retaliation that protects the agents' payoffs
+but collapses the resource (experiment E2).
+
+**Sanctioning** (`sanctioning.py`) — cooperate *and* enforce. It harvests sustainably
+like a cooperator, but also exposes a `SanctionPolicy` (`sanction_policy()`), which
+makes the engine cap *every* agent's harvest at a sustainable quota and charge the
+sanctioner a monitoring cost. Because it limits defectors' *extraction* (not just
+their payoff), it protects the resource even against fixed selfish agents — the only
+mechanism that protects both resource and fairness (experiment E3).
 
 **The registry** (`registry.py`) maps a name string to a strategy class, so a config
 can say `strategy: cooperative` and the code can build it:
 
 ```python
 make_strategy("cooperative", {"capacity": 100.0})   # → CooperativeStrategy(capacity=100.0)
-available_strategies()                               # → ["cooperative", "selfish"]
+available_strategies()  # → ["conditional_cooperator", "cooperative", "sanctioning", "selfish"]
 ```
 
 **To add a new strategy** you subclass `Strategy`, set its `name`, and call
@@ -346,6 +366,7 @@ sequenceDiagram
         A-->>Sim: request
     end
     Sim->>Sim: allocate() — scale down if Σrequests > stock
+    Sim->>Sim: enforce() — if any sanctioner, cap each harvest at the quota
     Sim->>A: record_harvest(share)  (updates payoff)
     Sim->>Pool: withdraw(total harvested)
     Note over Sim: resource_after_harvest = pool.level<br/>collapsed = pool.is_collapsed
@@ -366,6 +387,12 @@ else:
     harvests = [r * scale for r in requests]
 ```
 
+The **enforcement** step (`_enforce`) runs next. If any agent exposes a
+`SanctionPolicy`, every agent's harvest is capped at the per-capita quota
+(`min(quota_total) / N`), the confiscated excess stays in the pool (protecting the
+resource), and each sanctioner forfeits its monitoring cost. With no sanctioner
+present it is a no-op, so ordinary runs are unchanged (ADR-0005).
+
 `run()` just calls `step()` for every round and collects the records into a
 `RunResult`. Because the pool, the agents, and the RNG are all determined by
 `(config, seed)`, **the same inputs always produce the exact same run** — verified by
@@ -379,11 +406,12 @@ The engine emits **plain data** (no behaviour), so metrics and analysis don't de
 on engine internals:
 
 - **`RoundRecord`** — one per round: `resource_start`, `resource_after_regen`, the
-  per-agent `requested` and `harvested` amounts, `resource_after_harvest`, and
-  `collapsed`. It has small computed helpers like `total_harvested`.
+  per-agent `requested` and `harvested` amounts, `resource_after_harvest`,
+  `collapsed`, and `penalties` (per-agent monitoring cost paid to sanctioning, 0 for
+  everyone else). Computed helpers: `total_harvested`, `total_penalty`.
 - **`RunResult`** — the whole run: the seed, each agent's strategy name, and the list
-  of `RoundRecord`s. Helpers: `final_resource_level`, and `total_payoffs()` (sums
-  each agent's harvest across all rounds).
+  of `RoundRecord`s. Helpers: `final_resource_level`, and `total_payoffs()` (each
+  agent's harvest across all rounds, **net of sanction penalties**).
 
 Think of a `RunResult` as the raw trajectory; the CSV `round_history.csv` you opened
 in the walkthrough is basically this flattened into a table.
@@ -397,10 +425,15 @@ one flat dictionary (one row of `metrics.csv`):
 
 | metric | meaning |
 | ------ | ------- |
-| `total_harvest`, `mean_agent_payoff` | system performance (throughput) |
+| `total_harvest` (gross), `mean_agent_payoff` (net), `efficiency` | system performance |
+| `total_sanction_penalty` | total monitoring cost paid (0 without sanctioners) |
 | `final_resource_level`, `sustainability_ratio`, `mean_resource_level` | sustainability |
-| `collapsed`, `collapse_round` | did it fail, and when |
-| `payoff_gini` | fairness / inequality of earnings |
+| `collapsed`, `collapse_round`, `survival_time`, `over_usage_rate` | failure / over-use |
+| `payoff_gini` | fairness / inequality of (net) earnings |
+
+Note the gross-vs-net distinction: `total_harvest` is the resource actually
+extracted, while payoff and `payoff_gini` are *net* of monitoring costs — the two
+differ only when sanctioners are present.
 
 The `gini` helper deserves a note — it measures inequality from 0 (everyone equal) up
 toward 1 (one agent takes everything):

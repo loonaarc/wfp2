@@ -29,9 +29,11 @@ src/emergent_cooperation/
 │   ├── observation.py  Observation (the information boundary)
 │   └── agent.py        Agent (identity + payoff state; delegates to a Strategy)
 ├── strategies/
-│   ├── base.py         Strategy (ABC)
+│   ├── base.py         Strategy (ABC) + SanctionPolicy
 │   ├── selfish.py      SelfishStrategy
-│   ├── cooperative.py  CooperativeStrategy
+│   ├── cooperative.py  CooperativeStrategy (+ knowledge_bias)
+│   ├── conditional.py  ConditionalCooperatorStrategy (reciprocity)
+│   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
 │   └── registry.py     name → class registry (extension point)
 ├── communication/      CommunicationModel protocol (stubbed; Phase 2)
 ├── disturbances/       Disturbance protocol (stubbed; Phase 3)
@@ -39,6 +41,7 @@ src/emergent_cooperation/
 │   └── metrics.py      compute_metrics, gini
 ├── experiments/
 │   ├── runner.py       run_experiment, export_outcome, history_frame
+│   ├── sweep.py        run_grid, with_resource (parameter sweeps)
 │   └── provenance.py   Provenance (reproducibility metadata)
 └── cli/
     └── main.py         emergent-coop entry point
@@ -70,12 +73,18 @@ about the world. Under `private` information the shared `resource_level` is set 
 ### `agents.Agent` and `strategies.Strategy`
 `Agent` owns identity and mutable per-run state (payoff, last harvest) and
 delegates decisions to a `Strategy`. `Strategy.decide(observation, rng) -> float`
-must be pure w.r.t. hidden state: any randomness comes from the passed `rng`.
-New decision rules are added by subclassing `Strategy` and registering the class.
+must be pure w.r.t. hidden state: any randomness comes from the passed `rng`
+(strategies *may* hold per-run state, e.g. the conditional cooperator's memory of
+the last stock — that is reset per run). A strategy may also expose
+`sanction_policy() -> SanctionPolicy | None`; a non-`None` policy makes the engine
+enforce a harvest quota (ADR-0005). New decision rules are added by subclassing
+`Strategy` and registering the class.
 
 ### `core.Simulation` (the engine)
 Owns one run. Builds the pool and agents from the config, spawns one RNG stream
-per agent, and advances rounds. **Round order:** `regenerate → observe → harvest`.
+per agent, and advances rounds. **Round order:** `regenerate → observe → decide →
+ration → enforce → harvest`; the `enforce` step is a no-op unless a sanctioning
+agent is present.
 
 ### `metrics`
 Pure functions from a `RunResult` to a flat metric dict. No dependency on the
@@ -147,15 +156,19 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 | To add… | Do this |
 | ------- | ------- |
 | a strategy | subclass `Strategy`, set `name`, `register_strategy(...)` |
+| an enforcement/institutional rule | expose a `SanctionPolicy` via `sanction_policy()` |
 | a regeneration rule | extend `ResourcePool.regenerate` + `ResourceConfig` validation |
 | a metric | add a key in `compute_metrics` (or a new pure function in `metrics`) |
 | an information model | extend `Observation` + `Simulation._observe` |
+| a parameter sweep / study | use `experiments.sweep.run_grid` |
 | communication | implement `CommunicationModel`; add an exchange step in `step` |
 | a disturbance | implement `Disturbance`; invoke at a round boundary in `step` |
 
 ## Known simplifications (current)
 
 - Single scalar resource; no spatial structure.
-- Utility = cumulative harvest (linear; no diminishing returns or discounting).
+- Utility = cumulative harvest (linear; no diminishing returns or discounting), net
+  of sanction penalties.
+- Enforcement is frictionless and "any one monitor enforces fully" (see ADR-0005).
 - Communication and disturbances are interfaces only, not yet implemented.
-- Metrics are basic; richer cooperation/resilience measures are future work.
+- Strategies are deterministic so far; between-seed variance is currently zero.

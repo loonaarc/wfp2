@@ -50,11 +50,16 @@ resilience** (see [metrics.md](metrics.md)).
 Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
 `global`/`private` information; seeds; metrics; reproducible export; CLI; tests.
 
-### Phase 1 — First-scope completion (Wahlfachprojekt 2)
-- Sensitivity/robustness sweeps (seeds, group size, regeneration rate, initial stock).
-- A third strategy: `conditional-cooperator` (reciprocity).
-- Analysis notebook and baseline comparison plots.
-- Deepen documentation (this set) and add ADRs as decisions are made.
+### Phase 1 — First-scope completion (Wahlfachprojekt 2) — largely done
+- ✅ Split cooperation from ecological knowledge (`knowledge_bias`; ADR-0004) after a
+  literature review (Schill et al.).
+- ✅ Two more strategies: `conditional_cooperator` (reciprocity) and `sanctioning`
+  (enforcement; ADR-0005).
+- ✅ Parameter-sweep tooling (`experiments.sweep`) and three documented experiments
+  (E1–E3) with figures — see [findings-summary.md](findings-summary.md).
+- ✅ Deepened documentation and ADRs 0001–0005.
+- ⏳ Remaining: sensitivity sweeps over group size / regeneration rate; stochastic
+  strategies (so between-seed variance becomes meaningful).
 
 ### Phase 2 — Communication (thesis)
 Implement the `CommunicationModel` interface (already stubbed): start with
