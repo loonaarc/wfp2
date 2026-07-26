@@ -136,7 +136,9 @@ is assigned, payoffs update. Full detail in [docs/architecture.md](docs/architec
 
 ## Results so far
 
-Two reproducible experiments are documented in [docs/experiments/](docs/experiments/):
+**➜ Read the [findings summary](docs/findings-summary.md)** — the whole story
+(E1–E3) in one page, with the combined overview figure. The individual reports live
+in [docs/experiments/](docs/experiments/):
 
 - **[E1 — information & knowledge](docs/experiments/E1-information-and-knowledge.md):**
   cooperation sustains the resource *only* when agents have information (can observe

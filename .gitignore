@@ -36,3 +36,5 @@ results/**
 Thumbs.db
 .vscode/
 .idea/
+!results/synthesis/
+!results/synthesis/**
