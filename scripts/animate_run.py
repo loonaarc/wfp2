@@ -65,20 +65,22 @@ def _pool_color(ratio: float):
     return (1.0 - ratio, 0.35 + 0.45 * ratio, 0.25)
 
 
-def animate(agents: list[AgentSpec], label: str, path: Path) -> None:
-    """Render one run as an animated GIF."""
-    result = _run(agents)
+def make_animation(result: RunResult, label: str, capacity: float = CAPACITY):
+    """Build a ``(fig, FuncAnimation)`` of a run: a central pool with agents in a ring.
+
+    Reusable by both the GIF exporter here and the interactive notebook (via
+    ``anim.to_jshtml()``). The cumulative payoff is recomputed from scratch each frame,
+    so re-rendering (as ``to_jshtml`` does) stays correct.
+    """
     n = result.num_agents
     strategies = result.agent_strategies
+    total = len(result.rounds)
+    harvested = np.array([r.harvested for r in result.rounds])  # (rounds, agents)
     angles = np.linspace(0, 2 * np.pi, n, endpoint=False) + np.pi / 2
-    ax_x, ax_y = np.cos(angles), np.sin(angles)  # agent positions on a unit ring
-    cum = np.zeros(n)
+    ax_x, ax_y = np.cos(angles), np.sin(angles)  # agent positions on a unit ring (decorative)
+    colors = [STRATEGY_COLORS.get(s, "grey") for s in strategies]
 
     fig, ax = plt.subplots(figsize=(6, 6))
-    ax.set_xlim(-1.4, 1.4)
-    ax.set_ylim(-1.4, 1.4)
-    ax.set_aspect("equal")
-    ax.axis("off")
 
     def draw(t: int):
         ax.clear()
@@ -89,49 +91,37 @@ def animate(agents: list[AgentSpec], label: str, path: Path) -> None:
 
         rec = result.rounds[t]
         stock = rec.resource_after_harvest
-        ratio = stock / CAPACITY
+        ratio = stock / capacity
         # Central pool: area tracks the stock.
         pool_r = 0.15 + 0.45 * np.sqrt(max(ratio, 0.0))
         ax.add_patch(plt.Circle((0, 0), pool_r, color=_pool_color(ratio), zorder=1))
-        ax.text(
-            0,
-            0,
-            f"{stock:.0f}",
-            ha="center",
-            va="center",
-            color="white",
-            fontweight="bold",
-            zorder=3,
-        )
+        ax.text(0, 0, f"{stock:.0f}", ha="center", va="center", color="white",
+                fontweight="bold", zorder=3)
 
-        # Harvest lines (agent -> pool), width/alpha tracks this round's harvest.
+        # Harvest lines (agent -> pool); width/alpha tracks this round's harvest.
         max_h = max(rec.harvested) if any(rec.harvested) else 1.0
         for i in range(n):
             h = rec.harvested[i]
             if h > 1e-6:
-                ax.plot(
-                    [ax_x[i], 0],
-                    [ax_y[i], 0],
-                    color="grey",
-                    lw=0.5 + 4 * h / max_h,
-                    alpha=0.2 + 0.6 * h / max_h,
-                    zorder=2,
-                )
+                ax.plot([ax_x[i], 0], [ax_y[i], 0], color="grey",
+                        lw=0.5 + 4 * h / max_h, alpha=0.2 + 0.6 * h / max_h, zorder=2)
 
-        # Agents: colour by strategy, size grows with cumulative payoff.
-        for i in range(n):
-            cum[i] += rec.harvested[i]
-        sizes = 120 + 12 * cum
-        colors = [STRATEGY_COLORS.get(s, "grey") for s in strategies]
+        # Agents: colour by strategy, size grows with cumulative payoff so far.
+        sizes = 120 + 12 * harvested[: t + 1].sum(axis=0)
         ax.scatter(ax_x, ax_y, s=sizes, c=colors, edgecolors="white", linewidths=1.2, zorder=4)
 
         status = "COLLAPSED" if rec.collapsed else "alive"
         ax.set_title(
-            f"{label}\nround {t + 1}/{ROUNDS}   stock={stock:.0f}/{CAPACITY:.0f}   {status}",
+            f"{label}\nround {t + 1}/{total}   stock={stock:.0f}/{capacity:.0f}   {status}",
             fontsize=11,
         )
 
-    anim = FuncAnimation(fig, draw, frames=len(result.rounds), interval=250)
+    return fig, FuncAnimation(fig, draw, frames=total, interval=250)
+
+
+def animate(agents: list[AgentSpec], label: str, path: Path) -> None:
+    """Render one run to an animated GIF file."""
+    fig, anim = make_animation(_run(agents), label)
     anim.save(path, writer=PillowWriter(fps=4))
     plt.close(fig)
     print(f"Wrote {path}")
