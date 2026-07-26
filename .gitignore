@@ -30,6 +30,8 @@ results/**
 !results/E2_reciprocity/**
 !results/E3_sanctioning/
 !results/E3_sanctioning/**
+!results/trajectories/
+!results/trajectories/**
 
 # OS / editor
 .DS_Store

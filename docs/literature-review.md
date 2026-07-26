@@ -86,11 +86,13 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   https://doi.org/10.1126/science.162.3859.1243 — foundational framing; our
   `all_selfish_global` baseline instantiates it. (Read critically: later work shows
   the "tragedy" is not inevitable.)
-- 🔴 **Ostrom (1990), *Governing the Commons*, Cambridge University Press (280 pp).**
-  Communities *do* self-organize to sustain commons; her **eight design principles**
-  (boundaries, congruence, collective choice, monitoring, graduated sanctions,
-  conflict resolution, recognition of rights, nested enterprises) motivate our
-  communication and sanctioning extensions.
+- 🟡 **Ostrom (1990), *Governing the Commons*, Cambridge University Press (280 pp).**
+  → [scaffold note](paper-notes/1990-ostrom-governing-the-commons.md) *(citation +
+  eight design principles verified; full read pending — a book)*. Communities *do*
+  self-organize to sustain commons; her **eight design principles** (boundaries,
+  congruence, collective choice, monitoring, graduated sanctions, conflict
+  resolution, recognition of rights, nested enterprises) directly underpin our
+  sanctioning experiment (E3) and the communication phase.
 - 🟢 **Schill, Wijermans, Schlüter & Lindahl (2016), "Cooperation Is Not Enough…",
   *PLOS ONE* 11(8), e0157796.** → [note](paper-notes/2016-schill-cooperation-not-enough.md).
   *The most direction-relevant paper we've read* (see Implications above).
@@ -106,6 +108,15 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   1560–1563.** https://doi.org/10.1126/science.1133755 — taxonomy of five mechanisms
   (kin selection, direct/indirect reciprocity, network reciprocity, group selection);
   a menu of mechanisms we could implement and compare.
+- 🟡 **Fehr & Gächter (2002), "Altruistic Punishment in Humans", *Nature* 415,
+  137–140.** → [note](paper-notes/2002-fehr-gaechter-altruistic-punishment.md).
+  Costly punishment sustains cooperation; without it, cooperation breaks down — the
+  empirical backbone for our sanctioning experiment (E3).
+- 🟡 **Hauert, Traulsen, Brandt, Nowak & Sigmund (2007), "Via Freedom to Coercion",
+  *Science* 316, 1905–1907.** →
+  [note](paper-notes/2007-hauert-via-freedom-to-coercion.md). Optional participation
+  rescues costly punishment from the **second-order free-rider** problem — the
+  theoretical answer to the open question E3 raises (voluntary monitoring).
 
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 

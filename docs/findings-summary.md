@@ -25,6 +25,12 @@ Ostrom, Schill et al.).
 
 ![Overview](../results/synthesis/overview.png)
 
+The same story as *dynamics over time* — the resource stock and harvest round by
+round (`scripts/plot_trajectory.py`): selfish crash the pool in one round, reciprocity
+ratchets to collapse in a few, cooperation and sanctioning hold a steady sawtooth.
+
+![Trajectories](../results/trajectories/figure.png)
+
 ---
 
 ## Research question
