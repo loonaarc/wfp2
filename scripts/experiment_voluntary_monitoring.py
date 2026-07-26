@@ -66,7 +66,7 @@ def _largest_remainder(shares: dict[str, float], total: int) -> dict[str, int]:
 
 
 def _measure(counts: dict[str, int]) -> tuple[dict[str, float], float]:
-    """Run one simulation at the given composition; return per-strategy payoff and sustainability."""
+    """Run one simulation at ``counts``; return per-strategy payoff and sustainability."""
     agents = [AgentSpec(s, c, PARAMS[s]) for s, c in counts.items() if c > 0]
     cfg = SimulationConfig(
         name="E5",
