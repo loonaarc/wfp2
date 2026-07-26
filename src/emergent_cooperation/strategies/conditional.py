@@ -73,13 +73,26 @@ class ConditionalCooperatorStrategy(Strategy):
         self._last_level: float | None = None
 
     def decide(self, observation: Observation, rng: np.random.Generator) -> float:
-        """Cooperate unless the monitored stock declined; then reciprocate."""
+        """Cooperate unless over-extraction is detected; then reciprocate.
+
+        Over-extraction is detected from the *observed stock* (global information) or,
+        when blind, from a *communicated signal* of the group's total harvest if one
+        was received this round (broadcast communication, ADR-0007). With neither, the
+        agent cannot monitor and simply restrains like a cooperator.
+        """
         n = max(1, observation.num_agents)
         g, k = self.regeneration_rate, self.capacity
+        sustainable_total = g * k / 4.0  # MSY
 
         if observation.resource_level is None:
-            # Cannot monitor the group when blind: restrain like a cooperator.
-            return self.restraint * self.knowledge_bias * (g * k / 4.0) / n
+            # Blind: use the communicated signal to monitor the group, if available.
+            if observation.signal is not None:
+                if observation.signal > sustainable_total + self.sensitivity:
+                    # Communicated over-extraction: reciprocate with a selfish share.
+                    return self.defection_greed * k / n
+                return self.restraint * self.knowledge_bias * sustainable_total / n
+            # No stock, no message: restrain like a cooperator.
+            return self.restraint * self.knowledge_bias * sustainable_total / n
 
         level = observation.resource_level
         declined = self._last_level is not None and level < self._last_level - self.sensitivity

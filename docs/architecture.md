@@ -68,7 +68,11 @@ harvest is split among agents — that needs per-agent info it has no reason to 
 ### `agents.Observation`
 The **information boundary**: the only channel through which a strategy learns
 about the world. Under `private` information the shared `resource_level` is set to
-`None`, which is what makes information models meaningful and testable.
+`None`, which is what makes information models meaningful and testable. It also
+carries an optional `signal` — a communicated aggregate (the group's total harvest
+last round) delivered by the broadcast communication channel when
+`broadcast_reliability > 0` (ADR-0007); this is how communication can supply
+information the direct observation withholds.
 
 ### `agents.Agent` and `strategies.Strategy`
 `Agent` owns identity and mutable per-run state (payoff, last harvest) and
@@ -170,5 +174,8 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 - Utility = cumulative harvest (linear; no diminishing returns or discounting), net
   of sanction penalties.
 - Enforcement is frictionless and "any one monitor enforces fully" (see ADR-0005).
-- Communication and disturbances are interfaces only, not yet implemented.
-- Strategies are deterministic so far; between-seed variance is currently zero.
+- Communication is a single true aggregate broadcast (no per-agent messages,
+  deception, delay, or topology yet — ADR-0007); the full `CommunicationModel`
+  protocol remains stubbed. Disturbances are still interface-only.
+- Stochasticity is available (`decision_noise`, broadcast message loss), but the
+  strategies themselves are deterministic; a stochastic *strategy* is future work.

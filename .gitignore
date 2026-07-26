@@ -36,6 +36,8 @@ results/**
 !results/E4_robustness/**
 !results/E5_voluntary_monitoring/
 !results/E5_voluntary_monitoring/**
+!results/E6_communication/
+!results/E6_communication/**
 
 # OS / editor
 .DS_Store

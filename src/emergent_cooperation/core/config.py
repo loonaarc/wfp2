@@ -79,6 +79,10 @@ class SimulationConfig:
             ``d`` perturbs each request by a factor drawn uniformly from
             ``[1 - d, 1 + d]`` using the agent's own RNG. This is what makes the
             random seed consequential and between-seed variance meaningful.
+        broadcast_reliability: Communication channel in ``[0, 1]``. ``0`` = no
+            communication (default). ``p`` = each agent receives a broadcast of the
+            group's total harvest last round with probability ``p`` (drawn from its
+            own RNG), delivered via ``Observation.signal`` (see ADR-0007).
         resource: Resource parameters.
         agents: Ordered agent-group specifications.
     """
@@ -88,6 +92,7 @@ class SimulationConfig:
     seed: int = 0
     information_model: str = "global"
     decision_noise: float = 0.0
+    broadcast_reliability: float = 0.0
     resource: ResourceConfig = field(default_factory=ResourceConfig)
     agents: tuple[AgentSpec, ...] = field(default_factory=tuple)
 
@@ -101,6 +106,8 @@ class SimulationConfig:
             )
         if not 0 <= self.decision_noise < 1:
             raise ValueError("decision_noise must be in [0, 1)")
+        if not 0 <= self.broadcast_reliability <= 1:
+            raise ValueError("broadcast_reliability must be in [0, 1]")
 
     @property
     def num_agents(self) -> int:

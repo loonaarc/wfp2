@@ -101,6 +101,7 @@ def _config_to_dict(config: ExperimentConfig) -> dict:
         "rounds": sim.rounds,
         "information_model": sim.information_model,
         "decision_noise": sim.decision_noise,
+        "broadcast_reliability": sim.broadcast_reliability,
         "seeds": list(config.seeds),
         "record_history": config.record_history,
         "resource": {

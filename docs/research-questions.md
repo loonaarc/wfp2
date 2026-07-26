@@ -59,11 +59,18 @@ current front-runner for the project's specific focus — not yet locked.
   motivating sanctioning. Caveat: depends on retaliation severity (`defection_greed`).
 
 ### Communication (RQ-A)
-- **SQ-6** 🔵 Does broadcasting intended consumption before acting reduce collapse
-  probability in mixed populations, compared to no communication?
-- **SQ-7** 🔵 At what message-loss rate or delay does communication stop helping?
-- **SQ-8** 🔵 Is there a communication regime where *more* messaging worsens
-  outcomes (e.g. agents over-reacting to noisy signals)?
+- **SQ-6** 🟢 Does broadcasting reduce exploitation / improve outcomes in mixed
+  populations vs. no communication? **→ Answered (E6): partly.** Under private info a
+  broadcast of group extraction lets conditional cooperators detect free-riders,
+  cutting payoff inequality from 0.52 toward the global value — but it does **not**
+  save the resource (the response is retaliatory).
+- **SQ-7** 🟢 At what message-loss rate does communication stop helping? **→ Answered
+  (E6): graded, not a threshold** — the fairness benefit falls smoothly as reliability
+  drops from 1.0 to 0.0.
+- **SQ-8** 🟢 Is there a regime where communication fails to help / harms? **→ Answered
+  (E6): yes** — communication improves *fairness* but is neutral-to-harmful for the
+  *resource*; its value depends on the response rule, not communication itself. A
+  restraint-based responder is the open follow-up.
 
 ### Resilience (RQ-C)
 - **SQ-9** 🔵 After a sudden resource shock (e.g. −50% stock), how long do

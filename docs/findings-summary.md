@@ -130,6 +130,32 @@ Reading the ladder: each mechanism fixes the previous one's failure but reveals 
 problem, ending at the classic result that *enforced, monitored rules* sustain a
 commons — while raising the question of how monitoring itself is sustained.
 
+## Extensions (E4–E6)
+
+Beyond the core mechanism story, three further experiments probe robustness and the
+two remaining axes:
+
+- **[E4 — robustness & sensitivity](experiments/E4-robustness-and-sensitivity.md):**
+  with a `decision_noise` knob added, the E1–E3 conclusions are **robust** (between-seed
+  s.d. ≤ 0.008); higher regeneration rate `g` lets the resource tolerate more
+  free-riders; outcomes depend on the selfish *fraction*, not group size `N`
+  (scale-invariant). *(Answers SQ-11, SQ-12.)*
+- **[E5 — voluntary monitoring](experiments/E5-voluntary-monitoring.md):** if
+  monitoring is a *choice* (replicator dynamics, ADR-0006), it is **not evolutionarily
+  stable** — monitors erode via the second-order free-rider problem, and once they
+  vanish the commons collapses (a two-stage collapse). Reproduces the Hauert et al.
+  (2007) puzzle.
+- **[E6 — communication](experiments/E6-communication.md):** a broadcast channel
+  (ADR-0007) lets blind (private-info) conditional cooperators detect free-riders —
+  **communication substitutes for observation**, cutting inequality toward the global
+  value — but it does **not** save the resource, because the *response* (retaliation)
+  is destructive. Communication's value depends on what agents do with it.
+  *(Answers SQ-6, SQ-7, SQ-8.)*
+
+The throughline: cooperation needs *information* (E1, E6) and its outcome is decided by
+the *mechanism/response* (E2, E3, E6); enforcement fixes the commons but is itself
+fragile (E5); and the qualitative results are robust (E4).
+
 ## Relation to the literature
 
 - **Hardin (1968):** the all-selfish collapse is the tragedy of the commons.

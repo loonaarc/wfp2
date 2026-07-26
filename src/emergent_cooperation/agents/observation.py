@@ -25,6 +25,10 @@ class Observation:
         own_last_harvest: This agent's realised harvest in the previous round
             (0.0 in the first round).
         own_total_payoff: This agent's accumulated harvest so far.
+        signal: A communicated aggregate (the group's total harvest last round), or
+            ``None`` if no message was received / communication is off. This is the
+            channel through which communication supplies information the direct
+            observation may withhold (see ADR-0007).
     """
 
     round_index: int
@@ -33,3 +37,4 @@ class Observation:
     resource_level: float | None
     own_last_harvest: float
     own_total_payoff: float
+    signal: float | None = None

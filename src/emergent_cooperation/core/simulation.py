@@ -16,6 +16,8 @@ run is a pure function of ``(config, seed)``.
 
 from __future__ import annotations
 
+import numpy as np
+
 from ..agents.agent import Agent
 from ..agents.observation import Observation
 from ..environment.resource import ResourcePool
@@ -42,6 +44,8 @@ class Simulation:
         self.agents = self._build_agents(config)
         # One independent, reproducible RNG stream per agent.
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
+        # The group's total harvest last round (for the broadcast signal).
+        self._last_total_harvest: float = 0.0
 
     @staticmethod
     def _build_agents(config: SimulationConfig) -> list[Agent]:
@@ -59,9 +63,17 @@ class Simulation:
                 )
         return agents
 
-    def _observe(self, agent: Agent, round_index: int) -> Observation:
-        """Construct an agent's observation for the given round."""
+    def _observe(self, agent: Agent, round_index: int, rng: np.random.Generator) -> Observation:
+        """Construct an agent's observation for the given round.
+
+        Includes the communicated ``signal`` (the group's total harvest last round)
+        when broadcasting is on and this agent receives the message this round.
+        """
         share_level = self.config.information_model == "global"
+        signal = None
+        p = self.config.broadcast_reliability
+        if p > 0.0 and round_index > 0 and rng.random() < p:
+            signal = self._last_total_harvest
         return Observation(
             round_index=round_index,
             num_agents=len(self.agents),
@@ -69,6 +81,7 @@ class Simulation:
             resource_level=self.pool.level if share_level else None,
             own_last_harvest=agent.last_harvest,
             own_total_payoff=agent.total_payoff,
+            signal=signal,
         )
 
     def _allocate(self, requests: list[float]) -> tuple[list[float], float]:
@@ -137,7 +150,9 @@ class Simulation:
         resource_after_regen = self.pool.level
 
         requests = [
-            agent.decide(self._observe(agent, round_index), self._agent_rngs[i])
+            agent.decide(
+                self._observe(agent, round_index, self._agent_rngs[i]), self._agent_rngs[i]
+            )
             for i, agent in enumerate(self.agents)
         ]
         harvests, total_harvested = self._allocate(requests)
@@ -146,6 +161,7 @@ class Simulation:
         for agent, amount in zip(self.agents, harvests, strict=True):
             agent.record_harvest(amount)
         self.pool.withdraw(total_harvested)
+        self._last_total_harvest = total_harvested
         resource_after_harvest = self.pool.level
 
         return RoundRecord(

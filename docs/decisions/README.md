@@ -17,3 +17,4 @@ proposed decision and its trade-offs.
 | [0004](0004-separate-cooperation-from-knowledge.md) | Separate cooperation (social preference) from ecological knowledge | Accepted |
 | [0005](0005-enforcement-phase-for-sanctioning.md) | An enforcement phase in the engine for sanctioning | Accepted |
 | [0006](0006-evolutionary-dynamics-at-experiment-level.md) | Model strategy adaptation as replicator dynamics at the experiment level | Accepted |
+| [0007](0007-broadcast-communication-signal.md) | A minimal broadcast communication signal via the observation | Accepted |

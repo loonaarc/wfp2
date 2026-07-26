@@ -16,3 +16,4 @@ Naming: `E<n>-<short-topic>.md`.
 | [E3 — sanctioning](E3-sanctioning.md) | Can enforcement protect the resource *and* fairness where reciprocity cannot? | Yes — sanctioning protects **both**, but monitors pay a cost (second-order free-rider) |
 | [E4 — robustness & sensitivity](E4-robustness-and-sensitivity.md) | Are the results robust to noise, and how sensitive to `g` and `N`? (SQ-11, SQ-12) | Robust to noise; higher `g` tolerates more free-riders; ~scale-invariant in `N` |
 | [E5 — voluntary monitoring](E5-voluntary-monitoring.md) | If monitoring is a choice, does it (and the commons) survive selection? | No — monitors erode (second-order free-rider), then the commons collapses |
+| [E6 — communication](E6-communication.md) | Can a broadcast substitute for missing information under private info? (SQ-6/7/8) | Yes for **fairness** (substitutes for observation) — but the resource still collapses; value depends on the *response* |
