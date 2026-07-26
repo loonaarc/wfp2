@@ -14,6 +14,10 @@ application area (traffic, energy, epidemics, etc.).
 > **New here? Start with the hands-on walkthrough:
 > [docs/getting-started.md](docs/getting-started.md)** — run it, change one setting,
 > and watch cooperation succeed or collapse (~20 min).
+>
+> **Just want to play?** Open [`web/commons-demo.html`](web/commons-demo.html) in any
+> browser (no install) — an interactive, animated simulator (a validated JS port of
+> the engine).
 
 ## Status
 
@@ -139,7 +143,8 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ├── scripts/                  Convenience scripts (not the reproducible pipeline)
 ├── notebooks/                Analysis notebooks (analysis only, not app logic)
 ├── results/                  Experiment outputs (bulk data git-ignored)
-└── references/               Bibliography material
+├── references/               Bibliography material (+ git-ignored papers/)
+└── web/                      Standalone interactive browser demo (validated JS port)
 ```
 
 ## Results so far
