@@ -7,10 +7,11 @@ full analysed note in [paper-notes/](paper-notes/); this file is the map and the
 Read status: 🔴 not read · 🟡 skimmed · 🟢 analysed note exists in `paper-notes/` ·
 ⚪ reference only (not a reading lead).
 
-> **Status (2026-07):** most core sources have now been read from the primary PDFs
+> **Status (2026-07):** all core sources have now been read from the primary PDFs
 > (obtained via library access, in `references/papers/`, git-ignored) and have full
-> analysed notes. Remaining 🟡: Oliehoek & Amato (intro chapters only — a textbook).
-> Citations verified from the PDFs. A few thematic leads (below) remain 🔴 as
+> analysed notes (🟢). The one textbook, Oliehoek & Amato, is analysed for the
+> framework/model/complexity chapters we use; its solver chapters (4–8) are out of
+> scope. Citations verified from the PDFs. A few thematic leads (below) remain 🔴 as
 > candidates.
 
 ## How this maps to the project
@@ -165,9 +166,10 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   communication on cooperation (*d* ≈ 1.01), strongest face-to-face. Measures
   *cooperation*, never *resource survival* — so E6's fairness-vs-resource distinction
   is a genuine contribution angle.
-- 🟡 **Oliehoek & Amato (2016), *A Concise Introduction to Decentralized POMDPs*.** →
-  [note](paper-notes/2016-oliehoek-amato-dec-pomdps.md) *(intro + model/complexity
-  chapters)*. Formal tuple for decentralized decisions under partial observability;
+- 🟢 **Oliehoek & Amato (2016), *A Concise Introduction to Decentralized POMDPs*.** →
+  [note](paper-notes/2016-oliehoek-amato-dec-pomdps.md) *(framework/model/complexity
+  chapters analysed; solver chapters 4–8 out of scope)*. Formal tuple for decentralized
+  decisions under partial observability;
   useful to *precisely define* our `global`/`private` information models and to justify
   rule-based agents (finite-horizon Dec-POMDPs are NEXP-complete). We do **not** solve
   Dec-POMDPs — borrow the vocabulary, not the machinery.
@@ -183,8 +185,6 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   [note](paper-notes/2004-walker-resilience-adaptability.md). Four aspects of
   resilience (latitude, resistance, precariousness, panarchy) → measurable in our model
   (precariousness = distance to the collapse threshold).
-- 🔴 **Robustness of self-organizing/swarm systems.** Tolerance to agent failure and
-  perturbation.
 
 ## 5. Method: agent-based modelling and reproducibility
 

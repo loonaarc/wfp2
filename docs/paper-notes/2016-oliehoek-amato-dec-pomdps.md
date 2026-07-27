@@ -1,4 +1,6 @@
-Read status: 🟡 read the introductory/model chapters (it's a book).
+Read status: 🟢 analysed — the framework/model/complexity chapters read and
+analysed in full; the solution-algorithm chapters (4–8) are out of scope (see the
+scope note below), as this project uses Dec-POMDPs as vocabulary, not machinery.
 
 <!--
 Scope note: this is a ~140-page SpringerBrief. These notes cover the Preface,

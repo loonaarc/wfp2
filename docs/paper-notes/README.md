@@ -36,7 +36,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [2007-hauert-via-freedom-to-coercion](2007-hauert-via-freedom-to-coercion.md) | 🟢 | Loner opt-out rescues punishment (second-order); recipe to flip E5 |
 | [2010-balliet-communication-meta-analysis](2010-balliet-communication-meta-analysis.md) | 🟢 | Communication→cooperation effect *d*≈1.01; measures cooperation not resource (E6 angle) |
 | [2010-sigmund-social-learning-institutions](2010-sigmund-social-learning-institutions.md) | 🟢 | Pool vs peer punishment; 2nd-order punishment stabilises — one-variable E5 follow-up |
-| [2016-oliehoek-amato-dec-pomdps](2016-oliehoek-amato-dec-pomdps.md) | 🟡 | Dec-POMDP formalism to define our info models; justifies rule-based agents |
+| [2016-oliehoek-amato-dec-pomdps](2016-oliehoek-amato-dec-pomdps.md) | 🟢 | Dec-POMDP formalism to define our info models; justifies rule-based agents (solver chapters out of scope) |
 | [2016-schill-cooperation-not-enough](2016-schill-cooperation-not-enough.md) | 🟢 | Cooperation ≠ sustainability; you also need ecological knowledge (reframes our info axis) |
 | [2020-grimm-odd-protocol](2020-grimm-odd-protocol.md) | 🟢 | ODD standard for describing ABMs reproducibly → structure our model write-up |
 | [2022-janssen-communication-trust-inequality](2022-janssen-communication-trust-inequality.md) | 🟢 | Communication→trust→restraint; conditional cooperators dominate; Gini standard |
