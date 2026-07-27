@@ -4,7 +4,8 @@ A **living, structured** overview of the field. Papers that have been read get a
 full analysed note in [paper-notes/](paper-notes/); this file is the map and the
 "what it means for us" synthesis.
 
-Read status: 🔴 not read · 🟡 skimmed · 🟢 analysed note exists in `paper-notes/`.
+Read status: 🔴 not read · 🟡 skimmed · 🟢 analysed note exists in `paper-notes/` ·
+⚪ reference only (not a reading lead).
 
 > **Status (2026-07):** most core sources have now been read from the primary PDFs
 > (obtained via library access, in `references/papers/`, git-ignored) and have full
@@ -102,30 +103,14 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 
 ## 2. Evolution and maintenance of cooperation
 
+*(chronological)*
+
 - 🟢 **Axelrod & Hamilton (1981), "The Evolution of Cooperation", *Science* 211(4489),
   1390–1396.** → [note](paper-notes/1981-axelrod-hamilton-evolution-of-cooperation.md)
   *(volume 211 verified from the PDF)*. Tit-for-tat / reciprocity motivates our
   `conditional_cooperator`; **caveat:** TFT's stability needs *targeted* retaliation,
   absent in an N-player commons (why E2's reciprocity punishes the resource, not a
   culprit). (Axelrod's 1984 book expands this; not separately noted.)
-- 🟢 **Nowak (2006), "Five Rules for the Evolution of Cooperation", *Science* 314,
-  1560–1563.** → [note](paper-notes/2006-nowak-five-rules.md). Five mechanisms with
-  their conditions (kin `r>c/b`, direct reciprocity `w>c/b`, indirect reciprocity
-  `q>c/b`, network `b/c>k`, group). Direct reciprocity = our conditional cooperator;
-  **indirect reciprocity (reputation, `q`) is the most promising unexplored strategy**
-  and maps onto our information/communication axes.
-- 🟢 **Fehr & Gächter (2002), "Altruistic Punishment in Humans", *Nature* 415,
-  137–140.** → [note](paper-notes/2002-fehr-gaechter-altruistic-punishment.md).
-  Empirical backbone for E3: punishment sustains cooperation, its removal collapses it.
-  Their punishment works via *deterrence* (humans adapt); our fixed agents force
-  *confiscation* instead — a load-bearing distinction.
-- 🟢 **Hauert, Traulsen, Brandt, Nowak & Sigmund (2007), "Via Freedom to Coercion",
-  *Science* 316, 1905–1907.** →
-  [note](paper-notes/2007-hauert-via-freedom-to-coercion.md). A **loner** opt-out
-  rescues costly punishment from the second-order free-rider problem via cyclic
-  dynamics — a concrete recipe to turn E5's negative result positive (add a loner +
-  make monitoring cost scale with group size).
-
 - 🟢 **Nowak & Sigmund (1998), "Evolution of indirect reciprocity by image scoring",
   *Nature* 393, 573–577.** →
   [note](paper-notes/1998-nowak-sigmund-indirect-reciprocity.md). Founding model of
@@ -133,6 +118,23 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   `q > c/b` (probability of knowing a partner's reputation) and collapses as group size
   grows. Basis for a **reputation-based strategy** that targets individual
   over-extractors, unlike our collective-punishment conditional cooperator.
+- 🟢 **Fehr & Gächter (2002), "Altruistic Punishment in Humans", *Nature* 415,
+  137–140.** → [note](paper-notes/2002-fehr-gaechter-altruistic-punishment.md).
+  Empirical backbone for E3: punishment sustains cooperation, its removal collapses it.
+  Their punishment works via *deterrence* (humans adapt); our fixed agents force
+  *confiscation* instead — a load-bearing distinction.
+- 🟢 **Nowak (2006), "Five Rules for the Evolution of Cooperation", *Science* 314,
+  1560–1563.** → [note](paper-notes/2006-nowak-five-rules.md). Five mechanisms with
+  their conditions (kin `r>c/b`, direct reciprocity `w>c/b`, indirect reciprocity
+  `q>c/b`, network `b/c>k`, group). Direct reciprocity = our conditional cooperator;
+  **indirect reciprocity (reputation, `q`) is the most promising unexplored strategy**
+  and maps onto our information/communication axes.
+- 🟢 **Hauert, Traulsen, Brandt, Nowak & Sigmund (2007), "Via Freedom to Coercion",
+  *Science* 316, 1905–1907.** →
+  [note](paper-notes/2007-hauert-via-freedom-to-coercion.md). A **loner** opt-out
+  rescues costly punishment from the second-order free-rider problem via cyclic
+  dynamics — a concrete recipe to turn E5's negative result positive (add a loner +
+  make monitoring cost scale with group size).
 - 🟢 **Sigmund, De Silva, Traulsen & Hauert (2010), "Social learning promotes
   institutions for governing the commons", *Nature* 466, 861–863.** →
   [note](paper-notes/2010-sigmund-social-learning-institutions.md). **Pool**
@@ -190,8 +192,9 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   [note](paper-notes/2020-grimm-odd-protocol.md). The standard for documenting ABMs
   reproducibly — **action: add an ODD-structured model description** so the write-up
   matches the field standard (much of the material already exists across our docs).
-- 🔴 **Mesa framework docs.** Evaluated and *not* adopted (see ADR-0001); reference
-  for conventions and a possible future spatial scenario.
+- ⚪ **Mesa framework docs.** *Evaluated and deliberately not adopted* (ADR-0001) —
+  not a reading lead; kept here as a reference for conventions and a possible future
+  spatial scenario.
 
 ---
 

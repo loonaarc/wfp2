@@ -11,7 +11,7 @@ core            Simulation engine, configuration, deterministic RNG, run state.
 environment     The shared world (currently a renewable common-pool resource).
 agents          Agent container and the observation an agent receives each round.
 strategies      Interchangeable local decision rules (selfish, cooperative, ...).
-communication   Message-passing models (placeholder; see docs/architecture.md).
+communication   Broadcast signal implemented in core; per-agent protocol reserved.
 disturbances    Environmental perturbations for resilience experiments (placeholder).
 metrics         Quantitative evaluation of a completed run.
 experiments     Seed-controlled experiment runner and reproducible result export.

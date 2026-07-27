@@ -36,7 +36,7 @@ src/emergent_cooperation/
 │   ├── compensating.py CompensatingCooperatorStrategy (restraint / withhold)
 │   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
 │   └── registry.py     name → class registry (extension point)
-├── communication/      CommunicationModel protocol (stubbed; Phase 2)
+├── communication/      per-agent CommunicationModel protocol (reserved); broadcast lives in core
 ├── disturbances/       Disturbance protocol (stubbed; Phase 3)
 ├── metrics/
 │   └── metrics.py      compute_metrics, gini

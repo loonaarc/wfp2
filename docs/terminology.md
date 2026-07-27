@@ -43,11 +43,17 @@ name a concrete construct in the code.
 
 ## Communication
 
+- **Broadcast signal** — the one communication channel currently implemented: each
+  round every agent hears an aggregate (the group's total harvest last round) with a
+  per-round reliability probability; message loss = silence. *(model terms:
+  `SimulationConfig.broadcast_reliability`, `Observation.signal`; ADR-0007; used in
+  E6/E7.)*
 - **Communication topology** — the graph of who can send messages to whom
   (e.g. none, peer-to-peer, broadcast, range-limited, changing over time).
-- **Message budget / range / delay / loss** — constraints on communication:
+- **Message budget / range / delay / loss** — constraints on *per-agent* messaging:
   how many messages, how far, how late, how reliably they arrive.
-  *(planned; `communication.CommunicationModel` interface is stubbed.)*
+  *(planned; the reserved `communication.CommunicationModel` interface — the current
+  broadcast is a single aggregate signal, not per-agent messages.)*
 
 ## Resource dynamics
 

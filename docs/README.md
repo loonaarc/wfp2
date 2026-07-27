@@ -15,6 +15,12 @@ and how to run it), **results** (what we found), **reference** (how it works), a
    with diagrams.
 5. Then dip into the reference and research docs below as needed.
 
+**Prefer to see it move?** Open [`../web/commons-demo.html`](../web/commons-demo.html)
+in a browser (no install; pick a regime and watch a run unfold round by round), or
+run [`../notebooks/explore.ipynb`](../notebooks/explore.ipynb) for the same regimes
+backed by the real engine. Both are presentation layers over the same mechanics —
+see [getting-started.md](getting-started.md) for setup.
+
 ## Orientation
 
 | Doc | What it's for |

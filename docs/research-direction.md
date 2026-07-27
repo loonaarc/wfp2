@@ -89,5 +89,8 @@ possibly one small original strategy or measurement method compared to baselines
 - Reinforcement-learning agents (only with a strong, concrete justification).
 - Spatial/grid environments and Mesa (see
   [decisions/0001-custom-simulation-core.md](decisions/0001-custom-simulation-core.md)).
-- Rich visualization / GUI.
+- Rich *in-engine* visualization / GUI. *(A lightweight presentation layer now
+  exists — a browser demo `web/commons-demo.html` and the `notebooks/explore.ipynb`
+  dashboard — but the engine itself stays headless: it emits plain data records that
+  those layers, and the static plots in `scripts/`, consume.)*
 - Locking onto a single exact research question (kept open on purpose for now).

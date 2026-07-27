@@ -8,6 +8,11 @@ and be able to explain it.
 You don't need to read any other doc first. Pointers to deeper docs appear as you
 go.
 
+> **Just want to watch it first?** Open [`../web/commons-demo.html`](../web/commons-demo.html)
+> in any browser — no install needed. Pick a regime (tragedy, sustainable,
+> enforcement, …) and step through a run round by round. It's a faithful port of the
+> engine below; this walkthrough explains *why* those runs behave as they do.
+
 ---
 
 ## 0. One-time setup
@@ -261,6 +266,12 @@ You've seen the whole system. Good follow-ups, in order:
    the vocabulary for your report.
 5. **[contribution-opportunities.md](contribution-opportunities.md)** — what a
    defensible bachelor-level contribution looks like here.
+
+Prefer to explore interactively rather than read? Two presentation layers over the
+same mechanics: the browser demo
+[`../web/commons-demo.html`](../web/commons-demo.html) (no install) and the notebook
+[`../notebooks/explore.ipynb`](../notebooks/explore.ipynb) (regime presets + sliders,
+backed by the real engine).
 
 When you want to *add* something (a new strategy, a metric), see the extension-point
 table in [architecture.md](architecture.md).
