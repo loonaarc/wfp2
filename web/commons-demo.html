@@ -129,14 +129,6 @@
   }
   button.run:hover { filter: brightness(1.06); }
   button.run:active { transform: translateY(1px); }
-  .btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
-  .btnrow .run { flex: 1 1 130px; }
-  button.btn2 {
-    flex: 0 0 auto; font-family: var(--sans); font-weight: 600; font-size: 13px;
-    color: var(--text); background: var(--panel-2); border: 1px solid var(--border);
-    border-radius: 10px; padding: 11px 12px; cursor: pointer;
-  }
-  button.btn2:hover { border-color: var(--accent); }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
   .stage { display: flex; flex-direction: column; gap: 16px; }
@@ -145,10 +137,11 @@
 
   .playbar { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
   .playbar button {
-    font-family: var(--mono); font-size: 13px; color: var(--text);
+    font-family: var(--mono); font-size: 15px; color: var(--text);
     background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px 12px; cursor: pointer; min-width: 84px;
+    padding: 6px 10px; cursor: pointer; min-width: 44px;
   }
+  .playbar button:hover { border-color: var(--accent); }
   .playbar .tcount { font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .playbar input[type="range"] { flex: 1; }
 
@@ -231,11 +224,7 @@
           <label for="seed">Seed <span class="val" id="seed_v">1</span></label>
           <input type="range" id="seed" min="1" max="10" step="1" value="1" />
         </div>
-        <div class="btnrow">
-          <button class="run" id="run" type="submit">▶ Run &amp; animate</button>
-          <button class="btn2" id="play" type="button">⏸ Pause</button>
-          <button class="btn2" id="step" type="button">⏭ Step</button>
-        </div>
+        <button class="run" id="run" type="submit">▶ Run &amp; animate</button>
       </form>
 
       <!-- ── stage ─────────────────────────────────────── -->
@@ -245,8 +234,10 @@
         </div>
 
         <div class="card playbar">
-          <span class="tcount" id="tcount">round 1 / 40</span>
+          <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
+          <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
           <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
+          <span class="tcount" id="tcount">round 1 / 40</span>
         </div>
 
         <div class="metrics">
@@ -397,7 +388,7 @@
   const els = {
     regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), noise: $("noise"), bcast: $("bcast"), rounds: $("rounds"), seed: $("seed"),
-    run: $("run"), play: $("play"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
+    run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
     m_harvest: $("m_harvest"), m_stock: $("m_stock"),
@@ -473,12 +464,10 @@
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
-  els.run.addEventListener("click", run);
 
   // ── run + animation state ───────────────────────────────────────────────
-  let sim = null, frame = 0, playing = true, raf = null, lastT = 0;
+  let sim = null, frame = 0, playing = false, raf = null, lastT = 0;
   const FPS = 5;
-  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function currentSpecs() {
     const nsel = +els.nsel.value, coop = 8 - nsel, kind = els.ctype.value, kb = +els.kb.value;
@@ -510,10 +499,8 @@
     els.scrub.max = sim.frames.length - 1;
     buildLegend();
     drawTraj();
-    frame = 0; playing = !reduce; setPlayLabel();
-    if (raf) cancelAnimationFrame(raf);
-    lastT = 0; raf = requestAnimationFrame(loop);
-    if (reduce) draw();
+    // changing the config never autostarts — arm it, paused at round 1
+    frame = 0; playing = false; setBtn(); draw();
   }
   let runTimer = null;
   function scheduleRun() { clearTimeout(runTimer); runTimer = setTimeout(run, 120); }
@@ -645,27 +632,37 @@
   // ── playback loop ─────────────────────────────────────────────────────────
   function loop(ts) {
     if (!lastT) lastT = ts;
-    if (playing && ts - lastT > 1000 / FPS) {
+    if (playing && sim && ts - lastT > 1000 / FPS) {
       lastT = ts;
       frame = (frame + 1) % sim.frames.length;
     }
-    draw();
+    if (sim) draw();
     raf = requestAnimationFrame(loop);
   }
-  function setPlayLabel() { els.play.textContent = playing ? "⏸ Pause" : "▶ Play"; }
-  els.play.addEventListener("click", () => { if (sim) { playing = !playing; setPlayLabel(); } });
-  els.step.addEventListener("click", () => {
+  // the Run button is the single play/pause toggle
+  function setBtn() { els.run.textContent = playing ? "⏸ Pause" : "▶ Run & animate"; }
+  function togglePlay() {
     if (!sim) return;
-    playing = false; setPlayLabel();
-    frame = (frame + 1) % sim.frames.length;
-    draw();
-  });
-  els.scrub.addEventListener("input", () => { playing = false; setPlayLabel(); frame = +els.scrub.value; draw(); });
+    if (playing) { playing = false; }
+    else { if (frame >= sim.frames.length - 1) frame = 0; lastT = 0; playing = true; }
+    setBtn();
+  }
+  const stepTo = (i) => {
+    if (!sim) return;
+    playing = false;
+    frame = (i + sim.frames.length) % sim.frames.length;
+    setBtn(); draw();
+  };
+  els.run.addEventListener("click", (e) => { e.preventDefault(); togglePlay(); });
+  els.back.addEventListener("click", () => stepTo(frame - 1));
+  els.step.addEventListener("click", () => stepTo(frame + 1));
+  els.scrub.addEventListener("input", () => stepTo(+els.scrub.value));
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
   // ── go ──────────────────────────────────────────────────────────────────
   els.regime.value = "🛡️ Enforcement holds";
   applyRegime(); updateRegimeDesc(); syncLabels(); run();
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
