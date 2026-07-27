@@ -148,13 +148,18 @@
   .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   @media (max-width: 560px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
   .tile { padding: 12px 14px; }
-  .tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .tag { font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; font-weight: 700; }
+  .tag.live { color: var(--accent); border-color: color-mix(in oklab, var(--accent) 45%, var(--border)); }
   .tile .v { font-family: var(--mono); font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
   .pill { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; padding: 3px 10px; border-radius: 999px; margin-top: 6px; }
   .pill.good { color: var(--good); background: color-mix(in oklab, var(--good) 16%, transparent); }
   .pill.bad { color: var(--bad); background: color-mix(in oklab, var(--bad) 16%, transparent); }
 
-  .foot { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; padding: 12px 14px; }
+  .foot { display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: 12px 14px; }
+  .foot-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .foot-row.col { flex-direction: column; align-items: stretch; gap: 5px; }
+  .foot-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
   .legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
@@ -242,27 +247,36 @@
 
         <div class="metrics">
           <div class="card tile">
-            <div class="k">Resource</div>
+            <div class="k">Stock <span class="tag live" id="m_round">round 0</span></div>
+            <div class="v" id="m_stock">—</div>
+          </div>
+          <div class="card tile">
+            <div class="k">Sustainability <span class="tag">final</span></div>
             <div class="v" id="m_sustain">—</div>
             <span class="pill" id="m_status">—</span>
           </div>
           <div class="card tile">
-            <div class="k">Fairness (Gini)</div>
+            <div class="k">Fairness · Gini <span class="tag">final</span></div>
             <div class="v" id="m_gini">—</div>
           </div>
           <div class="card tile">
-            <div class="k">Total harvest</div>
+            <div class="k">Total harvest <span class="tag">final</span></div>
             <div class="v" id="m_harvest">—</div>
           </div>
-          <div class="card tile">
-            <div class="k">Stock now</div>
-            <div class="v" id="m_stock">—</div>
-          </div>
         </div>
+        <p class="caption"><b>Stock</b> tracks the current round as it plays;
+          <b>Sustainability</b> (final stock ÷ capacity), <b>Fairness</b> and
+          <b>Total harvest</b> are the run's outcome at the end.</p>
 
         <div class="card foot">
-          <div class="legend" id="legend"></div>
-          <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over time"></canvas>
+          <div class="foot-row">
+            <span class="foot-label">Agents — colour = strategy:</span>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="foot-row col">
+            <span class="foot-label">Resource stock over rounds (dotted = healthy level, K/2)</span>
+            <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over rounds"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -391,7 +405,7 @@
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
-    m_harvest: $("m_harvest"), m_stock: $("m_stock"),
+    m_harvest: $("m_harvest"), m_stock: $("m_stock"), m_round: $("m_round"),
   };
   for (const name of Object.keys(REGIMES)) {
     const opt = document.createElement("option");
@@ -488,6 +502,9 @@
     const acc = new Array(sim.n).fill(0);
     for (const f of sim.frames) { f.harv.forEach((h, i) => (acc[i] += h)); sim.cum.push(acc.slice()); }
     sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
+    // prepend a display-only "round 0": the starting pool, before anyone harvests
+    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: INIT, collapsed: false });
+    sim.cum.unshift(new Array(sim.n).fill(0));
     const final = sim.frames[sim.frames.length - 1];
     const m = { sustain: final.stock / K, collapsed: sim.frames.some((f) => f.collapsed),
                 gini: gini(sim.payoff), harvest: sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0) };
@@ -589,7 +606,8 @@
     }
 
     els.scrub.value = frame;
-    els.tcount.textContent = `round ${frame + 1} / ${sim.frames.length}`;
+    els.tcount.textContent = `round ${frame} / ${sim.frames.length - 1}`;
+    els.m_round.textContent = "round " + frame;
     els.m_stock.textContent = Math.round(f.stock);
     els.m_stock.style.color = f.collapsed ? css("--bad") : "";
     drawTrajMarker();
