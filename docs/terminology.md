@@ -119,9 +119,19 @@ Related concepts:
   unequal).
 - **Resilience** — the system's ability to maintain or recover cooperative,
   sustainable behaviour after a disturbance. Proxies: recovery time, post-shock
-  sustainability. *(disturbances planned.)*
+  sustainability. *(model terms: `DisturbanceConfig`, the `recovery_time`/`recovered`
+  metrics; the first disturbance — a resource shock — is implemented, see E8/ADR-0008.)*
 - **Robustness** — insensitivity of outcomes to nuisance factors such as random
   seed or small parameter changes. Contrast with resilience (recovery from shocks).
+- **Disturbance** — an external perturbation applied to the world at a scheduled
+  round (not a random event, so runs stay reproducible). *(model terms:
+  `DisturbanceConfig`, the `disturbances` package; ADR-0008.)*
+- **Resource shock** — a *pulse* disturbance that removes a fraction of the stock in
+  one round (`magnitude = 0.7` → lose 70%). The first implemented disturbance kind.
+  *(model term: `disturbances.ResourceShock`.)*
+- **Recovery time** — rounds after a shock until the stock returns to ≥ 90% of its
+  pre-shock level; undefined (right-censored) if it never does. *(model term: the
+  `recovery_time` metric.)*
 - **Reproducibility** — the property that a run can be exactly re-executed from its
   recorded configuration, seed, and software version, yielding identical results.
   Enforced here via deterministic RNG and provenance capture.

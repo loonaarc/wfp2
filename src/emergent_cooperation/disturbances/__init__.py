@@ -1,30 +1,44 @@
-"""Environmental disturbances (planned extension point).
+"""Environmental disturbances for resilience experiments.
 
-This package will host perturbations for resilience experiments: agent failure,
-sudden resource loss, slower regeneration, communication failure, message delay,
-misleading information, and agents joining or leaving (see
-``docs/research-direction.md``).
+A disturbance is an external perturbation the engine applies at a scheduled round:
+it may cut the standing stock, remove agents, or degrade communication. The world
+runs normally, a shock lands at a known round, and the resilience metrics measure
+how (and whether) cooperation recovers.
 
-Status: not yet implemented. The :class:`Disturbance` protocol fixes the intended
-hook — a callback invoked by the engine at a round boundary that may mutate the
-world — so resilience scenarios can be added without redesigning the engine.
+Disturbances are **deterministic and config-driven** (scheduled by round, not by a
+random draw), so a run stays a pure function of ``(config, seed)``: the shock is
+part of the configuration, not a source of hidden randomness. See ADR-0008.
+
+Currently implemented: :class:`~emergent_cooperation.disturbances.shocks.ResourceShock`
+(a pulse loss of stock). Agent failure, communication failure, and misleading
+information are the next kinds to add against the same interface.
 """
 
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from ..core.config import DisturbanceConfig
+from .shocks import ResourceShock, build_disturbances
+
 
 @runtime_checkable
 class Disturbance(Protocol):
-    """Planned interface for an environmental perturbation.
+    """Interface for an environmental perturbation applied at a round boundary.
 
-    A concrete disturbance inspects the round index and may mutate the pool and/or
-    the agent population (e.g. remove an agent, cut the stock). Returning nothing;
-    effects are applied in place. Scheduling (which rounds it fires on) is part of
-    each concrete implementation.
+    A concrete disturbance carries its own schedule (which round it fires on) and
+    mutates the world in place — the pool and/or the agent population. It is invoked
+    every round by the engine and decides for itself whether to act.
     """
 
-    def apply(self, round_index: int, pool: object, agents: list) -> None:
-        """Apply the disturbance in place for the given round, if scheduled."""
+    def apply(self, round_index: int, pool: object, agents: list) -> bool:
+        """Apply the disturbance in place if scheduled for ``round_index``.
+
+        Returns:
+            ``True`` if the disturbance fired this round, ``False`` otherwise. The
+            engine uses this to mark disturbed rounds in the run record.
+        """
         ...
+
+
+__all__ = ["Disturbance", "DisturbanceConfig", "ResourceShock", "build_disturbances"]

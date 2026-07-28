@@ -88,6 +88,7 @@ def history_frame(results: list[RunResult]) -> pd.DataFrame:
                     "total_harvested": r.total_harvested,
                     "resource_after_harvest": r.resource_after_harvest,
                     "collapsed": r.collapsed,
+                    "disturbed": r.disturbed,
                 }
             )
     return pd.DataFrame(records)
@@ -113,6 +114,9 @@ def _config_to_dict(config: ExperimentConfig) -> dict:
         },
         "agents": [
             {"strategy": a.strategy, "count": a.count, "params": dict(a.params)} for a in sim.agents
+        ],
+        "disturbances": [
+            {"kind": d.kind, "round": d.round, "magnitude": d.magnitude} for d in sim.disturbances
         ],
     }
 

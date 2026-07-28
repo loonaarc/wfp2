@@ -74,11 +74,18 @@ Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
   and communication that funds monitoring — unifying E5 + E7); then the fuller
   `CommunicationModel` (per-agent messages, deception, delay, topology).
 
-### Phase 3 — Disturbances & resilience (thesis) — ⏳ not started
-Implement the `Disturbance` interface (still stubbed): resource shocks, agent
-failure, communication failure, malicious agents. Measure recovery time and
-resilience; identify mechanisms that are efficient under normal conditions but
-fragile under disruption.
+### Phase 3 — Disturbances & resilience (thesis) — 🔄 in progress
+Implement the `Disturbance` interface (was stubbed): resource shocks, agent failure,
+communication failure, malicious agents. Measure recovery time and resilience;
+identify mechanisms that are efficient under normal conditions but fragile under
+disruption.
+- ✅ **Resource shock + resilience metrics (E8, ADR-0008):** a deterministic,
+  config-scheduled pulse shock; recovery-time / recovered metrics. Result:
+  **information, not enforcement, decides whether cooperation recovers** — observing
+  populations self-correct and recover, blind ones collapse, and enforcement doesn't
+  help. The first genuinely non-obvious finding.
+- ⏳ Next: **agent failure** and **communication failure** disturbances (same
+  interface); mixed populations under a shock; a *press* (sustained) disturbance.
 
 ### Phase 4 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

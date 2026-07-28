@@ -37,7 +37,7 @@ src/emergent_cooperation/
 │   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
 │   └── registry.py     name → class registry (extension point)
 ├── communication/      per-agent CommunicationModel protocol (reserved); broadcast lives in core
-├── disturbances/       Disturbance protocol (stubbed; Phase 3)
+├── disturbances/       Disturbance protocol + ResourceShock (config-scheduled; ADR-0008)
 ├── metrics/
 │   └── metrics.py      compute_metrics, gini
 ├── experiments/
@@ -87,9 +87,10 @@ enforce a harvest quota (ADR-0005). New decision rules are added by subclassing
 
 ### `core.Simulation` (the engine)
 Owns one run. Builds the pool and agents from the config, spawns one RNG stream
-per agent, and advances rounds. **Round order:** `regenerate → observe → decide →
-ration → enforce → harvest`; the `enforce` step is a no-op unless a sanctioning
-agent is present.
+per agent, and advances rounds. **Round order:** `regenerate → disturb → observe →
+decide → ration → enforce → harvest`; the `disturb` step is a no-op unless a
+disturbance is scheduled for the round (ADR-0008), and the `enforce` step is a no-op
+unless a sanctioning agent is present.
 
 ### `metrics`
 Pure functions from a `RunResult` to a flat metric dict. No dependency on the
@@ -100,9 +101,16 @@ engine beyond the data records.
 a DataFrame; `export_outcome` writes a self-contained, reproducible output
 directory; `Provenance` captures the software/environment context.
 
-### `communication`, `disturbances` (stubbed)
-Protocols fixing the intended interfaces so the engine can adopt them later without
-redesign. See the module docstrings and
+### `disturbances`
+The `Disturbance` protocol plus `ResourceShock`, a config-scheduled pulse that cuts
+the stock at a set round (ADR-0008). The engine applies scheduled disturbances in the
+`disturb` step and marks the affected `RoundRecord`. Agent failure and communication
+failure are the next kinds behind the same interface.
+
+### `communication` (partly stubbed)
+The per-agent `CommunicationModel` protocol fixes the intended interface for a fuller
+channel; the *broadcast* model already lives in `core` (ADR-0007). See the module
+docstrings and
 [decisions/0003-information-models-before-communication.md](decisions/0003-information-models-before-communication.md).
 
 ## Data flow
@@ -115,7 +123,7 @@ YAML ──load_experiment──► ExperimentConfig
                                │  build ResourcePool + Agents
                                │  spawn per-agent RNG streams
                                ▼
-   per round:  regenerate ─► observe (Observation) ─► decide (Strategy) ─►
+   per round:  regenerate ─► disturb ─► observe (Observation) ─► decide (Strategy) ─►
                allocate (proportional rationing) ─► harvest ─► record RoundRecord
                                │
                                ▼
@@ -132,16 +140,19 @@ YAML ──load_experiment──► ExperimentConfig
 For round `t` (in `Simulation.step`):
 
 1. **Snapshot** `resource_start = pool.level` (stock carried from `t−1`).
-2. **Regenerate:** `pool.regenerate()` → `resource_after_regen`.
-3. **Observe:** build each agent's `Observation` of the regrown stock (respecting
-   the information model).
-4. **Decide:** each agent returns a non-negative requested consumption.
-5. **Allocate:** if `Σ requests > stock`, scale every request by the same factor
+2. **Regenerate:** `pool.regenerate()`.
+3. **Disturb:** apply any disturbance scheduled for round `t` (e.g. a resource shock
+   cuts the stock); `resource_after_regen` reflects the post-shock level and the
+   round is flagged `disturbed`. No-op when nothing is scheduled (ADR-0008).
+4. **Observe:** build each agent's `Observation` of the (regrown, possibly shocked)
+   stock, respecting the information model.
+5. **Decide:** each agent returns a non-negative requested consumption.
+6. **Allocate:** if `Σ requests > stock`, scale every request by the same factor
    `stock / Σ requests` (strategy-neutral rationing); otherwise grant requests.
-6. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, cap every
+7. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, cap every
    agent's harvest at the per-capita quota (excess stays in the pool) and charge each
    sanctioner its monitoring cost. No-op when no sanctioner is present (ADR-0005).
-7. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
+8. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
    record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
 
 Regenerating **before** harvest makes the all-cooperative equilibrium exactly
@@ -167,7 +178,7 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 | an information model | extend `Observation` + `Simulation._observe` |
 | a parameter sweep / study | use `experiments.sweep.run_grid` |
 | communication | implement `CommunicationModel`; add an exchange step in `step` |
-| a disturbance | implement `Disturbance`; invoke at a round boundary in `step` |
+| a disturbance | add a kind to `DISTURBANCE_KINDS`, a class in `disturbances.shocks`, and a `build_disturbances` branch (ADR-0008) |
 
 ## Known simplifications (current)
 
@@ -177,6 +188,9 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 - Enforcement is frictionless and "any one monitor enforces fully" (see ADR-0005).
 - Communication is a single true aggregate broadcast (no per-agent messages,
   deception, delay, or topology yet — ADR-0007); the full `CommunicationModel`
-  protocol remains stubbed. Disturbances are still interface-only.
+  protocol remains stubbed.
+- Disturbances cover a single deterministic *pulse* resource shock (ADR-0008); agent
+  failure, communication failure, and *press* (sustained) disturbances are not yet
+  implemented.
 - Stochasticity is available (`decision_noise`, broadcast message loss), but the
   strategies themselves are deterministic; a stochastic *strategy* is future work.

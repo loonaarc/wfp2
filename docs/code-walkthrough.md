@@ -74,7 +74,7 @@ src/emergent_cooperation/
 │   └── main.py          The `emergent-coop` terminal command
 ├── communication/       CommunicationModel protocol (stub); a first broadcast model
 │                         is live via SimulationConfig.broadcast_reliability + Observation.signal
-└── disturbances/        (stub) future shocks for resilience experiments
+└── disturbances/        Disturbance protocol + ResourceShock (config-scheduled; ADR-0008)
 ```
 
 A useful way to think about it in **layers**, from foundations up:
@@ -535,9 +535,12 @@ collapse.** That's the phenomenon this whole codebase exists to study.
   implemented** (ADR-0007): `SimulationConfig.broadcast_reliability` makes the engine
   deliver an aggregate `signal` (the group's total harvest last round) into each
   agent's `Observation` with a per-round probability. Studied in experiments E6–E7.
-- **`disturbances/`** — still an interface only: a `Disturbance` would perturb the
-  world at a round boundary (a resource shock, an agent failing) to test
-  **resilience**. This is the main remaining axis.
+- **`disturbances/`** — the `Disturbance` protocol plus `ResourceShock`, a
+  config-scheduled pulse that cuts the stock at a set round to test **resilience**
+  (ADR-0008). The engine applies it in the `disturb` step and marks the round;
+  `compute_metrics` then reports `recovery_time`/`recovered`. Studied in
+  [E8](experiments/E8-resilience.md) (information, not enforcement, decides recovery).
+  Agent failure and communication failure are the next kinds.
 
 ---
 

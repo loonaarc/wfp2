@@ -36,10 +36,12 @@ application area (traffic, energy, epidemics, etc.).
 - metrics: performance, efficiency, sustainability, collapse, survival time,
   over-usage, and fairness (Gini);
 - reproducible result export (config + metrics + history + provenance);
-- a CLI, seven experiments (E1–E7), and 62 passing tests.
+- environmental **disturbances** (a resource shock) with resilience metrics (E8);
+- a CLI, eight experiments (E1–E8), and 74 passing tests.
 
-Not yet implemented: environmental **disturbances** (interface stubbed), and the full
-per-agent `CommunicationModel` (a first broadcast model is implemented). See
+Partly implemented: disturbances so far cover a single resource shock (agent /
+communication failure are next), and the full per-agent `CommunicationModel` (a first
+broadcast model is implemented). See
 [docs/research-direction.md](docs/research-direction.md) for the roadmap.
 
 ## Research direction
@@ -106,12 +108,13 @@ config (YAML) ─► ExperimentConfig ─► Simulation(seed) ─► RunResult �
                     ┌────────────────────┼─────────────────────┐
                     ▼                    ▼                     ▼
               ResourcePool           Agents              Communication (broadcast)
-             (regeneration)      (Strategy each)         + Disturbances (future)
+             (regeneration)      (Strategy each)         + Disturbances (resource shock)
 ```
 
-Each round: the resource regenerates, agents observe (subject to the information
-model and any communicated signal), agents request consumption, requests are scaled
-to fit the stock, sanctioners enforce a quota, harvest is assigned, payoffs update.
+Each round: the resource regenerates, any scheduled disturbance perturbs it, agents
+observe (subject to the information model and any communicated signal), agents request
+consumption, requests are scaled to fit the stock, sanctioners enforce a quota,
+harvest is assigned, payoffs update.
 Full detail in [docs/architecture.md](docs/architecture.md).
 
 ## Repository structure
@@ -122,7 +125,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ├── docs/                     Documentation — see docs/README.md for the index
 │   ├── README.md             Documentation index + recommended reading path
 │   ├── getting-started.md    Hands-on walkthrough (run it, tweak it)
-│   ├── findings-summary.md   The E1–E7 results in one page (the writeup spine)
+│   ├── findings-summary.md   The E1–E8 results in one page (the writeup spine)
 │   ├── project-overview.md   The problem in accessible language
 │   ├── research-direction.md Chosen direction and roadmap (canonical)
 │   ├── research-questions.md Broad questions, testable subquestions, hypotheses
@@ -131,7 +134,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 │   ├── architecture.md       Components, interfaces, data flow
 │   ├── experiment-design.md  Variables, baselines, seeds, reproducibility
 │   ├── metrics.md            Metric definitions, formulas, limitations
-│   ├── experiments/          One report per experiment E1–E7 (+ index)
+│   ├── experiments/          One report per experiment E1–E8 (+ index)
 │   ├── contribution-opportunities.md
 │   ├── literature-review.md  Structured overview of the field
 │   ├── paper-notes/          One analysed note per paper (+ template)
@@ -150,7 +153,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ## Results so far
 
 **➜ Read the [findings summary](docs/findings-summary.md)** — the whole story
-(experiments **E1–E7**) in one page, with the overview figure. The per-experiment
+(experiments **E1–E8**) in one page, with the overview figure. The per-experiment
 reports and a one-line index live in [docs/experiments/](docs/experiments/).
 
 The throughline: cooperation needs *information* (E1, E6); its outcome is decided by

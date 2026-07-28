@@ -18,6 +18,39 @@ import yaml
 # Information models decide what an agent may observe each round.
 INFORMATION_MODELS = ("global", "private")
 
+# Environmental disturbances the engine knows how to apply (see :mod:`disturbances`).
+DISTURBANCE_KINDS = ("resource_shock",)
+
+
+@dataclass(frozen=True)
+class DisturbanceConfig:
+    """A single scheduled environmental perturbation.
+
+    Disturbances make the resilience experiments possible: the world runs
+    normally, then a shock hits at a known round and we measure recovery. Keeping
+    the schedule in the config (rather than in random events) preserves the
+    ``run = f(config, seed)`` guarantee — a shock is deterministic.
+
+    Attributes:
+        kind: One of :data:`DISTURBANCE_KINDS`. ``"resource_shock"`` removes a
+            fraction of the standing stock in a single round (a "pulse" shock).
+        round: Zero-based round at which the disturbance fires.
+        magnitude: Kind-specific size. For ``"resource_shock"`` it is the fraction
+            of the stock removed, in ``(0, 1]`` (``0.7`` = lose 70%).
+    """
+
+    kind: str = "resource_shock"
+    round: int = 0
+    magnitude: float = 0.5
+
+    def __post_init__(self) -> None:
+        if self.kind not in DISTURBANCE_KINDS:
+            raise ValueError(f"kind must be one of {DISTURBANCE_KINDS}, got {self.kind!r}")
+        if self.round < 0:
+            raise ValueError("round must be non-negative")
+        if self.kind == "resource_shock" and not 0 < self.magnitude <= 1:
+            raise ValueError("resource_shock magnitude must be in (0, 1]")
+
 
 @dataclass(frozen=True)
 class ResourceConfig:
@@ -85,6 +118,8 @@ class SimulationConfig:
             own RNG), delivered via ``Observation.signal`` (see ADR-0007).
         resource: Resource parameters.
         agents: Ordered agent-group specifications.
+        disturbances: Scheduled environmental perturbations (empty by default, so
+            existing experiments are unchanged). Each fires at its own round.
     """
 
     name: str = "unnamed"
@@ -95,6 +130,7 @@ class SimulationConfig:
     broadcast_reliability: float = 0.0
     resource: ResourceConfig = field(default_factory=ResourceConfig)
     agents: tuple[AgentSpec, ...] = field(default_factory=tuple)
+    disturbances: tuple[DisturbanceConfig, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -108,6 +144,11 @@ class SimulationConfig:
             raise ValueError("decision_noise must be in [0, 1)")
         if not 0 <= self.broadcast_reliability <= 1:
             raise ValueError("broadcast_reliability must be in [0, 1]")
+        for d in self.disturbances:
+            if d.round >= self.rounds:
+                raise ValueError(
+                    f"disturbance round {d.round} is outside the run ({self.rounds} rounds)"
+                )
 
     @property
     def num_agents(self) -> int:
@@ -120,7 +161,8 @@ class SimulationConfig:
         data = dict(data)
         resource = ResourceConfig(**data.pop("resource", {}))
         agents = tuple(AgentSpec(**spec) for spec in data.pop("agents", []))
-        return cls(resource=resource, agents=agents, **data)
+        disturbances = tuple(DisturbanceConfig(**d) for d in data.pop("disturbances", []))
+        return cls(resource=resource, agents=agents, disturbances=disturbances, **data)
 
 
 @dataclass(frozen=True)

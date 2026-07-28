@@ -20,6 +20,7 @@ import numpy as np
 
 from ..agents.agent import Agent
 from ..agents.observation import Observation
+from ..disturbances.shocks import build_disturbances
 from ..environment.resource import ResourcePool
 from ..strategies.registry import make_strategy
 from . import rng as rng_module
@@ -46,6 +47,8 @@ class Simulation:
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
         # The group's total harvest last round (for the broadcast signal).
         self._last_total_harvest: float = 0.0
+        # Scheduled environmental disturbances (empty unless configured).
+        self._disturbances = build_disturbances(config.disturbances)
 
     @staticmethod
     def _build_agents(config: SimulationConfig) -> list[Agent]:
@@ -137,16 +140,27 @@ class Simulation:
 
         return capped, sum(capped), penalties
 
+    def _disturb(self, round_index: int) -> bool:
+        """Apply any scheduled disturbances for this round; report if any fired."""
+        fired = False
+        for disturbance in self._disturbances:
+            fired |= disturbance.apply(round_index, self.pool, self.agents)
+        return fired
+
     def step(self, round_index: int) -> RoundRecord:
         """Advance the simulation by exactly one round and return its record.
 
-        Order: regenerate -> observe -> harvest. The stock first regrows, agents
-        observe the regrown stock, then harvest from it. This makes the
-        all-cooperative equilibrium exactly stable (harvest equals regrowth).
+        Order: regenerate -> disturb -> observe -> harvest. The stock first regrows,
+        any scheduled disturbance then perturbs it, agents observe the resulting
+        stock, then harvest from it. Applying the shock before observation means
+        agents that can see the stock (``global`` model) react to the depleted level
+        the same round; blind (``private``) agents do not, which is what the
+        resilience experiment (E8) exploits.
         """
         resource_start = self.pool.level
 
         self.pool.regenerate()
+        disturbed = self._disturb(round_index)
         resource_after_regen = self.pool.level
 
         requests = [
@@ -173,6 +187,7 @@ class Simulation:
             resource_after_harvest=resource_after_harvest,
             collapsed=self.pool.is_collapsed,
             penalties=tuple(penalties),
+            disturbed=disturbed,
         )
 
     def run(self) -> RunResult:

@@ -18,3 +18,4 @@ proposed decision and its trade-offs.
 | [0005](0005-enforcement-phase-for-sanctioning.md) | An enforcement phase in the engine for sanctioning | Accepted |
 | [0006](0006-evolutionary-dynamics-at-experiment-level.md) | Model strategy adaptation as replicator dynamics at the experiment level | Accepted |
 | [0007](0007-broadcast-communication-signal.md) | A minimal broadcast communication signal via the observation | Accepted |
+| [0008](0008-disturbances-as-scheduled-config.md) | Disturbances as deterministic, config-scheduled events | Accepted |

@@ -45,6 +45,8 @@ results/**
 !results/E6_communication/**
 !results/E7_response_rules/
 !results/E7_response_rules/**
+!results/E8_resilience/
+!results/E8_resilience/**
 
 # OS / editor
 .DS_Store

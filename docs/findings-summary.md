@@ -1,10 +1,10 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E7. This is the narrative spine for the
-Wahlfachprojekt writeup; each claim links to its full experiment report and the code
-that produced it.*
+*A consolidated synthesis of experiments E1–E8. E1–E7 study the calm commons; E8
+opens the resilience phase (a disturbance). This is the narrative spine for the
+writeup; each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-07-26 · 5 strategies · 7 experiments (E1–E7) · 62 tests · results
+**Status:** 2026-07-27 · 5 strategies · 8 experiments (E1–E8) · 74 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -161,12 +161,37 @@ two remaining axes:
   the only mechanism in the "good corner" (sustainable **and** fair), because it
   converts information into a **binding constraint** rather than a reactive choice.
 
+## Resilience: what survives a shock? (E8 — Phase 3)
+
+*(First disturbance experiment. Full report: [E8](experiments/E8-resilience.md).)*
+
+E1–E7 study the *calm* commons. E8 disrupts it: a settled cooperative population is
+hit with a **70% resource shock** at round 60 (ADR-0008), and we ask what recovers.
+Crossing information (`global`/`private`) with enforcement (`cooperative`/`sanctioning`):
+
+| condition | recovered after shock? |
+| --------- | :--------------------: |
+| observing (`global`), either strategy | ✓ 100% — back to `K/2` in a few rounds |
+| blind (`private`), either strategy | ✗ 0% — collapses to 0 |
+
+**Information, not enforcement, decides resilience.** Agents that can *see* the
+depleted stock stop harvesting and let it regrow (self-correction); blind agents keep
+taking the steady-state quota from a shrunken pool and drive it to collapse.
+Enforcement doesn't help — the sanctioning quota caps over-use but cannot *force*
+restraint on a blind population. Crucially, a **no-shock control is stable in every
+condition**: the fragility is invisible in calm conditions and only the disturbance
+reveals it. This is the first genuinely *non-obvious* result — the same information
+that is nearly optional for *running* the commons (E1) is decisive for *surviving a
+shock* to it.
+
 The throughline: cooperation needs *information* (E1, E6); its outcome is decided by
 the *mechanism/response* (E2, E3, E7); **communication informs but does not
 coordinate — only a binding rule (enforcement) does** (E7); enforcement fixes the
 commons but is itself fragile when voluntary (E5); and the qualitative results are
 robust (E4). This mirrors Ostrom: enduring commons need monitoring **and** graduated
-sanctions, not talk alone.
+sanctions, not talk alone. **Under disturbance the picture turns:** when a shock hits,
+*information* — not enforcement — decides whether the commons recovers (E8), so
+resilience is a different property from the calm-state governance E2–E7 is about.
 
 ## Relation to the literature
 
@@ -192,8 +217,10 @@ sanctions, not talk alone.
 - **Idealised mechanisms:** reciprocity retaliates at full strength (`defection_greed
   = 1.0`); enforcement is frictionless and "any one monitor enforces fully"; the
   monitoring cost is a free parameter (its *sign* is robust, its magnitude is not).
-- **Homogeneous ecology and no space, communication, or disturbances** — those are the
-  planned next axes, not yet exercised.
+- **Homogeneous ecology and no space** — still simplifications. Disturbances are now
+  exercised for a single *pulse* resource shock on *homogeneous* populations (E8);
+  agent failure, communication failure, mixed populations under shock, and *press*
+  disturbances are the next steps.
 
 ## What this is (and isn't) as a contribution
 
@@ -210,8 +237,10 @@ open threads:
 1. **Binding agreement / collective choice** — can communication produce a *consented*
    quota (and fund the monitoring to uphold it), unifying E5 + E7? This is the sharp
    version of "communication that coordinates, not just informs".
-2. **Disturbances (Phase 3):** resource shocks and agent failure — which mechanisms
-   are resilient, and how fast do they recover? (The main un-started axis.)
+2. **Disturbances (Phase 3, started):** the resource shock is in (E8: information
+   decides recovery). Next — **agent failure** and **communication failure** against
+   the same interface, and **mixed populations under a shock** (does enforcement help
+   recovery once free-riders are present?).
 3. **A genuinely stochastic strategy** (not just noisy execution), so between-seed
    variance becomes substantial and the robustness question sharper.
 
@@ -227,5 +256,6 @@ python scripts/experiment_robustness.py              # E4
 python scripts/experiment_voluntary_monitoring.py    # E5
 python scripts/experiment_communication.py           # E6
 python scripts/experiment_response_rules.py          # E7
-pytest                                               # 62 tests
+python scripts/experiment_resilience.py              # E8
+pytest                                               # 74 tests
 ```

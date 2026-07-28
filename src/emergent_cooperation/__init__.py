@@ -12,7 +12,7 @@ environment     The shared world (currently a renewable common-pool resource).
 agents          Agent container and the observation an agent receives each round.
 strategies      Interchangeable local decision rules (selfish, cooperative, ...).
 communication   Broadcast signal implemented in core; per-agent protocol reserved.
-disturbances    Environmental perturbations for resilience experiments (placeholder).
+disturbances    Environmental perturbations for resilience experiments (resource shock).
 metrics         Quantitative evaluation of a completed run.
 experiments     Seed-controlled experiment runner and reproducible result export.
 cli             Command-line entry point.

@@ -83,10 +83,16 @@ carrying capacity, `g` = regeneration rate.
   harvest)`, or the fraction of rounds an agent harvests ≤ its sustainable share.
 - **Open question:** which benchmark is fairest and comparable across configs.
 
-### Recovery time / resilience (needs disturbances)
-- **Idea:** rounds to return within `ε` of the pre-shock stock (or payoff rate)
-  after a disturbance; and whether recovery occurs at all.
-- **Good for:** RQ-C. **Depends on:** the `disturbances` module.
+### Recovery time / resilience — **implemented** (E8, ADR-0008)
+- **What:** measured around the first disturbance and emitted by `compute_metrics`
+  (all `None`/`False` when no disturbance fired): `shock_round`, `pre_shock_level`
+  (the recovery baseline), `post_shock_min_level` (how deep the dip went),
+  `recovery_time` (rounds until the stock returns to ≥ 90% of `pre_shock_level`;
+  `None` = right-censored, never recovered), and `recovered` (bool).
+- **Good for:** RQ-C. Used by [E8](experiments/E8-resilience.md), which finds
+  recovery is decided by *information*, not enforcement.
+- **Next:** cumulative post-shock shortfall (an integral, not just time-to-90%);
+  recovery under agent/communication failure.
 
 ### Robustness across seeds
 - **Idea:** dispersion of a metric across seeds for a fixed config

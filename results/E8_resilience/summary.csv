@@ -1,0 +1,9 @@
+strategy,information,shock,recovered_rate,mean_recovery_time,final_sustainability
+cooperative,global,True,1.0,4.0,0.49988895187774735
+cooperative,global,False,0.0,,0.49988895187774735
+sanctioning,global,True,1.0,4.0,0.5095801046166523
+sanctioning,global,False,0.0,,0.5096611480846931
+cooperative,private,True,0.0,,0.0
+cooperative,private,False,0.0,,0.4341050572463455
+sanctioning,private,True,0.0,,0.0
+sanctioning,private,False,0.0,,0.5781876209992316

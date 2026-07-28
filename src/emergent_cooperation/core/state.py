@@ -27,6 +27,9 @@ class RoundRecord:
         resource_after_harvest: Stock after harvest; carried into the next round.
         collapsed: Whether the resource was at/below the collapse threshold after
             this round's harvest.
+        penalties: Per-agent monitoring/sanction penalty paid this round.
+        disturbed: Whether an environmental disturbance (e.g. a resource shock)
+            fired this round. ``resource_after_regen`` already reflects its effect.
     """
 
     round_index: int
@@ -37,6 +40,7 @@ class RoundRecord:
     resource_after_harvest: float
     collapsed: bool
     penalties: tuple[float, ...] = ()
+    disturbed: bool = False
 
     @property
     def total_requested(self) -> float:

@@ -85,6 +85,7 @@ def compute_metrics(
     )
     efficiency = _efficiency(gross_harvest, msy, n_rounds)
     over_usage_rate = _over_usage_rate(result, msy, collapse_threshold)
+    resilience = _resilience_metrics(result)
 
     return {
         "config_name": result.config_name,
@@ -107,6 +108,8 @@ def compute_metrics(
         "over_usage_rate": over_usage_rate,
         # Fairness.
         "payoff_gini": gini(payoffs),
+        # Resilience (populated only when a disturbance fired; else None/False).
+        **resilience,
     }
 
 
@@ -138,6 +141,54 @@ def _over_usage_rate(
         return 0.0
     over = sum(1 for r in active if r.total_harvested > msy + 1e-9)
     return over / len(active)
+
+
+def _resilience_metrics(result: RunResult, recovery_fraction: float = 0.9) -> dict[str, Any]:
+    """Recovery metrics measured around the first environmental disturbance.
+
+    A disturbance (e.g. a resource shock) knocks the stock down at a known round;
+    these quantify whether and how fast the system climbs back. All keys are present
+    for a stable CSV schema but are ``None``/``False`` when no disturbance fired.
+
+    - ``shock_round`` — round of the first disturbance.
+    - ``pre_shock_level`` — standing stock just before the shock (the recovery
+      baseline).
+    - ``post_shock_min_level`` — lowest stock reached from the shock onward (how
+      deep the dip went).
+    - ``recovery_time`` — rounds after the shock until the stock first returns to
+      ``recovery_fraction`` of ``pre_shock_level``; ``None`` if it never does
+      (i.e. it did not recover within the run — right-censored).
+    - ``recovered`` — whether recovery occurred within the run.
+
+    Args:
+        result: A completed run.
+        recovery_fraction: Fraction of the pre-shock level that counts as recovered.
+    """
+    keys = ("shock_round", "pre_shock_level", "post_shock_min_level", "recovery_time", "recovered")
+    none_result: dict[str, Any] = dict.fromkeys(keys, None)
+    none_result["recovered"] = False
+
+    shock_round = next((r.round_index for r in result.rounds if r.disturbed), None)
+    if shock_round is None:
+        return none_result
+
+    shock = result.rounds[shock_round]
+    pre_shock_level = shock.resource_start  # stock carried in, before regen + shock
+    after = [r for r in result.rounds if r.round_index >= shock_round]
+    post_shock_min_level = min(r.resource_after_harvest for r in after)
+
+    target = recovery_fraction * pre_shock_level
+    recovered_round = next(
+        (r.round_index for r in after if r.resource_after_harvest >= target), None
+    )
+    recovery_time = None if recovered_round is None else recovered_round - shock_round
+    return {
+        "shock_round": shock_round,
+        "pre_shock_level": pre_shock_level,
+        "post_shock_min_level": post_shock_min_level,
+        "recovery_time": recovery_time,
+        "recovered": recovered_round is not None,
+    }
 
 
 def _approx_capacity_from(result: RunResult) -> float:

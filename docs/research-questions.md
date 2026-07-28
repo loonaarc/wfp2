@@ -73,9 +73,12 @@ current front-runner for the project's specific focus — not yet locked.
   restraint-based responder is the open follow-up.
 
 ### Resilience (RQ-C)
-- **SQ-9** 🔵 After a sudden resource shock (e.g. −50% stock), how long do
-  cooperative vs. conditional-cooperative populations take to recover, if at all?
-- **SQ-10** 🔵 How does resilience scale with group size and with regeneration rate?
+- **SQ-9** 🟢 After a sudden resource shock, how long do populations take to recover,
+  if at all? *Partly answered by [E8](experiments/E8-resilience.md): recovery is
+  decided by information (observing recovers, blind collapses), not enforcement. The
+  `recovery_time`/`recovered` metrics generalise to other mixes.*
+- **SQ-10** 🟡 How does resilience scale with group size and with regeneration rate?
+  *(A sweep of the E8 shock over `N` and `g` — small addition.)*
 
 ### Reproducibility & sensitivity (RQ-D)
 - **SQ-11** 🟢 How much do outcome metrics vary across random seeds for a fixed
@@ -128,4 +131,5 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-5 | conditional + sanctioning strategies | ✅ E2/E3 |
 | SQ-6–8 | broadcast communication | ✅ `broadcast_reliability` + E6/E7 |
 | SQ-3 | outdated-info model | ➕ small `Observation` extension |
-| SQ-9,10 | disturbance module | 🔲 `disturbances` (stubbed) |
+| SQ-9 | resource shock + recovery metrics | ✅ `disturbances.ResourceShock` + E8 |
+| SQ-10 | resilience vs. `N` and `g` | ➕ sweep the E8 shock over `N`, `g` |

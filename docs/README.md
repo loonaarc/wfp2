@@ -9,7 +9,7 @@ and how to run it), **results** (what we found), **reference** (how it works), a
 1. [getting-started.md](getting-started.md) — hands-on: run it, tweak a config, see
    cooperation succeed or collapse (~20 min).
 2. [findings-summary.md](findings-summary.md) — the actual results (experiments
-   E1–E7) in one page, with the overview figure.
+   E1–E8) in one page, with the overview figure.
 3. [project-overview.md](project-overview.md) — the problem in plain language.
 4. [code-walkthrough.md](code-walkthrough.md) — a guided tour of the Python code,
    with diagrams.
@@ -34,8 +34,8 @@ see [getting-started.md](getting-started.md) for setup.
 
 | Doc | What it's for |
 | --- | ------------- |
-| [findings-summary.md](findings-summary.md) | The whole E1–E7 story + overview figure (the writeup spine). |
-| [experiments/](experiments/) | One detailed report per experiment (E1–E7); see its index for the one-line summaries. |
+| [findings-summary.md](findings-summary.md) | The whole E1–E8 story + overview figure (the writeup spine). |
+| [experiments/](experiments/) | One detailed report per experiment (E1–E8); see its index for the one-line summaries. |
 
 ## Reference (how it works)
 
