@@ -167,6 +167,32 @@
   .caption { font-size: 12px; color: var(--muted); margin: 10px 2px 0; max-width: 78ch; }
   .caption code { font-family: var(--mono); font-size: 11px; background: var(--panel-2); padding: 1px 5px; border-radius: 5px; }
   @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+  /* explainer + repo map */
+  section.explain, section.repo { margin-top: 30px; }
+  section.explain > h2, section.repo > h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em;
+  }
+  .section-lede { color: var(--muted); font-size: 14px; margin: 0 0 16px; max-width: 74ch; }
+  .findings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .findings-grid { grid-template-columns: 1fr; } }
+  .finding { padding: 16px 18px; }
+  .finding h3 { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 700; margin: 0 0 10px; }
+  .finding ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .finding li { font-size: 13.5px; color: var(--text); line-height: 1.45; display: flex; gap: 9px; align-items: baseline; }
+  .finding li .arm { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .finding li b { font-weight: 650; }
+  .takeaway { margin-top: 16px; padding: 14px 18px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 10px 10px 0; }
+  .takeaway p { margin: 0; font-size: 14px; }
+  .takeaway b { color: var(--text); }
+
+  .repo-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+  .repo-col { padding: 14px 16px; }
+  .repo-col h3 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 10px; }
+  .repo-col ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .repo-col a { color: var(--accent); text-decoration: none; font-size: 13.5px; font-weight: 550; }
+  .repo-col a:hover { text-decoration: underline; }
+  .repo-col a .m { color: var(--muted); font-weight: 400; }
 </style>
 
 <div class="app">
@@ -176,8 +202,9 @@
       <h1>Watch a shared resource live or die</h1>
       <p class="lede">Eight agents draw from one renewable pool each round. Whether it
         is sustained or collapses depends on <b>who is in the group</b>, <b>what they can
-        see</b>, and <b>whether anyone enforces a limit</b>. Pick a regime or adjust the
-        dials, then press run.</p>
+        see</b>, <b>whether anyone enforces a limit</b>, and <b>whether it survives a
+        shock</b>. Pick a regime or adjust the dials, then press run — this is a live,
+        faithful port of the research engine below.</p>
     </header>
 
     <div class="layout">
@@ -220,6 +247,10 @@
         <div class="field">
           <label for="bcast">Communication <span class="val" id="bcast_v">off</span></label>
           <input type="range" id="bcast" min="0" max="1" step="0.1" value="0" />
+        </div>
+        <div class="field">
+          <label for="shock">Resource shock <span class="val" id="shock_v">off</span></label>
+          <input type="range" id="shock" min="0" max="0.8" step="0.1" value="0" />
         </div>
         <div class="field">
           <label for="rounds">Rounds <span class="val" id="rounds_v">40</span></label>
@@ -274,7 +305,7 @@
             <div class="legend" id="legend"></div>
           </div>
           <div class="foot-row col">
-            <span class="foot-label">Resource stock over rounds (dotted = healthy level, K/2)</span>
+            <span class="foot-label">Resource stock over rounds (grey dotted = healthy level K/2; red dashed = shock)</span>
             <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over rounds"></canvas>
           </div>
         </div>
@@ -289,6 +320,96 @@
       generator differs from Python's, so those numbers are representative, not identical. The
       Python repository is the canonical source of the results.
     </p>
+
+    <!-- ── what the project found ─────────────────────────── -->
+    <section class="explain">
+      <h2>What this project is about</h2>
+      <p class="section-lede">A small, reproducible model to study <b>when and why decentralized
+        cooperation emerges, and how fragile it is</b>. Nine experiments (E1–E9) build one story;
+        every regime above is a slice of it, and every claim below is a runnable, seed-reproducible
+        result — not a new algorithm, but a systematic, literature-grounded measurement.</p>
+      <div class="findings-grid">
+        <div class="card finding">
+          <h3>In calm conditions — the mechanism ladder</h3>
+          <ul>
+            <li><span class="arm">selfish →</span><span>the pool is emptied in one round (tragedy of the commons).</span></li>
+            <li><span class="arm">cooperation →</span><span>sustains it — but is <b>exploited</b> once free-riders appear.</span></li>
+            <li><span class="arm">reciprocity →</span><span>starves free-riders (fairer) yet the retaliation spiral <b>collapses the resource</b>.</span></li>
+            <li><span class="arm">enforcement →</span><span>caps everyone at a quota — the only rule that protects <b>both</b> resource and fairness (monitors pay a cost).</span></li>
+          </ul>
+        </div>
+        <div class="card finding">
+          <h3>Under a shock — resilience</h3>
+          <ul>
+            <li><span class="arm">E8 —</span><span><b>information decides recovery.</b> The same cooperators recover if they can <b>see</b> the depleted stock, and collapse if <b>blind</b>. Enforcement alone does not help.</span></li>
+            <li><span class="arm">E9 —</span><span>with <b>free-riders</b> present, enforcement is <b>also</b> required to recover — observation lets the pool climb back, enforcement decides how many free-riders it can carry.</span></li>
+            <li><span class="arm">↳</span><span>Try the four <b>💥 Shock</b> regimes above to see each case play out.</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="takeaway">
+        <p><b>The throughline:</b> cooperation needs <b>information</b> (to self-correct) and, against
+          free-riders, a <b>binding rule</b> (enforcement). Resilience needs the same two together —
+          neither alone survives a disturbed, mixed commons. This reproduces, in a minimal model,
+          classic results from Hardin, Ostrom, and the evolution-of-cooperation literature.</p>
+      </div>
+    </section>
+
+    <!-- ── explore the repo ───────────────────────────────── -->
+    <section class="repo">
+      <h2>Explore the repository</h2>
+      <p class="section-lede">This demo is one view of a larger, documented research repo. Links are
+        repo-relative — they open when viewing this file inside the repository (locally or on the
+        code host).</p>
+      <div class="repo-cols">
+        <div class="card repo-col">
+          <h3>Start here</h3>
+          <ul>
+            <li><a href="../README.md">README <span class="m">— what &amp; why</span></a></li>
+            <li><a href="../docs/getting-started.md">Getting started <span class="m">— hands-on run</span></a></li>
+            <li><a href="../docs/findings-summary.md">Findings summary <span class="m">— the whole story</span></a></li>
+            <li><a href="../docs/project-overview.md">Project overview <span class="m">— plain language</span></a></li>
+          </ul>
+        </div>
+        <div class="card repo-col">
+          <h3>The experiments (E1–E9)</h3>
+          <ul>
+            <li><a href="../docs/experiments/README.md">All reports <span class="m">— index</span></a></li>
+            <li><a href="../docs/experiments/E1-information-and-knowledge.md">E1 — information &amp; knowledge</a></li>
+            <li><a href="../docs/experiments/E3-sanctioning.md">E3 — sanctioning</a></li>
+            <li><a href="../docs/experiments/E8-resilience.md">E8 — resilience (the shock)</a></li>
+            <li><a href="../docs/experiments/E9-resilience-with-free-riders.md">E9 — shock + free-riders</a></li>
+          </ul>
+        </div>
+        <div class="card repo-col">
+          <h3>How it works</h3>
+          <ul>
+            <li><a href="../docs/architecture.md">Architecture <span class="m">— the engine</span></a></li>
+            <li><a href="../docs/code-walkthrough.md">Code walkthrough</a></li>
+            <li><a href="../docs/terminology.md">Terminology</a></li>
+            <li><a href="../docs/metrics.md">Metrics</a></li>
+          </ul>
+        </div>
+        <div class="card repo-col">
+          <h3>Decisions &amp; direction</h3>
+          <ul>
+            <li><a href="../docs/decisions/README.md">Decision records (ADRs)</a></li>
+            <li><a href="../docs/research-direction.md">Research direction <span class="m">— roadmap</span></a></li>
+            <li><a href="../docs/research-questions.md">Research questions</a></li>
+            <li><a href="../docs/literature-review.md">Literature review</a></li>
+          </ul>
+        </div>
+        <div class="card repo-col">
+          <h3>Run it yourself</h3>
+          <ul>
+            <li><a href="../scripts/">scripts/ <span class="m">— E1–E9 + figures</span></a></li>
+            <li><a href="../scripts/experiment_resilience.py">E8 script</a></li>
+            <li><a href="../scripts/experiment_resilience_freeriders.py">E9 script</a></li>
+            <li><a href="../notebooks/explore.ipynb">notebook <span class="m">— same regimes, real engine</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
   </div>
 </div>
 
@@ -355,6 +476,9 @@
     const payoff = new Array(n).fill(0), frames = [];
     for (let t = 0; t < o.rounds; t++) {
       level = regen(level);
+      // disturbance: a scheduled resource shock (deterministic; ADR-0008 / E8–E9)
+      const shocked = o.shock > 0 && t === o.shockRound;
+      if (shocked) level = Math.max(0, level * (1 - o.shock));
       const req = agents.map((a) => {
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) signal = lastTotal;
@@ -374,7 +498,7 @@
       const total = h.reduce((x, y) => x + y, 0);
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
       level -= total; lastTotal = total;
-      frames.push({ harv: h, stock: level, collapsed: level <= THRESH });
+      frames.push({ harv: h, stock: level, collapsed: level <= THRESH, shock: shocked });
     }
     return { kinds: agents.map((a) => a.kind), frames, payoff, n };
   }
@@ -395,13 +519,18 @@
     "🛡️ Enforcement holds": { ctype: "sanctioning", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🙈 Blind & overconfident": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "📣 Communication → fairness": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
+    "💥 Shock — observing recovers (E8)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
+    "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
+    "💥 Shock — free-riders break it (E9)": { ctype: "cooperative", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
+    "💥 Shock — enforcement recovers it (E9)": { ctype: "sanctioning", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
   const els = {
     regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
-    kb: $("kb"), noise: $("noise"), bcast: $("bcast"), rounds: $("rounds"), seed: $("seed"),
+    kb: $("kb"), noise: $("noise"), bcast: $("bcast"), shock: $("shock"),
+    rounds: $("rounds"), seed: $("seed"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
@@ -423,6 +552,7 @@
     kb: "How accurate a blind agent's estimate of the sustainable yield is. 1.0 = accurate; >1 = overconfident (over-harvests); <1 = over-cautious. Only matters under private information.",
     noise: "Random wobble added to each agent's request. 0 = fully deterministic. (With noise on, the browser's randomness differs from the Python engine, so numbers are representative.)",
     bcast: "Chance each round that agents hear a broadcast of the group's total harvest. off = silent; 1.0 = always heard. Lets blind agents detect over-use.",
+    shock: "A one-off disturbance: remove this fraction of the stock at the half-way round (a drought/die-off). off = none. Reveals resilience — who recovers and who collapses (experiments E8–E9).",
     rounds: "How many rounds to simulate.",
     seed: "Random seed — only changes the outcome when decision noise or partial communication is on.",
   };
@@ -446,6 +576,10 @@
     "🛡️ Enforcement holds": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
     "🙈 Blind & overconfident": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "📣 Communication → fairness": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
+    "💥 Shock — observing recovers (E8)": "A settled cooperative pool is hit by a 70% shock mid-run. Because the agents can SEE the depleted stock, they stop harvesting and let it regrow — full recovery in a few rounds.",
+    "💥 Shock — blind collapses (E8)": "The same shock, same cooperators — but BLIND (private info). They keep taking the steady-state amount from a shrunken pool and drive it to collapse. Same intent, opposite fate: information decides resilience.",
+    "💥 Shock — free-riders break it (E9)": "Observing cooperators plus 2 free-riders, then a shock. Observation lets them climb back — but only to the level the free-riders already dragged it to, which is collapse. Watch it fail to return to healthy.",
+    "💥 Shock — enforcement recovers it (E9)": "Same mix and shock, but the cooperators enforce a quota. The cap contains the free-riders during the fragile recovery, and the pool returns to half-full. With free-riders, you need enforcement too.",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -455,6 +589,7 @@
     $("kb_v").textContent = (+els.kb.value).toFixed(1) + "×";
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
     $("bcast_v").textContent = +els.bcast.value === 0 ? "off" : (+els.bcast.value).toFixed(1);
+    $("shock_v").textContent = +els.shock.value === 0 ? "off" : "−" + Math.round(+els.shock.value * 100) + "%";
     $("rounds_v").textContent = els.rounds.value;
     $("seed_v").textContent = els.seed.value;
   }
@@ -466,6 +601,8 @@
     applying = true;
     els.ctype.value = r.ctype; els.nsel.value = r.nsel; els.info.value = r.info;
     els.kb.value = r.kb; els.noise.value = r.noise; els.bcast.value = r.bcast;
+    els.shock.value = r.shock ?? 0;
+    if (r.rounds) els.rounds.value = r.rounds;
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -474,7 +611,7 @@
   }
   els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
-  ["nsel", "kb", "noise", "bcast"].forEach((k) =>
+  ["nsel", "kb", "noise", "bcast", "shock"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -492,9 +629,11 @@
   }
   function run() {
     const specs = currentSpecs();
+    const rounds = +els.rounds.value;
     const opts = {
       info: els.info.value, noise: +els.noise.value, broadcast: +els.bcast.value,
-      rounds: +els.rounds.value, seed: +els.seed.value,
+      rounds, seed: +els.seed.value,
+      shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
     };
     sim = runSim(specs, opts);
     // cumulative payoff per frame for agent sizing
@@ -627,6 +766,13 @@
     ctx.strokeStyle = css("--border"); ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(pad, Y(50)); ctx.lineTo(w - pad, Y(50)); ctx.stroke();
     ctx.setLineDash([]);
+    // shock marker (vertical dashed line at the disturbed round)
+    const si = sim.frames.findIndex((f) => f.shock);
+    if (si >= 0) {
+      ctx.strokeStyle = css("--bad"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(X(si), pad); ctx.lineTo(X(si), h - pad); ctx.stroke();
+      ctx.setLineDash([]);
+    }
     // area + line
     ctx.beginPath(); ctx.moveTo(X(0), Y(sim.frames[0].stock));
     for (let i = 1; i < N; i++) ctx.lineTo(X(i), Y(sim.frames[i].stock));
