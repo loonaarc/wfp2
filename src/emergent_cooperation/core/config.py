@@ -19,7 +19,7 @@ import yaml
 INFORMATION_MODELS = ("global", "private")
 
 # Environmental disturbances the engine knows how to apply (see :mod:`disturbances`).
-DISTURBANCE_KINDS = ("resource_shock",)
+DISTURBANCE_KINDS = ("resource_shock", "agent_failure")
 
 
 @dataclass(frozen=True)
@@ -33,10 +33,14 @@ class DisturbanceConfig:
 
     Attributes:
         kind: One of :data:`DISTURBANCE_KINDS`. ``"resource_shock"`` removes a
-            fraction of the standing stock in a single round (a "pulse" shock).
+            fraction of the standing stock in a single round (a "pulse" shock);
+            ``"agent_failure"`` deactivates a fraction of the agents (they stop
+            requesting, harvesting, and — if a sanctioner — enforcing).
         round: Zero-based round at which the disturbance fires.
-        magnitude: Kind-specific size. For ``"resource_shock"`` it is the fraction
-            of the stock removed, in ``(0, 1]`` (``0.7`` = lose 70%).
+        magnitude: Kind-specific size, always a fraction in ``(0, 1]``. For
+            ``"resource_shock"`` it is the fraction of the stock removed (``0.7`` =
+            lose 70%); for ``"agent_failure"`` it is the fraction of agents that fail
+            (``0.25`` = one in four; agents fail in index/spec order).
     """
 
     kind: str = "resource_shock"
@@ -48,8 +52,8 @@ class DisturbanceConfig:
             raise ValueError(f"kind must be one of {DISTURBANCE_KINDS}, got {self.kind!r}")
         if self.round < 0:
             raise ValueError("round must be non-negative")
-        if self.kind == "resource_shock" and not 0 < self.magnitude <= 1:
-            raise ValueError("resource_shock magnitude must be in (0, 1]")
+        if not 0 < self.magnitude <= 1:
+            raise ValueError(f"{self.kind} magnitude must be in (0, 1]")
 
 
 @dataclass(frozen=True)

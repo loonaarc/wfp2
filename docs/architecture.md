@@ -37,7 +37,7 @@ src/emergent_cooperation/
 │   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
 │   └── registry.py     name → class registry (extension point)
 ├── communication/      per-agent CommunicationModel protocol (reserved); broadcast lives in core
-├── disturbances/       Disturbance protocol + ResourceShock (config-scheduled; ADR-0008)
+├── disturbances/       Disturbance protocol + ResourceShock / AgentFailure (config-scheduled; ADR-0008)
 ├── metrics/
 │   └── metrics.py      compute_metrics, gini
 ├── experiments/
@@ -102,10 +102,11 @@ a DataFrame; `export_outcome` writes a self-contained, reproducible output
 directory; `Provenance` captures the software/environment context.
 
 ### `disturbances`
-The `Disturbance` protocol plus `ResourceShock`, a config-scheduled pulse that cuts
-the stock at a set round (ADR-0008). The engine applies scheduled disturbances in the
-`disturb` step and marks the affected `RoundRecord`. Agent failure and communication
-failure are the next kinds behind the same interface.
+The `Disturbance` protocol plus two config-scheduled kinds (ADR-0008): `ResourceShock`
+(cuts the stock at a set round) and `AgentFailure` (deactivates a fraction of the
+agents — they stop requesting, harvesting, and enforcing). The engine applies scheduled
+disturbances in the `disturb` step and marks the affected `RoundRecord`. Communication
+failure is the next kind behind the same interface.
 
 ### `communication` (partly stubbed)
 The per-agent `CommunicationModel` protocol fixes the intended interface for a fuller
@@ -141,9 +142,9 @@ For round `t` (in `Simulation.step`):
 
 1. **Snapshot** `resource_start = pool.level` (stock carried from `t−1`).
 2. **Regenerate:** `pool.regenerate()`.
-3. **Disturb:** apply any disturbance scheduled for round `t` (e.g. a resource shock
-   cuts the stock); `resource_after_regen` reflects the post-shock level and the
-   round is flagged `disturbed`. No-op when nothing is scheduled (ADR-0008).
+3. **Disturb:** apply any disturbance scheduled for round `t` — a resource shock cuts
+   the stock, or an agent failure deactivates some agents; the round is flagged
+   `disturbed`. No-op when nothing is scheduled (ADR-0008).
 4. **Observe:** build each agent's `Observation` of the (regrown, possibly shocked)
    stock, respecting the information model.
 5. **Decide:** each agent returns a non-negative requested consumption.
@@ -189,8 +190,8 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 - Communication is a single true aggregate broadcast (no per-agent messages,
   deception, delay, or topology yet — ADR-0007); the full `CommunicationModel`
   protocol remains stubbed.
-- Disturbances cover a single deterministic *pulse* resource shock (ADR-0008); agent
-  failure, communication failure, and *press* (sustained) disturbances are not yet
-  implemented.
+- Disturbances cover a deterministic *pulse* resource shock and *agent failure*
+  (ADR-0008); communication failure, *press* (sustained) disturbances, and agents that
+  rejoin/are replaced are not yet implemented.
 - Stochasticity is available (`decision_noise`, broadcast message loss), but the
   strategies themselves are deterministic; a stochastic *strategy* is future work.

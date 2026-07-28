@@ -129,6 +129,10 @@ Related concepts:
 - **Resource shock** — a *pulse* disturbance that removes a fraction of the stock in
   one round (`magnitude = 0.7` → lose 70%). The first implemented disturbance kind.
   *(model term: `disturbances.ResourceShock`.)*
+- **Agent failure** — a disturbance that deactivates a fraction of the agents at a
+  scheduled round: they stop requesting, harvesting, and (if a sanctioner) enforcing.
+  Tests tolerance to agent loss (E10). *(model term: `disturbances.AgentFailure`;
+  `Agent.active`.)*
 - **Recovery time** — rounds after a shock until the stock returns to ≥ 90% of its
   pre-shock level; undefined (right-censored) if it never does. *(model term: the
   `recovery_time` metric.)*

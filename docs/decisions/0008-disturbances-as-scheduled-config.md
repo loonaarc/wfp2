@@ -78,5 +78,10 @@ needs to be told out-of-band when the shock happened.
   stochastic disturbance timing are not modelled. A genuinely random disturbance
   regime, if ever needed, should draw from a **separate, explicitly seeded** stream
   rather than the per-agent streams, to keep provenance clean.
-- **Follow-ups.** `AgentDropout` (agent failure) and a `communication_failure` kind;
-  a *press* shock; recovery metrics beyond time-to-90% (e.g. cumulative shortfall).
+- **Update.** A second kind, `agent_failure` (:class:`AgentFailure`), now ships against
+  this same design — it deactivates a fraction of the agents at a scheduled round
+  (E10). It confirmed the interface generalises beyond the pool: a disturbance may
+  mutate the *agents*, not just the resource, with the same `disturbed` bookkeeping.
+- **Follow-ups.** A `communication_failure` kind; a *press* (sustained) shock; agents
+  that rejoin/are replaced; recovery metrics beyond time-to-90% (e.g. cumulative
+  shortfall).

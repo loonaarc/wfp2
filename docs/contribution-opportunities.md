@@ -37,7 +37,7 @@ information conditions and group sizes, with proper seed statistics.
 - **Dependencies:** one more strategy (conditional cooperator); sweep tooling.
 - **Evaluation:** distributions across ≥20 seeds; effect sizes; sensitivity sweeps.
 - **Verdict:** ✅ Strongest bachelor-appropriate target — **realized** across
-  experiments E1–E9 ([findings-summary.md](findings-summary.md)), including robustness
+  experiments E1–E10 ([findings-summary.md](findings-summary.md)), including robustness
   and sensitivity (E4). Remaining: larger seed sets once a genuinely *stochastic
   strategy* exists.
 
@@ -64,11 +64,12 @@ malicious agents) + resilience metrics.
 - **Dependencies:** `disturbances` module + recovery-time metric — **both built**
   (ADR-0008; `ResourceShock`, `recovery_time`/`recovered`).
 - **Evaluation:** recovery time and post-shock sustainability vs. baselines.
-- **Verdict:** 🔄 Strong thesis extension, **now under way** — the resource shock +
-  resilience metrics ship, with two results: E8 (information, not enforcement, decides
-  a pure population's recovery) and E9 (with free-riders, enforcement is also
-  required). Remaining: agent/communication failure; the blind + free-rider cell; a
-  *press* disturbance.
+- **Verdict:** 🔄 Strong thesis extension, **now under way** — the resource shock and
+  agent-failure disturbances + resilience metrics ship, with three results: E8
+  (information, not enforcement, decides a pure population's recovery), E9 (with
+  free-riders, enforcement is also required), and E10 (enforcement is a single point of
+  failure). Remaining: communication failure; monitor-redundancy sweeps; a *press*
+  disturbance.
 
 ## C5. Measurement framework for cooperation, self-organization, fairness, resilience
 Carefully defined, validated metrics with stated assumptions and limitations, plus

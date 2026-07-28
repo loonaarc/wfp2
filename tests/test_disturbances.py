@@ -8,8 +8,8 @@ from emergent_cooperation.core.config import (
     ResourceConfig,
     SimulationConfig,
 )
-from emergent_cooperation.core.simulation import run_simulation
-from emergent_cooperation.disturbances import ResourceShock, build_disturbances
+from emergent_cooperation.core.simulation import Simulation, run_simulation
+from emergent_cooperation.disturbances import AgentFailure, ResourceShock, build_disturbances
 from emergent_cooperation.environment.resource import ResourcePool
 from emergent_cooperation.metrics.metrics import compute_metrics
 
@@ -145,3 +145,64 @@ def test_enforcement_outlasts_cooperation_under_shock_with_free_riders():
     assert coop["final_resource_level"] < 25  # cooperation degraded / not restored
     assert enforced["final_resource_level"] > 40  # enforcement back toward K/2
     assert enforced["final_resource_level"] > coop["final_resource_level"]
+
+
+# --- agent failure (E10) -------------------------------------------------------
+
+
+def test_agent_failure_kind_validates_magnitude():
+    with pytest.raises(ValueError, match="magnitude"):
+        DisturbanceConfig(kind="agent_failure", round=5, magnitude=1.5)
+
+
+def test_agent_failure_deactivates_agents_in_index_order():
+    failure = AgentFailure(round=3, fraction=0.25)
+    agents = [type("A", (), {"active": True})() for _ in range(8)]
+    assert failure.apply(2, None, agents) is False  # not its round
+    assert all(a.active for a in agents)
+    assert failure.apply(3, None, agents) is True
+    assert [a.active for a in agents] == [False, False, True, True, True, True, True, True]
+
+
+def _e10_cfg(agents, *, fail=True, rounds=60):
+    disturbances = (
+        (DisturbanceConfig("agent_failure", round=30, magnitude=0.25),) if fail else ()
+    )
+    return SimulationConfig(
+        name="e10",
+        rounds=rounds,
+        information_model="global",
+        resource=ResourceConfig(initial_level=50.0, capacity=100.0, regeneration_rate=0.4),
+        agents=agents,
+        disturbances=disturbances,
+    )
+
+
+_SANCTION = {"regeneration_rate": 0.4, "capacity": 100.0, "monitoring_cost": 0.2}
+_COOP = {"regeneration_rate": 0.4, "capacity": 100.0}
+
+
+def test_failed_agent_goes_inactive_and_stops_harvesting():
+    # Agent 0 fails at round 30; afterwards it must be inactive and harvest nothing.
+    cfg = _e10_cfg((AgentSpec("cooperative", 8, _COOP),))
+    sim = Simulation(cfg, seed=1)
+    sim.run()
+    failed = sim.agents[0]
+    assert failed.active is False
+    assert failed.last_harvest == 0.0  # nothing harvested in the final (post-failure) round
+
+
+def test_losing_the_enforcer_collapses_a_commons_that_holds_without_failure():
+    # E10 headline: enforcement is a single point of failure.
+    enforced = (AgentSpec("sanctioning", 2, _SANCTION), AgentSpec("selfish", 6, {"greed": 1.0}))
+    held = run_simulation(_e10_cfg(enforced, fail=False), seed=1).final_resource_level
+    lost = run_simulation(_e10_cfg(enforced, fail=True), seed=1).final_resource_level
+    assert held > 40  # enforcement holds the commons when nobody fails
+    assert lost < 5  # failing the 2 sanctioners removes enforcement -> collapse
+
+
+def test_self_correcting_commons_is_robust_to_losing_members():
+    # Contrast: losing cooperators does not endanger a self-organizing commons.
+    coop = (AgentSpec("cooperative", 8, _COOP),)
+    lost = run_simulation(_e10_cfg(coop, fail=True), seed=1).final_resource_level
+    assert lost > 40  # the remaining cooperators still self-correct

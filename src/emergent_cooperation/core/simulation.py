@@ -123,7 +123,10 @@ class Simulation:
             A ``(harvests, total_harvested, penalties)`` triple, where ``penalties``
             is the per-agent monitoring cost paid this round (0 for non-sanctioners).
         """
-        policies = [agent.strategy.sanction_policy() for agent in self.agents]
+        # A failed (inactive) sanctioner no longer enforces.
+        policies = [
+            agent.strategy.sanction_policy() if agent.active else None for agent in self.agents
+        ]
         active = [p for p in policies if p is not None]
         penalties = [0.0] * len(self.agents)
         if not active:
@@ -163,10 +166,13 @@ class Simulation:
         disturbed = self._disturb(round_index)
         resource_after_regen = self.pool.level
 
+        # Failed agents (agent_failure disturbance) request nothing; active ones decide.
         requests = [
             agent.decide(
                 self._observe(agent, round_index, self._agent_rngs[i]), self._agent_rngs[i]
             )
+            if agent.active
+            else 0.0
             for i, agent in enumerate(self.agents)
         ]
         harvests, total_harvested = self._allocate(requests)

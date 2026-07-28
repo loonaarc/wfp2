@@ -88,9 +88,13 @@ disruption.
   is additionally required** to recover — cooperation recovers only up to ~1
   free-rider, enforcement up to 3 of 8. Resilience needs *both* information (E8) and
   enforcement (E9).
-- ⏳ Next: **agent failure** and **communication failure** disturbances (same
-  interface); the blind + free-rider "needs both" cell; a *press* (sustained)
-  disturbance.
+- ✅ **Agent failure (E10):** agents dropping out mid-run. **Who fails decides** —
+  losing the enforcer collapses the commons, losing a cooperator is harmless, losing a
+  free-rider helps. Enforcement is a **single point of failure**; distributed
+  self-correction degrades gracefully.
+- ⏳ Next: **communication failure** (the broadcast drops) on the same interface;
+  monitor **redundancy** sweeps; a *press* (sustained) disturbance; agents that
+  rejoin/are replaced.
 
 ### Phase 4 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

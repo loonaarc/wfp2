@@ -49,6 +49,8 @@ results/**
 !results/E8_resilience/**
 !results/E9_resilience_freeriders/
 !results/E9_resilience_freeriders/**
+!results/E10_agent_failure/
+!results/E10_agent_failure/**
 
 # OS / editor
 .DS_Store

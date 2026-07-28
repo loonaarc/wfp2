@@ -74,7 +74,7 @@ src/emergent_cooperation/
 │   └── main.py          The `emergent-coop` terminal command
 ├── communication/       CommunicationModel protocol (stub); a first broadcast model
 │                         is live via SimulationConfig.broadcast_reliability + Observation.signal
-└── disturbances/        Disturbance protocol + ResourceShock (config-scheduled; ADR-0008)
+└── disturbances/        Disturbance protocol + ResourceShock / AgentFailure (config-scheduled)
 ```
 
 A useful way to think about it in **layers**, from foundations up:
@@ -535,12 +535,14 @@ collapse.** That's the phenomenon this whole codebase exists to study.
   implemented** (ADR-0007): `SimulationConfig.broadcast_reliability` makes the engine
   deliver an aggregate `signal` (the group's total harvest last round) into each
   agent's `Observation` with a per-round probability. Studied in experiments E6–E7.
-- **`disturbances/`** — the `Disturbance` protocol plus `ResourceShock`, a
-  config-scheduled pulse that cuts the stock at a set round to test **resilience**
-  (ADR-0008). The engine applies it in the `disturb` step and marks the round;
-  `compute_metrics` then reports `recovery_time`/`recovered`. Studied in
-  [E8](experiments/E8-resilience.md) (information, not enforcement, decides recovery).
-  Agent failure and communication failure are the next kinds.
+- **`disturbances/`** — the `Disturbance` protocol plus two config-scheduled kinds
+  (ADR-0008): `ResourceShock` (cuts the stock at a set round) and `AgentFailure`
+  (deactivates a fraction of the agents). The engine applies them in the `disturb`
+  step and marks the round; `compute_metrics` reports `recovery_time`/`recovered`.
+  Studied in [E8](experiments/E8-resilience.md) and
+  [E9](experiments/E9-resilience-with-free-riders.md) (the shock) and
+  [E10](experiments/E10-agent-failure.md) (agent failure — enforcement is a single
+  point of failure). Communication failure is the next kind.
 
 ---
 

@@ -9,9 +9,11 @@ Disturbances are **deterministic and config-driven** (scheduled by round, not by
 random draw), so a run stays a pure function of ``(config, seed)``: the shock is
 part of the configuration, not a source of hidden randomness. See ADR-0008.
 
-Currently implemented: :class:`~emergent_cooperation.disturbances.shocks.ResourceShock`
-(a pulse loss of stock). Agent failure, communication failure, and misleading
-information are the next kinds to add against the same interface.
+Implemented kinds: :class:`~emergent_cooperation.disturbances.shocks.ResourceShock`
+(a pulse loss of stock) and
+:class:`~emergent_cooperation.disturbances.shocks.AgentFailure` (agents dropping out).
+Communication failure and misleading information are the next kinds to add against
+the same interface.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from ..core.config import DisturbanceConfig
-from .shocks import ResourceShock, build_disturbances
+from .shocks import AgentFailure, ResourceShock, build_disturbances
 
 
 @runtime_checkable
@@ -41,4 +43,10 @@ class Disturbance(Protocol):
         ...
 
 
-__all__ = ["Disturbance", "DisturbanceConfig", "ResourceShock", "build_disturbances"]
+__all__ = [
+    "AgentFailure",
+    "Disturbance",
+    "DisturbanceConfig",
+    "ResourceShock",
+    "build_disturbances",
+]

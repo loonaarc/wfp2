@@ -78,6 +78,10 @@ current front-runner for the project's specific focus — not yet locked.
   information decides recovery, not enforcement) and
   [E9](experiments/E9-resilience-with-free-riders.md) (with free-riders, enforcement is
   also required). Resilience needs both.*
+- **SQ-9b** 🟢 When agents *fail* (drop out mid-run), does the commons survive, and
+  does it matter who? *Answered by [E10](experiments/E10-agent-failure.md): who fails
+  decides — losing the enforcer collapses it, a cooperator is harmless, a free-rider
+  helps. Enforcement is a single point of failure.*
 - **SQ-10** 🟡 How does resilience scale with group size and with regeneration rate?
   *(A sweep of the E8 shock over `N` and `g` — small addition.)*
 
@@ -132,5 +136,6 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-5 | conditional + sanctioning strategies | ✅ E2/E3 |
 | SQ-6–8 | broadcast communication | ✅ `broadcast_reliability` + E6/E7 |
 | SQ-3 | outdated-info model | ➕ small `Observation` extension |
-| SQ-9 | resource shock + recovery metrics | ✅ `disturbances.ResourceShock` + E8 |
+| SQ-9 | resource shock + recovery metrics | ✅ `disturbances.ResourceShock` + E8/E9 |
+| SQ-9b | agent failure | ✅ `disturbances.AgentFailure` + E10 |
 | SQ-10 | resilience vs. `N` and `g` | ➕ sweep the E8 shock over `N`, `g` |

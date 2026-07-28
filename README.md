@@ -37,7 +37,7 @@ application area (traffic, energy, epidemics, etc.).
   over-usage, and fairness (Gini);
 - reproducible result export (config + metrics + history + provenance);
 - environmental **disturbances** (a resource shock) with resilience metrics (E8);
-- a CLI, nine experiments (E1–E9), and 75 passing tests.
+- a CLI, ten experiments (E1–E10), and 80 passing tests.
 
 Partly implemented: disturbances so far cover a single resource shock (agent /
 communication failure are next), and the full per-agent `CommunicationModel` (a first
@@ -125,7 +125,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ├── docs/                     Documentation — see docs/README.md for the index
 │   ├── README.md             Documentation index + recommended reading path
 │   ├── getting-started.md    Hands-on walkthrough (run it, tweak it)
-│   ├── findings-summary.md   The E1–E9 results in one page (the writeup spine)
+│   ├── findings-summary.md   The E1–E10 results in one page (the writeup spine)
 │   ├── project-overview.md   The problem in accessible language
 │   ├── research-direction.md Chosen direction and roadmap (canonical)
 │   ├── research-questions.md Broad questions, testable subquestions, hypotheses
@@ -134,7 +134,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 │   ├── architecture.md       Components, interfaces, data flow
 │   ├── experiment-design.md  Variables, baselines, seeds, reproducibility
 │   ├── metrics.md            Metric definitions, formulas, limitations
-│   ├── experiments/          One report per experiment E1–E9 (+ index)
+│   ├── experiments/          One report per experiment E1–E10 (+ index)
 │   ├── contribution-opportunities.md
 │   ├── literature-review.md  Structured overview of the field
 │   ├── paper-notes/          One analysed note per paper (+ template)
@@ -153,7 +153,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ## Results so far
 
 **➜ Read the [findings summary](docs/findings-summary.md)** — the whole story
-(experiments **E1–E9**) in one page, with the overview figure. The per-experiment
+(experiments **E1–E10**) in one page, with the overview figure. The per-experiment
 reports and a one-line index live in [docs/experiments/](docs/experiments/).
 
 The throughline: cooperation needs *information* (E1, E6); its outcome is decided by

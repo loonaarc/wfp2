@@ -56,7 +56,7 @@ Any new mechanism (a strategy, a communication model, a disturbance) is evaluate
 **against these baselines**, not in isolation.
 
 Systematic studies use the sweep runner (`experiments.sweep.run_grid`) to cover a
-grid of parameter values; worked examples are the nine experiments E1–E9
+grid of parameter values; worked examples are the ten experiments E1–E10
 (`scripts/experiment_*.py`, written up in [experiments/](experiments/) and the
 [findings summary](findings-summary.md)).
 

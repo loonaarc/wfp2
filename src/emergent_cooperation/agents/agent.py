@@ -23,6 +23,9 @@ class Agent:
         strategy: The decision rule this agent follows.
         total_payoff: Accumulated realised harvest over the run.
         last_harvest: Realised harvest from the most recent round.
+        active: Whether the agent is still participating. An ``agent_failure``
+            disturbance sets this ``False``; a failed agent requests and harvests
+            nothing and (if a sanctioner) stops enforcing.
     """
 
     def __init__(self, agent_id: int, strategy: Strategy, decision_noise: float = 0.0) -> None:
@@ -39,6 +42,7 @@ class Agent:
         self.decision_noise = decision_noise
         self.total_payoff: float = 0.0
         self.last_harvest: float = 0.0
+        self.active: bool = True
 
     @property
     def strategy_name(self) -> str:

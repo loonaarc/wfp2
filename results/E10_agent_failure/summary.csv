@@ -1,0 +1,7 @@
+scenario,failure,final_sustainability
+enforcer fails,True,8.096073360167904e-15
+enforcer fails,False,0.5081193235886658
+cooperator fails,True,0.5328787389385828
+cooperator fails,False,0.4997558630916529
+free-rider fails,True,0.5328787389385828
+free-rider fails,False,0.17025568029267926
