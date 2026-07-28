@@ -253,6 +253,10 @@
           <input type="range" id="shock" min="0" max="0.8" step="0.1" value="0" />
         </div>
         <div class="field">
+          <label for="fail">Agent failure <span class="val" id="fail_v">off</span></label>
+          <input type="range" id="fail" min="0" max="4" step="1" value="0" />
+        </div>
+        <div class="field">
           <label for="rounds">Rounds <span class="val" id="rounds_v">40</span></label>
           <input type="range" id="rounds" min="20" max="60" step="10" value="40" />
         </div>
@@ -305,7 +309,7 @@
             <div class="legend" id="legend"></div>
           </div>
           <div class="foot-row col">
-            <span class="foot-label">Resource stock over rounds (grey dotted = healthy level K/2; red dashed = shock)</span>
+            <span class="foot-label">Resource stock over rounds (grey dotted = healthy K/2; red dashed = shock; purple dashed = agent failure)</span>
             <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over rounds"></canvas>
           </div>
         </div>
@@ -325,7 +329,7 @@
     <section class="explain">
       <h2>What this project is about</h2>
       <p class="section-lede">A small, reproducible model to study <b>when and why decentralized
-        cooperation emerges, and how fragile it is</b>. Nine experiments (E1–E9) build one story;
+        cooperation emerges, and how fragile it is</b>. Ten experiments (E1–E10) build one story;
         every regime above is a slice of it, and every claim below is a runnable, seed-reproducible
         result — not a new algorithm, but a systematic, literature-grounded measurement.</p>
       <div class="findings-grid">
@@ -339,11 +343,12 @@
           </ul>
         </div>
         <div class="card finding">
-          <h3>Under a shock — resilience</h3>
+          <h3>Under disturbance — resilience</h3>
           <ul>
-            <li><span class="arm">E8 —</span><span><b>information decides recovery.</b> The same cooperators recover if they can <b>see</b> the depleted stock, and collapse if <b>blind</b>. Enforcement alone does not help.</span></li>
+            <li><span class="arm">E8 —</span><span><b>information decides recovery.</b> The same cooperators recover from a shock if they can <b>see</b> the depleted stock, and collapse if <b>blind</b>. Enforcement alone does not help.</span></li>
             <li><span class="arm">E9 —</span><span>with <b>free-riders</b> present, enforcement is <b>also</b> required to recover — observation lets the pool climb back, enforcement decides how many free-riders it can carry.</span></li>
-            <li><span class="arm">↳</span><span>Try the four <b>💥 Shock</b> regimes above to see each case play out.</span></li>
+            <li><span class="arm">E10 —</span><span>when agents <b>fail</b>, <b>who fails decides</b>: losing the enforcer collapses the commons, a cooperator is harmless, a free-rider helps. Enforcement is a <b>single point of failure</b>.</span></li>
+            <li><span class="arm">↳</span><span>Try the <b>💥 Shock</b> and <b>🔌/🧩 failure</b> regimes above to see each case play out.</span></li>
           </ul>
         </div>
       </div>
@@ -372,13 +377,14 @@
           </ul>
         </div>
         <div class="card repo-col">
-          <h3>The experiments (E1–E9)</h3>
+          <h3>The experiments (E1–E10)</h3>
           <ul>
             <li><a href="../docs/experiments/README.md">All reports <span class="m">— index</span></a></li>
             <li><a href="../docs/experiments/E1-information-and-knowledge.md">E1 — information &amp; knowledge</a></li>
             <li><a href="../docs/experiments/E3-sanctioning.md">E3 — sanctioning</a></li>
             <li><a href="../docs/experiments/E8-resilience.md">E8 — resilience (the shock)</a></li>
             <li><a href="../docs/experiments/E9-resilience-with-free-riders.md">E9 — shock + free-riders</a></li>
+            <li><a href="../docs/experiments/E10-agent-failure.md">E10 — agent failure</a></li>
           </ul>
         </div>
         <div class="card repo-col">
@@ -402,7 +408,7 @@
         <div class="card repo-col">
           <h3>Run it yourself</h3>
           <ul>
-            <li><a href="../scripts/">scripts/ <span class="m">— E1–E9 + figures</span></a></li>
+            <li><a href="../scripts/">scripts/ <span class="m">— E1–E10 + figures</span></a></li>
             <li><a href="../scripts/experiment_resilience.py">E8 script</a></li>
             <li><a href="../scripts/experiment_resilience_freeriders.py">E9 script</a></li>
             <li><a href="../notebooks/explore.ipynb">notebook <span class="m">— same regimes, real engine</span></a></li>
@@ -469,7 +475,7 @@
     for (const s of specs) for (let i = 0; i < s.count; i++) agents.push({
       kind: s.kind,
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: 0.2 },
-      isS: s.kind === "sanctioning", st: { last: null },
+      isS: s.kind === "sanctioning", st: { last: null }, active: true,
     });
     const n = agents.length, rng = mulberry32(o.seed);
     let level = INIT, lastTotal = 0;
@@ -479,7 +485,14 @@
       // disturbance: a scheduled resource shock (deterministic; ADR-0008 / E8–E9)
       const shocked = o.shock > 0 && t === o.shockRound;
       if (shocked) level = Math.max(0, level * (1 - o.shock));
+      // disturbance: agent failure — deactivate the first `failCount` agents (E10)
+      let failed = false;
+      if (o.failCount > 0 && t === o.failRound) {
+        let toFail = o.failCount;
+        for (const a of agents) { if (toFail <= 0) break; if (a.active) { a.active = false; toFail--; failed = true; } }
+      }
       const req = agents.map((a) => {
+        if (!a.active) return 0;  // a failed agent requests nothing
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) signal = lastTotal;
         const obs = { level: o.info === "global" ? level : null, signal, n, cap: K };
@@ -490,15 +503,16 @@
       const tot = req.reduce((x, y) => x + y, 0);
       let h = tot <= level || tot === 0 ? req.slice() : req.map((r) => (r * level) / tot);
       const pen = new Array(n).fill(0);
-      if (agents.some((a) => a.isS)) {
+      if (agents.some((a) => a.isS && a.active)) {  // a failed sanctioner stops enforcing
         const q = MSY / n;
         h = h.map((x) => Math.min(x, q));
-        agents.forEach((a, i) => { if (a.isS) pen[i] = a.p.mc; });
+        agents.forEach((a, i) => { if (a.isS && a.active) pen[i] = a.p.mc; });
       }
       const total = h.reduce((x, y) => x + y, 0);
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
       level -= total; lastTotal = total;
-      frames.push({ harv: h, stock: level, collapsed: level <= THRESH, shock: shocked });
+      frames.push({ harv: h, stock: level, collapsed: level <= THRESH, shock: shocked,
+                    fail: failed, active: agents.map((a) => a.active) });
     }
     return { kinds: agents.map((a) => a.kind), frames, payoff, n };
   }
@@ -523,13 +537,15 @@
     "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — free-riders break it (E9)": { ctype: "cooperative", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — enforcement recovers it (E9)": { ctype: "sanctioning", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
+    "🔌 Enforcer fails → collapse (E10)": { ctype: "sanctioning", nsel: 6, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
+    "🧩 A member fails, commons holds (E10)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
   const els = {
     regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
-    kb: $("kb"), noise: $("noise"), bcast: $("bcast"), shock: $("shock"),
+    kb: $("kb"), noise: $("noise"), bcast: $("bcast"), shock: $("shock"), fail: $("fail"),
     rounds: $("rounds"), seed: $("seed"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
@@ -553,6 +569,7 @@
     noise: "Random wobble added to each agent's request. 0 = fully deterministic. (With noise on, the browser's randomness differs from the Python engine, so numbers are representative.)",
     bcast: "Chance each round that agents hear a broadcast of the group's total harvest. off = silent; 1.0 = always heard. Lets blind agents detect over-use.",
     shock: "A one-off disturbance: remove this fraction of the stock at the half-way round (a drought/die-off). off = none. Reveals resilience — who recovers and who collapses (experiments E8–E9).",
+    fail: "Agents that drop out at the half-way round (they stop harvesting and, if a sanctioner, stop enforcing). They fail in order, so the cooperator/enforcer group fails first. Losing the enforcer collapses the commons; losing a member of a self-correcting group does not (experiment E10).",
     rounds: "How many rounds to simulate.",
     seed: "Random seed — only changes the outcome when decision noise or partial communication is on.",
   };
@@ -580,6 +597,8 @@
     "💥 Shock — blind collapses (E8)": "The same shock, same cooperators — but BLIND (private info). They keep taking the steady-state amount from a shrunken pool and drive it to collapse. Same intent, opposite fate: information decides resilience.",
     "💥 Shock — free-riders break it (E9)": "Observing cooperators plus 2 free-riders, then a shock. Observation lets them climb back — but only to the level the free-riders already dragged it to, which is collapse. Watch it fail to return to healthy.",
     "💥 Shock — enforcement recovers it (E9)": "Same mix and shock, but the cooperators enforce a quota. The cap contains the free-riders during the fragile recovery, and the pool returns to half-full. With free-riders, you need enforcement too.",
+    "🔌 Enforcer fails → collapse (E10)": "Enforcement is holding a commons of 2 sanctioners + 6 selfish. At mid-run the 2 enforcers drop out — and with the quota gone, the free-riders empty the pool. Enforcement is a single point of failure.",
+    "🧩 A member fails, commons holds (E10)": "A self-correcting cooperative commons loses 2 of its 8 members mid-run. The rest still observe and self-correct, so the pool is unharmed — distributed protection has no single point of failure.",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -590,6 +609,7 @@
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
     $("bcast_v").textContent = +els.bcast.value === 0 ? "off" : (+els.bcast.value).toFixed(1);
     $("shock_v").textContent = +els.shock.value === 0 ? "off" : "−" + Math.round(+els.shock.value * 100) + "%";
+    $("fail_v").textContent = +els.fail.value === 0 ? "off" : +els.fail.value + " agent" + (+els.fail.value > 1 ? "s" : "");
     $("rounds_v").textContent = els.rounds.value;
     $("seed_v").textContent = els.seed.value;
   }
@@ -602,6 +622,7 @@
     els.ctype.value = r.ctype; els.nsel.value = r.nsel; els.info.value = r.info;
     els.kb.value = r.kb; els.noise.value = r.noise; els.bcast.value = r.bcast;
     els.shock.value = r.shock ?? 0;
+    els.fail.value = r.fail ?? 0;
     if (r.rounds) els.rounds.value = r.rounds;
     applying = false; syncLabels();
   }
@@ -611,7 +632,7 @@
   }
   els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
-  ["nsel", "kb", "noise", "bcast", "shock"].forEach((k) =>
+  ["nsel", "kb", "noise", "bcast", "shock", "fail"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -634,6 +655,7 @@
       info: els.info.value, noise: +els.noise.value, broadcast: +els.bcast.value,
       rounds, seed: +els.seed.value,
       shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
+      failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
     };
     sim = runSim(specs, opts);
     // cumulative payoff per frame for agent sizing
@@ -642,7 +664,8 @@
     for (const f of sim.frames) { f.harv.forEach((h, i) => (acc[i] += h)); sim.cum.push(acc.slice()); }
     sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
     // prepend a display-only "round 0": the starting pool, before anyone harvests
-    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: INIT, collapsed: false });
+    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: INIT, collapsed: false,
+                         active: new Array(sim.n).fill(true) });
     sim.cum.unshift(new Array(sim.n).fill(0));
     const final = sim.frames[sim.frames.length - 1];
     const m = { sustain: final.stock / K, collapsed: sim.frames.some((f) => f.collapsed),
@@ -732,16 +755,27 @@
     const labelR = ringR + size * 0.075;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     for (let i = 0; i < n; i++) {
+      const dead = f.active && !f.active[i];  // a failed agent (agent_failure)
+      ctx.globalAlpha = dead ? 0.28 : 1;
       const r = size * (0.014 + 0.032 * (cum[i] / sim.maxCum));
       ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
       ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = css("--panel"); ctx.stroke();
+      if (dead) {  // small ✕ to mark a dropped-out agent
+        const d = r * 0.9;
+        ctx.strokeStyle = css("--text"); ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(pos[i][0] - d, pos[i][1] - d); ctx.lineTo(pos[i][0] + d, pos[i][1] + d);
+        ctx.moveTo(pos[i][0] - d, pos[i][1] + d); ctx.lineTo(pos[i][0] + d, pos[i][1] - d);
+        ctx.stroke();
+      }
       // payoff ("resource collected") number, just outside the ring
       const lx = cx + labelR * Math.cos(angs[i]), ly = cy + labelR * Math.sin(angs[i]);
       const txt = Math.round(cum[i]);
       ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
       ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
       ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
+      ctx.globalAlpha = 1;
     }
 
     els.scrub.value = frame;
@@ -771,6 +805,13 @@
     if (si >= 0) {
       ctx.strokeStyle = css("--bad"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(X(si), pad); ctx.lineTo(X(si), h - pad); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // agent-failure marker (vertical dashed line at the failure round)
+    const fi = sim.frames.findIndex((f) => f.fail);
+    if (fi >= 0) {
+      ctx.strokeStyle = css("--s-compensating_cooperator"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(X(fi), pad); ctx.lineTo(X(fi), h - pad); ctx.stroke();
       ctx.setLineDash([]);
     }
     // area + line
