@@ -74,9 +74,10 @@ current front-runner for the project's specific focus — not yet locked.
 
 ### Resilience (RQ-C)
 - **SQ-9** 🟢 After a sudden resource shock, how long do populations take to recover,
-  if at all? *Partly answered by [E8](experiments/E8-resilience.md): recovery is
-  decided by information (observing recovers, blind collapses), not enforcement. The
-  `recovery_time`/`recovered` metrics generalise to other mixes.*
+  if at all? *Answered by [E8](experiments/E8-resilience.md) (pure populations:
+  information decides recovery, not enforcement) and
+  [E9](experiments/E9-resilience-with-free-riders.md) (with free-riders, enforcement is
+  also required). Resilience needs both.*
 - **SQ-10** 🟡 How does resilience scale with group size and with regeneration rate?
   *(A sweep of the E8 shock over `N` and `g` — small addition.)*
 

@@ -1,10 +1,10 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E8. E1–E7 study the calm commons; E8
-opens the resilience phase (a disturbance). This is the narrative spine for the
-writeup; each claim links to its full experiment report and the code that produced it.*
+*A consolidated synthesis of experiments E1–E9. E1–E7 study the calm commons; E8–E9
+are the resilience phase (a disturbance). This is the narrative spine for the writeup;
+each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-07-27 · 5 strategies · 8 experiments (E1–E8) · 74 tests · results
+**Status:** 2026-07-27 · 5 strategies · 9 experiments (E1–E9) · 75 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -184,14 +184,27 @@ reveals it. This is the first genuinely *non-obvious* result — the same inform
 that is nearly optional for *running* the commons (E1) is decisive for *surviving a
 shock* to it.
 
+**...but with free-riders, you also need enforcement (E8 → E9).**
+[E9](experiments/E9-resilience-with-free-riders.md) adds selfish free-riders (global
+information throughout) and shocks the mix. Enforcement recovers the commons to `K/2`
+at every free-rider count up to 3 of 8; plain cooperation recovers only up to ~1
+free-rider, then collapses — and the shock ≈ the calm control, so the free-riders, not
+the shock, are the killer there. So the two protective factors are **complementary,
+not substitutes**: *observation* lets a commons climb back from a shock (E8);
+*enforcement* decides how many free-riders it can carry while doing so (E9). Resilience
+of a mixed, disturbed commons needs **both** — which is what unifies the calm-state
+mechanism ladder (E2–E3, E7) with the resilience phase.
+
 The throughline: cooperation needs *information* (E1, E6); its outcome is decided by
 the *mechanism/response* (E2, E3, E7); **communication informs but does not
 coordinate — only a binding rule (enforcement) does** (E7); enforcement fixes the
 commons but is itself fragile when voluntary (E5); and the qualitative results are
 robust (E4). This mirrors Ostrom: enduring commons need monitoring **and** graduated
 sanctions, not talk alone. **Under disturbance the picture turns:** when a shock hits,
-*information* — not enforcement — decides whether the commons recovers (E8), so
-resilience is a different property from the calm-state governance E2–E7 is about.
+*information* — not enforcement — decides whether a **pure** population recovers (E8);
+but once **free-riders** are present, *enforcement* is additionally required to recover
+to health (E9). Resilience of a mixed, disturbed commons needs **both** information and
+enforcement — a synthesis that ties the resilience phase back to the calm-state ladder.
 
 ## Relation to the literature
 
@@ -218,9 +231,9 @@ resilience is a different property from the calm-state governance E2–E7 is abo
   = 1.0`); enforcement is frictionless and "any one monitor enforces fully"; the
   monitoring cost is a free parameter (its *sign* is robust, its magnitude is not).
 - **Homogeneous ecology and no space** — still simplifications. Disturbances are now
-  exercised for a single *pulse* resource shock on *homogeneous* populations (E8);
-  agent failure, communication failure, mixed populations under shock, and *press*
-  disturbances are the next steps.
+  exercised for a single *pulse* resource shock, on homogeneous (E8) and
+  free-rider-mixed (E9) populations; agent failure, communication failure, the blind +
+  free-rider cell, and *press* disturbances are the next steps.
 
 ## What this is (and isn't) as a contribution
 
@@ -237,10 +250,11 @@ open threads:
 1. **Binding agreement / collective choice** — can communication produce a *consented*
    quota (and fund the monitoring to uphold it), unifying E5 + E7? This is the sharp
    version of "communication that coordinates, not just informs".
-2. **Disturbances (Phase 3, started):** the resource shock is in (E8: information
-   decides recovery). Next — **agent failure** and **communication failure** against
-   the same interface, and **mixed populations under a shock** (does enforcement help
-   recovery once free-riders are present?).
+2. **Disturbances (Phase 3, started):** the resource shock is in — E8 (information
+   decides recovery of a pure population) and E9 (with free-riders, enforcement is also
+   required). Next — **agent failure** and **communication failure** against the same
+   interface; the blind + free-rider + enforcement "needs both" cell; a *press*
+   (sustained) disturbance.
 3. **A genuinely stochastic strategy** (not just noisy execution), so between-seed
    variance becomes substantial and the robustness question sharper.
 
@@ -257,5 +271,6 @@ python scripts/experiment_voluntary_monitoring.py    # E5
 python scripts/experiment_communication.py           # E6
 python scripts/experiment_response_rules.py          # E7
 python scripts/experiment_resilience.py              # E8
-pytest                                               # 74 tests
+python scripts/experiment_resilience_freeriders.py   # E9
+pytest                                               # 75 tests
 ```

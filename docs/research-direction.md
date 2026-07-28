@@ -81,11 +81,16 @@ identify mechanisms that are efficient under normal conditions but fragile under
 disruption.
 - ✅ **Resource shock + resilience metrics (E8, ADR-0008):** a deterministic,
   config-scheduled pulse shock; recovery-time / recovered metrics. Result:
-  **information, not enforcement, decides whether cooperation recovers** — observing
-  populations self-correct and recover, blind ones collapse, and enforcement doesn't
-  help. The first genuinely non-obvious finding.
+  **information, not enforcement, decides whether a pure population recovers** —
+  observing populations self-correct and recover, blind ones collapse. The first
+  genuinely non-obvious finding.
+- ✅ **Mixed populations under a shock (E9):** with free-riders present, **enforcement
+  is additionally required** to recover — cooperation recovers only up to ~1
+  free-rider, enforcement up to 3 of 8. Resilience needs *both* information (E8) and
+  enforcement (E9).
 - ⏳ Next: **agent failure** and **communication failure** disturbances (same
-  interface); mixed populations under a shock; a *press* (sustained) disturbance.
+  interface); the blind + free-rider "needs both" cell; a *press* (sustained)
+  disturbance.
 
 ### Phase 4 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

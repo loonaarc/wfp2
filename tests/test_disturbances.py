@@ -117,3 +117,31 @@ def test_enforcement_does_not_confer_resilience_when_blind():
     # restraint on a shrunken pool.
     blind_sanction = _metrics(_cfg("private", strategy="sanctioning"))
     assert blind_sanction["recovered"] is False
+
+
+def _mixed_cfg(strategy, n_selfish, *, rounds=120):
+    # Global info; (8 - n_selfish) cooperators/sanctioners + n_selfish free-riders.
+    params = {"regeneration_rate": 0.4, "capacity": 100.0}
+    if strategy == "sanctioning":
+        params["monitoring_cost"] = 0.2
+    return SimulationConfig(
+        name=f"mixed_{strategy}",
+        rounds=rounds,
+        information_model="global",
+        resource=ResourceConfig(initial_level=50.0, capacity=100.0, regeneration_rate=0.4),
+        agents=(
+            AgentSpec(strategy, 8 - n_selfish, params),
+            AgentSpec("selfish", n_selfish, {"greed": 1.0}),
+        ),
+        disturbances=(DisturbanceConfig("resource_shock", round=60, magnitude=0.7),),
+    )
+
+
+def test_enforcement_outlasts_cooperation_under_shock_with_free_riders():
+    # The E9 finding: with free-riders present and observation available, enforcement
+    # recovers the commons after the shock where plain cooperation cannot.
+    coop = _metrics(_mixed_cfg("cooperative", 2))
+    enforced = _metrics(_mixed_cfg("sanctioning", 2))
+    assert coop["final_resource_level"] < 25  # cooperation degraded / not restored
+    assert enforced["final_resource_level"] > 40  # enforcement back toward K/2
+    assert enforced["final_resource_level"] > coop["final_resource_level"]

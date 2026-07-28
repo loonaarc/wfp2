@@ -57,7 +57,7 @@ we get a reproducible testbed others can extend and compare against.
 
 **Wahlfachprojekt 2:** the engine, five strategies, the information/knowledge
 conditions, a broadcast communication channel, seeds + `decision_noise`, metrics,
-reproducible export, and eight documented experiments (E1–E8; see the
+reproducible export, and nine documented experiments (E1–E9; see the
 [findings summary](findings-summary.md)) — done. This already reaches into thesis
 territory.
 

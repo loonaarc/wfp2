@@ -47,6 +47,8 @@ results/**
 !results/E7_response_rules/**
 !results/E8_resilience/
 !results/E8_resilience/**
+!results/E9_resilience_freeriders/
+!results/E9_resilience_freeriders/**
 
 # OS / editor
 .DS_Store
