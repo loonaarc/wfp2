@@ -35,8 +35,8 @@ reproducible source of all results.
   positions; the resource is one shared scalar). It illustrates the dynamics; it is
   not a spatial simulation.
 
-The **"Explore the repository"** links in the page are repo-relative, so they resolve
-when the file is opened inside the repo (locally or on the code host). A hosted copy
-(shareable URL) can also be published via Claude Code's artifact tool from the same
-content — there the repo-relative links do not resolve (it is served off-repo), so the
-page still works as a standalone explainer but the navigation links are inert.
+The **"Explore the repository"** links in the page point to the rendered files on
+GitHub (`github.com/loonaarc/wfp2`), so they open the same way wherever the demo is
+viewed — served raw, hosted, or published as an artifact. (They are absolute URLs, so
+they require the repo to be public and do not resolve when browsing the file fully
+offline.)
