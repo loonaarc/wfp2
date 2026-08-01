@@ -526,13 +526,13 @@
   // ── regimes ─────────────────────────────────────────────────────────────
   const REGIMES = {
     "— custom —": null,
-    "🎣 Tragedy of the commons": { ctype: "cooperative", nsel: 8, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🌱 Sustainable cooperation": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🪝 Free-riding erodes it": { ctype: "cooperative", nsel: 3, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "↩️ Reciprocity collapses it": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🛡️ Enforcement holds": { ctype: "sanctioning", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🙈 Blind & overconfident": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
-    "📣 Communication → fairness": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
+    "🎣 Tragedy of the commons (baseline)": { ctype: "cooperative", nsel: 8, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🌱 Sustainable cooperation (baseline)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🪝 Free-riding erodes it (E2)": { ctype: "cooperative", nsel: 3, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "↩️ Reciprocity collapses it (E2)": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🛡️ Enforcement holds (E3)": { ctype: "sanctioning", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
+    "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
     "💥 Shock — observing recovers (E8)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — free-riders break it (E9)": { ctype: "cooperative", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
@@ -586,13 +586,13 @@
 
   const REGIME_DESC = {
     "— custom —": "Your own settings — adjust any control below.",
-    "🎣 Tragedy of the commons": "Everyone is selfish: the regrown pool is emptied in the very first round and never recovers — Hardin's classic result.",
-    "🌱 Sustainable cooperation": "All cooperators with full information harvest only the regrowth, so the pool holds steady at half-full, indefinitely.",
-    "🪝 Free-riding erodes it": "A few selfish agents among cooperators. The cooperators keep subsidising them until the pool collapses — and the free-riders get rich (high inequality).",
-    "↩️ Reciprocity collapses it": "Conditional cooperators retaliate when they detect over-use. That starves the free-riders (fairer) but the retaliation spiral collapses the resource.",
-    "🛡️ Enforcement holds": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
-    "🙈 Blind & overconfident": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
-    "📣 Communication → fairness": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
+    "🎣 Tragedy of the commons (baseline)": "Everyone is selfish: the regrown pool is emptied in the very first round and never recovers — Hardin's classic result.",
+    "🌱 Sustainable cooperation (baseline)": "All cooperators with full information harvest only the regrowth, so the pool holds steady at half-full, indefinitely.",
+    "🪝 Free-riding erodes it (E2)": "A few selfish agents among cooperators. The cooperators keep subsidising them until the pool collapses — and the free-riders get rich (high inequality).",
+    "↩️ Reciprocity collapses it (E2)": "Conditional cooperators retaliate when they detect over-use. That starves the free-riders (fairer) but the retaliation spiral collapses the resource.",
+    "🛡️ Enforcement holds (E3)": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
+    "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
+    "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
     "💥 Shock — observing recovers (E8)": "A settled cooperative pool is hit by a 70% shock mid-run. Because the agents can SEE the depleted stock, they stop harvesting and let it regrow — full recovery in a few rounds.",
     "💥 Shock — blind collapses (E8)": "The same shock, same cooperators — but BLIND (private info). They keep taking the steady-state amount from a shrunken pool and drive it to collapse. Same intent, opposite fate: information decides resilience.",
     "💥 Shock — free-riders break it (E9)": "Observing cooperators plus 2 free-riders, then a shock. Observation lets them climb back — but only to the level the free-riders already dragged it to, which is collapse. Watch it fail to return to healthy.",
@@ -865,7 +865,7 @@
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
   // ── go ──────────────────────────────────────────────────────────────────
-  els.regime.value = "🛡️ Enforcement holds";
+  els.regime.value = "🛡️ Enforcement holds (E3)";
   applyRegime(); updateRegimeDesc(); syncLabels(); run();
   requestAnimationFrame(loop);
 })();
