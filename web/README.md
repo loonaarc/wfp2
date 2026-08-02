@@ -5,7 +5,7 @@ common-pool-resource simulator that doubles as a one-page explainer of the whole
 project. **Double-click it** (or open it in any browser) — no install, no server, no
 internet. Pick a *regime* or drag the dials, and it runs and animates the run: a
 central pool being drawn down, agents around it coloured by strategy, a stock
-sparkline, and the headline metrics. Below the stage it summarises **what the nine
+sparkline, and the headline metrics. Below the stage it summarises **what the ten
 experiments found** and links into the rest of the repository.
 
 It covers all three research axes: **who is in the group** (strategy mix), **what they
@@ -15,6 +15,12 @@ populations recover, blind ones collapse, and with free-riders you also need
 enforcement); the `Agent failure` dial and the `🔌/🧩` regimes reproduce E10 (losing
 the enforcer collapses the commons, losing a self-correcting member does not —
 enforcement is a single point of failure).
+
+It also has a mixed-population mode (a `Monitors` slider — sanctioners, cooperators
+and selfish in one group — with the ring showing **net payoff** so E3's second-order
+free-rider is visible), and a separate **Evolution (E5)** section that runs replicator
+dynamics over generations (reusing the same engine) and charts the two-stage collapse:
+monitors quietly erode, then the commons cliff-drops.
 
 ## Status: presentation layer, not the science
 

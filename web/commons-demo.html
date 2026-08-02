@@ -195,6 +195,23 @@
   .repo-col a { color: var(--accent); text-decoration: none; font-size: 13.5px; font-weight: 550; }
   .repo-col a:hover { text-decoration: underline; }
   .repo-col a .m { color: var(--muted); font-weight: 400; }
+
+  /* evolution (E5) mode */
+  section.evolution { margin-top: 30px; }
+  section.evolution > h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em;
+  }
+  .evo-controls { padding: 16px; display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-end; }
+  .evo-controls .field { margin: 0; min-width: 140px; flex: 1 1 140px; }
+  .evo-controls button.run { flex: 0 0 auto; width: auto; padding: 10px 18px; }
+  .evo-comp { flex-basis: 100%; font-size: 11.5px; color: var(--muted); margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+  .evo-comp b { color: var(--text); font-weight: 600; }
+  .evo-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  @media (max-width: 720px) { .evo-charts { grid-template-columns: 1fr; } }
+  .evo-chart-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  canvas.evo { display: block; width: 100%; height: 200px; }
+  .evo-readout { font-size: 13px; color: var(--text); margin: 14px 2px 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--panel-2); border-radius: 0 10px 10px 0; }
+  .evo-readout b { font-weight: 650; }
 </style>
 
 <div class="app">
@@ -340,6 +357,48 @@
       generator differs from Python's, so those numbers are representative, not identical. The
       Python repository is the canonical source of the results.
     </p>
+
+    <!-- ── evolution (E5) ─────────────────────────────────── -->
+    <section class="evolution">
+      <h2>🧬 Evolution — does voluntary monitoring survive? (E5)</h2>
+      <p class="section-lede">Everything above is one run of a <i>fixed</i> group. This is one level up:
+        each <b>generation</b> runs a whole simulation, then strategies that earned an above-average
+        payoff grow their share of the population (replicator dynamics). Monitors <b>cooperate and
+        pay to enforce</b>; cooperators cooperate but free-ride on that enforcement; selfish defect.
+        The question: if monitoring is optional, does it last?</p>
+      <div class="card evo-controls">
+        <div class="field">
+          <label for="evo_mon">Start monitors % <span class="val" id="evo_mon_v">40</span></label>
+          <input type="range" id="evo_mon" min="0" max="80" step="5" value="40" />
+        </div>
+        <div class="field">
+          <label for="evo_sel">Start selfish % <span class="val" id="evo_sel_v">20</span></label>
+          <input type="range" id="evo_sel" min="0" max="80" step="5" value="20" />
+        </div>
+        <div class="field">
+          <label for="evo_str">Selection strength <span class="val" id="evo_str_v">0.30</span></label>
+          <input type="range" id="evo_str" min="0.1" max="0.9" step="0.1" value="0.3" />
+        </div>
+        <div class="field">
+          <label for="evo_gen">Generations <span class="val" id="evo_gen_v">40</span></label>
+          <input type="range" id="evo_gen" min="20" max="60" step="10" value="40" />
+        </div>
+        <button class="run" id="evo_run" type="button">🧬 Run evolution</button>
+        <p class="evo-comp" id="evo_comp"></p>
+      </div>
+      <div class="evo-charts">
+        <div class="card evo-chart-card">
+          <span class="foot-label">A. Strategy shares over generations</span>
+          <canvas class="evo" id="evo_shares" width="600" height="200" aria-label="strategy shares over generations"></canvas>
+          <div class="legend" id="evo_legend"></div>
+        </div>
+        <div class="card evo-chart-card">
+          <span class="foot-label">B. Resource (sustainability) over generations — grey dotted = healthy K/2</span>
+          <canvas class="evo" id="evo_sustain" width="600" height="200" aria-label="sustainability over generations"></canvas>
+        </div>
+      </div>
+      <p class="evo-readout" id="evo_readout"></p>
+    </section>
 
     <!-- ── what the project found ─────────────────────────── -->
     <section class="explain">
@@ -921,9 +980,158 @@
   els.scrub.addEventListener("input", () => stepTo(+els.scrub.value));
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
+  // ── evolution (E5): replicator dynamics on top of the single-run engine ────
+  const STRATS3 = ["sanctioning", "cooperative", "selfish"];
+  const EVO_NICE = { sanctioning: "monitor", cooperative: "cooperator", selfish: "selfish" };
+  let lastEvoHistory = null;
+
+  // round fractional shares to integer counts summing to `total` (largest remainder)
+  function largestRemainder(shares, total) {
+    const raw = {}, counts = {};
+    for (const s of STRATS3) { raw[s] = shares[s] * total; counts[s] = Math.floor(raw[s]); }
+    const rem = total - STRATS3.reduce((a, s) => a + counts[s], 0);
+    const order = [...STRATS3].sort((a, b) => (raw[b] - counts[b]) - (raw[a] - counts[a]));
+    for (let i = 0; i < rem; i++) counts[order[i]]++;
+    return counts;
+  }
+
+  // one generation: run a full simulation, return each strategy's mean NET payoff + sustainability
+  function measureEvo(counts) {
+    const specs = [];
+    if (counts.sanctioning > 0) specs.push({ kind: "sanctioning", count: counts.sanctioning });
+    if (counts.cooperative > 0) specs.push({ kind: "cooperative", count: counts.cooperative, kb: 1 });
+    if (counts.selfish > 0) specs.push({ kind: "selfish", count: counts.selfish });
+    const sim = runSim(specs, { info: "global", noise: 0, broadcast: 0, rounds: 60, seed: 1,
+      init: 50, shock: 0, shockRound: -1, failCount: 0, failRound: -1 });
+    const sum = {}, cnt = {};
+    sim.kinds.forEach((k, i) => { sum[k] = (sum[k] || 0) + sim.payoff[i]; cnt[k] = (cnt[k] || 0) + 1; });
+    const fitness = {};
+    for (const s of STRATS3) fitness[s] = cnt[s] ? sum[s] / cnt[s] : 0;
+    return { fitness, sustainability: sim.frames[sim.frames.length - 1].stock / K };
+  }
+
+  // softened replicator: above-average strategies grow (mirrors the Python E5 update)
+  function runEvolution(shares0, selection, generations, n) {
+    let shares = { ...shares0 };
+    const history = [];
+    for (let gen = 0; gen < generations; gen++) {
+      const { fitness, sustainability } = measureEvo(largestRemainder(shares, n));
+      history.push({ shares: { ...shares }, sustainability });
+      const fAvg = Math.max(1e-9, STRATS3.reduce((a, s) => a + shares[s] * fitness[s], 0));
+      const nw = {};
+      for (const s of STRATS3)
+        nw[s] = Math.max(0, shares[s] * (1 + selection * (Math.max(0, fitness[s]) / fAvg - 1)));
+      const z = STRATS3.reduce((a, s) => a + nw[s], 0) || 1;
+      const next = {};
+      for (const s of STRATS3) next[s] = nw[s] / z;
+      shares = next;
+    }
+    return history;
+  }
+
+  function evoSetup(c) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = c.clientWidth || 600, h = 200;
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx, w, h };
+  }
+  function drawEvo(history) {
+    const G = history.length, PAD = 30;
+    // A. strategy shares (0..1)
+    {
+      const { ctx, w, h } = evoSetup($("evo_shares"));
+      const X = (i) => PAD + (i / Math.max(1, G - 1)) * (w - PAD - 8);
+      const Y = (v) => (h - PAD) - v * (h - PAD - 8);
+      ctx.font = `10px ${css("--mono")}`; ctx.fillStyle = css("--muted");
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (const t of [0, 0.5, 1]) {
+        ctx.strokeStyle = css("--border"); ctx.globalAlpha = 0.4; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(PAD, Y(t)); ctx.lineTo(w - 8, Y(t)); ctx.stroke(); ctx.globalAlpha = 1;
+        ctx.fillText(t.toFixed(1), PAD - 4, Y(t));
+      }
+      for (const s of STRATS3) {
+        ctx.strokeStyle = stratColor(s); ctx.lineWidth = 2; ctx.beginPath();
+        history.forEach((r, i) => (i ? ctx.lineTo(X(i), Y(r.shares[s])) : ctx.moveTo(X(i), Y(r.shares[s]))));
+        ctx.stroke();
+      }
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillText("gen 0", X(0), h - PAD + 6); ctx.fillText(String(G - 1), X(G - 1), h - PAD + 6);
+    }
+    // B. sustainability (0..0.6)
+    {
+      const { ctx, w, h } = evoSetup($("evo_sustain"));
+      const X = (i) => PAD + (i / Math.max(1, G - 1)) * (w - PAD - 8);
+      const Y = (v) => (h - PAD) - (v / 0.6) * (h - PAD - 8);
+      ctx.strokeStyle = css("--border"); ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PAD, Y(0.5)); ctx.lineTo(w - 8, Y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+      ctx.font = `10px ${css("--mono")}`; ctx.fillStyle = css("--muted");
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText("0.5", PAD - 4, Y(0.5)); ctx.fillText("0", PAD - 4, Y(0));
+      ctx.strokeStyle = css("--bad"); ctx.lineWidth = 2; ctx.beginPath();
+      history.forEach((r, i) => (i ? ctx.lineTo(X(i), Y(r.sustainability)) : ctx.moveTo(X(i), Y(r.sustainability))));
+      ctx.stroke();
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillText("gen 0", X(0), h - PAD + 6); ctx.fillText(String(G - 1), X(G - 1), h - PAD + 6);
+    }
+  }
+  function buildEvoLegend() {
+    const el = $("evo_legend"); el.innerHTML = "";
+    for (const s of STRATS3) {
+      const span = document.createElement("span");
+      span.innerHTML = `<i style="background:${stratColor(s)}"></i>${EVO_NICE[s]}`;
+      el.appendChild(span);
+    }
+  }
+  function runEvo() {
+    const monP = +$("evo_mon").value / 100, selP = +$("evo_sel").value / 100;
+    const coopP = Math.max(0, 1 - monP - selP);
+    const pct = (x) => Math.round(x * 100);
+    $("evo_comp").innerHTML =
+      `Start: <b>${pct(monP)}%</b> monitors + <b>${pct(coopP)}%</b> cooperators + `
+      + `<b>${pct(selP)}%</b> selfish · N = 40`;
+    const gens = +$("evo_gen").value, sel = +$("evo_str").value;
+    lastEvoHistory = runEvolution({ sanctioning: monP, cooperative: coopP, selfish: selP }, sel, gens, 40);
+    drawEvo(lastEvoHistory);
+    const last = lastEvoHistory[lastEvoHistory.length - 1];
+    const monGone = lastEvoHistory.findIndex((r) => r.shares.sanctioning < 0.01);
+    const collapsed = last.sustainability < 0.25;
+    let msg = `After ${gens} generations: <b>${pct(last.shares.sanctioning)}%</b> monitors, `
+      + `<b>${pct(last.shares.cooperative)}%</b> cooperators, <b>${pct(last.shares.selfish)}%</b> selfish. `;
+    if (monGone >= 0 && collapsed)
+      msg += `Monitoring eroded to ~0 by generation ${monGone}, then the commons <b>collapsed</b> `
+        + `— voluntary monitoring is not evolutionarily stable.`;
+    else if (!collapsed)
+      msg += `The commons is <b>still alive</b> (sustainability ${last.sustainability.toFixed(2)}).`;
+    else msg += `The commons <b>collapsed</b> (sustainability ${last.sustainability.toFixed(2)}).`;
+    $("evo_readout").innerHTML = msg;
+  }
+  let evoTimer = null;
+  const scheduleEvo = () => { clearTimeout(evoTimer); evoTimer = setTimeout(runEvo, 150); };
+  function evoLabels() {
+    $("evo_mon_v").textContent = $("evo_mon").value;
+    $("evo_sel_v").textContent = $("evo_sel").value;
+    $("evo_str_v").textContent = (+$("evo_str").value).toFixed(2);
+    $("evo_gen_v").textContent = $("evo_gen").value;
+  }
+  const clampEvo = (changed) => {  // start monitors% + selfish% ≤ 100 (rest = cooperators)
+    if (+$("evo_mon").value + +$("evo_sel").value > 100) {
+      const other = changed === "evo_mon" ? "evo_sel" : "evo_mon";
+      $(other).value = 100 - +$(changed).value;
+    }
+  };
+  ["evo_mon", "evo_sel"].forEach((k) =>
+    $(k).addEventListener("input", () => { clampEvo(k); evoLabels(); scheduleEvo(); }));
+  ["evo_str", "evo_gen"].forEach((k) =>
+    $(k).addEventListener("input", () => { evoLabels(); scheduleEvo(); }));
+  $("evo_run").addEventListener("click", runEvo);
+  window.addEventListener("resize", () => { if (lastEvoHistory) drawEvo(lastEvoHistory); });
+
   // ── go ──────────────────────────────────────────────────────────────────
   els.regime.value = "🛡️ Enforcement holds (E3)";
   applyRegime(); updateRegimeDesc(); syncLabels(); run();
+  buildEvoLegend(); evoLabels(); runEvo();
   requestAnimationFrame(loop);
 })();
 </script>
