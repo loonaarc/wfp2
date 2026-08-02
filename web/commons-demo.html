@@ -241,6 +241,10 @@
           <input type="range" id="kb" min="0.6" max="1.5" step="0.1" value="1.0" />
         </div>
         <div class="field">
+          <label for="init">Initial stock <span class="val" id="init_v">50</span></label>
+          <input type="range" id="init" min="10" max="100" step="5" value="50" />
+        </div>
+        <div class="field">
           <label for="noise">Decision noise <span class="val" id="noise_v">0.00</span></label>
           <input type="range" id="noise" min="0" max="0.5" step="0.05" value="0" />
         </div>
@@ -483,7 +487,7 @@
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
     });
     const n = agents.length, rng = mulberry32(o.seed);
-    let level = INIT, lastTotal = 0;
+    let level = o.init ?? INIT, lastTotal = 0;
     const payoff = new Array(n).fill(0), frames = [];
     for (let t = 0; t < o.rounds; t++) {
       level = regen(level);
@@ -537,6 +541,7 @@
     "↩️ Reciprocity collapses it (E2)": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🛡️ Enforcement holds (E3)": { ctype: "sanctioning", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
+    "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
     "💥 Shock — observing recovers (E8)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
@@ -550,8 +555,8 @@
   const $ = (id) => document.getElementById(id);
   const els = {
     regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
-    kb: $("kb"), noise: $("noise"), bcast: $("bcast"), shock: $("shock"), fail: $("fail"),
-    rounds: $("rounds"), seed: $("seed"),
+    kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
+    shock: $("shock"), fail: $("fail"), rounds: $("rounds"), seed: $("seed"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
@@ -571,6 +576,7 @@
     nsel: "How many of the 8 agents are selfish — grabbing as large a share as they can each round.",
     info: "global: agents see the current stock and self-correct. private: agents are blind to the stock and rely on their own estimate.",
     kb: "How accurate a blind agent's estimate of the sustainable yield is. 1.0 = accurate; >1 = overconfident (over-harvests); <1 = over-cautious. Only matters under private information.",
+    init: "Starting resource stock (out of capacity 100). K/2 = 50 is the healthy, maximum-yield level. Below 50, observing agents (global) still recover; blind agents (private) cannot see they must hold back — the second half of experiment E1.",
     noise: "Random wobble added to each agent's request. 0 = fully deterministic. (With noise on, the browser's randomness differs from the Python engine, so numbers are representative.)",
     bcast: "Chance each round that agents hear a broadcast of the group's total harvest. off = silent; 1.0 = always heard. Lets blind agents detect over-use.",
     shock: "A one-off disturbance: remove this fraction of the stock at the half-way round (a drought/die-off). off = none. Reveals resilience — who recovers and who collapses (experiments E8–E9).",
@@ -597,6 +603,7 @@
     "↩️ Reciprocity collapses it (E2)": "Conditional cooperators retaliate when they detect over-use. That starves the free-riders (fairer) but the retaliation spiral collapses the resource.",
     "🛡️ Enforcement holds (E3)": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
+    "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
     "💥 Shock — observing recovers (E8)": "A settled cooperative pool is hit by a 70% shock mid-run. Because the agents can SEE the depleted stock, they stop harvesting and let it regrow — full recovery in a few rounds.",
     "💥 Shock — blind collapses (E8)": "The same shock, same cooperators — but BLIND (private info). They keep taking the steady-state amount from a shrunken pool and drive it to collapse. Same intent, opposite fate: information decides resilience.",
@@ -611,6 +618,7 @@
     els.nsel_v = $("nsel_v"); // noop guard
     $("nsel_v").textContent = els.nsel.value;
     $("kb_v").textContent = (+els.kb.value).toFixed(1) + "×";
+    $("init_v").textContent = els.init.value;
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
     $("bcast_v").textContent = +els.bcast.value === 0 ? "off" : (+els.bcast.value).toFixed(1);
     $("shock_v").textContent = +els.shock.value === 0 ? "off" : "−" + Math.round(+els.shock.value * 100) + "%";
@@ -626,6 +634,7 @@
     applying = true;
     els.ctype.value = r.ctype; els.nsel.value = r.nsel; els.info.value = r.info;
     els.kb.value = r.kb; els.noise.value = r.noise; els.bcast.value = r.bcast;
+    els.init.value = r.init ?? 50;
     els.shock.value = r.shock ?? 0;
     els.fail.value = r.fail ?? 0;
     if (r.rounds) els.rounds.value = r.rounds;
@@ -637,7 +646,7 @@
   }
   els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
-  ["nsel", "kb", "noise", "bcast", "shock", "fail"].forEach((k) =>
+  ["nsel", "kb", "init", "noise", "bcast", "shock", "fail"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -655,10 +664,10 @@
   }
   function run() {
     const specs = currentSpecs();
-    const rounds = +els.rounds.value;
+    const rounds = +els.rounds.value, init = +els.init.value;
     const opts = {
       info: els.info.value, noise: +els.noise.value, broadcast: +els.bcast.value,
-      rounds, seed: +els.seed.value,
+      rounds, seed: +els.seed.value, init,
       shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
     };
@@ -669,7 +678,7 @@
     for (const f of sim.frames) { f.harv.forEach((h, i) => (acc[i] += h)); sim.cum.push(acc.slice()); }
     sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
     // prepend a display-only "round 0": the starting pool, before anyone harvests
-    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: INIT, collapsed: false,
+    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: init, collapsed: false,
                          active: new Array(sim.n).fill(true) });
     sim.cum.unshift(new Array(sim.n).fill(0));
     const final = sim.frames[sim.frames.length - 1];
