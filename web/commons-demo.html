@@ -197,6 +197,12 @@
   .repo-col a .m { color: var(--muted); font-weight: 400; }
 
   /* evolution (E5) mode */
+  .stage.evo #stage_ring, .stage.evo #evo_count_card { max-width: 440px; margin-left: auto; margin-right: auto; }
+  .evo-count-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .count-bar { display: flex; height: 40px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+  .count-bar > div { display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-family: var(--mono); font-size: 12px; font-weight: 700; color: #fff; min-width: 0;
+    white-space: nowrap; overflow: hidden; transition: flex-basis .2s ease; }
   section.evolution { margin-top: 30px; }
   section.evolution > h2 {
     font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em;
@@ -295,7 +301,7 @@
       </form>
 
       <!-- ── stage ─────────────────────────────────────── -->
-      <div class="stage">
+      <div class="stage" id="stage">
         <!-- 1. headline metrics -->
         <div class="metrics">
           <div class="card tile">
@@ -335,12 +341,20 @@
             <div class="legend" id="legend"></div>
           </div>
         </div>
-        <div class="card stage-top">
+        <div class="card stage-top" id="stage_ring">
           <canvas id="ring" width="640" height="640" aria-label="animation of agents drawing from the resource pool"></canvas>
         </div>
 
-        <!-- 4. playback / stepping -->
+        <!-- 3b. count of each strategy group (evolution mode only) -->
+        <div class="card evo-count-card" id="evo_count_card" style="display:none">
+          <span class="foot-label">Population this generation — count of each strategy (of 40)</span>
+          <div class="count-bar" id="evo_count"></div>
+        </div>
+
+        <!-- 4. playback / nested stepping -->
         <div class="card playbar">
+          <button class="stepbtn evo-step" id="gback" type="button" title="Previous generation" style="display:none">⏪</button>
+          <button class="stepbtn evo-step" id="gfwd" type="button" title="Next generation" style="display:none">⏩</button>
           <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
           <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
           <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
@@ -759,7 +773,8 @@
   let evo = null;           // { history, sims, gen, G } when in evolution mode
   const FPS = 5;
   const EVO_N = 40;         // agents per generation (matches the Python E5 study)
-  const EVO_GEN_FPS = 4;    // evolution plays generation-by-generation (~10s for 40 gens)
+  const EVO_FPS = 12;          // rounds/sec while playing evolution
+  const EVO_ROUND_WINDOW = 12; // rounds animated per generation before advancing (scrub sees all 60)
 
   function currentSpecs() {
     const nsel = +els.nsel.value, nmon = +els.mon.value;
@@ -907,12 +922,12 @@
         const ang = angs[g.idx[Math.floor(g.idx.length / 2)]];
         const lx = cx + labelR * Math.cos(ang), ly = cy + labelR * Math.sin(ang);
         const avg = g.idx.reduce((a, i) => a + cum[i], 0) / g.idx.length;
-        ctx.font = `700 ${Math.round(size * 0.028)}px ${css("--mono")}`;
+        ctx.font = `700 ${Math.round(size * 0.03)}px ${css("--mono")}`;
         ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
-        const top = `${g.idx.length} ${short[g.k] || g.k}`;
+        const top = short[g.k] || g.k;
         ctx.strokeText(top, lx, ly - size * 0.016);
         ctx.fillStyle = stratColor(g.k); ctx.fillText(top, lx, ly - size * 0.016);
-        ctx.font = `600 ${Math.round(size * 0.021)}px ${css("--mono")}`;
+        ctx.font = `600 ${Math.round(size * 0.023)}px ${css("--mono")}`;
         ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
         ctx.strokeText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
         ctx.fillStyle = css("--muted"); ctx.fillText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
@@ -1006,16 +1021,18 @@
   // ── playback loop ─────────────────────────────────────────────────────────
   function loop(ts) {
     if (!lastT) lastT = ts;
-    const fps = mode === "evolution" ? EVO_GEN_FPS : FPS;
+    const fps = mode === "evolution" ? EVO_FPS : FPS;
     if (playing && sim && ts - lastT > 1000 / fps) {
       lastT = ts;
-      if (mode === "evolution") {
-        // play advances one generation per tick, showing its outcome (not the rounds)
-        if (evo && evo.gen < evo.G - 1) setEvoGeneration(evo.gen + 1);
-        else { playing = false; setBtn(); }
-      } else {
-        frame++;
-        if (frame >= sim.frames.length) { frame = sim.frames.length - 1; playing = false; setBtn(); }
+      frame++;
+      const cap = mode === "evolution"
+        ? Math.min(EVO_ROUND_WINDOW, sim.frames.length) : sim.frames.length;
+      if (frame >= cap) {
+        if (mode === "evolution" && evo && evo.gen < evo.G - 1) {
+          setEvoGeneration(evo.gen + 1);   // next generation, animate its rounds (sets frame 0)
+        } else {
+          frame = cap - 1; playing = false; setBtn();   // end: stop (no auto-loop)
+        }
       }
     }
     if (sim) draw();
@@ -1043,6 +1060,13 @@
   els.back.addEventListener("click", () => stepTo(frame - 1));
   els.step.addEventListener("click", () => stepTo(frame + 1));
   els.scrub.addEventListener("input", () => stepTo(+els.scrub.value));
+  // nested stepper: step whole generations (round stepping stays on ⏮/⏭ + scrub)
+  $("gback").addEventListener("click", () => {
+    if (evo && evo.gen > 0) { playing = false; setEvoGeneration(evo.gen - 1); setBtn(); draw(); }
+  });
+  $("gfwd").addEventListener("click", () => {
+    if (evo && evo.gen < evo.G - 1) { playing = false; setEvoGeneration(evo.gen + 1); setBtn(); draw(); }
+  });
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
   // ── evolution (E5): replicator dynamics on top of the single-run engine ────
@@ -1156,6 +1180,22 @@
       el.appendChild(span);
     }
   }
+  // stacked bar of how many agents are each strategy this generation
+  function drawCountBar(g) {
+    const kinds = evo.sims[g].kinds, counts = { sanctioning: 0, cooperative: 0, selfish: 0 };
+    kinds.forEach((k) => (counts[k] += 1));
+    const nice = { sanctioning: "monitors", cooperative: "cooperators", selfish: "selfish" };
+    const el = $("evo_count"); el.innerHTML = "";
+    for (const s of STRATS3) {
+      const c = counts[s]; if (c === 0) continue;
+      const seg = document.createElement("div");
+      seg.style.flex = String(c);
+      seg.style.background = stratColor(s);
+      seg.textContent = c >= 8 ? `${c} ${nice[s]}` : `${c}`;
+      seg.title = `${c} ${nice[s]}`;
+      el.appendChild(seg);
+    }
+  }
   // show/hide the single-run vs evolution controls and charts
   function setMode(m) {
     mode = m;
@@ -1167,6 +1207,9 @@
     });
     $("evo_section").style.display = evoOn ? "" : "none";
     $("gcount").style.display = evoOn ? "" : "none";
+    $("evo_count_card").style.display = evoOn ? "" : "none";
+    ["gback", "gfwd"].forEach((id) => ($(id).style.display = evoOn ? "" : "none"));
+    $("stage").classList.toggle("evo", evoOn);
     if (!evoOn) { evo = null; playing = false; setBtn(); }
   }
 
@@ -1176,9 +1219,10 @@
     evo.gen = g;
     sim = evo.sims[g];
     els.scrub.max = sim.frames.length - 1;
-    frame = sim.frames.length - 1;   // show the generation's OUTCOME (scrub to see its rounds)
+    frame = 0;                       // start the new generation at round 0 (pool = 50)
     buildLegend();
     drawEvo(evo.history, g);
+    drawCountBar(g);
     $("gcount").textContent = `gen ${g} / ${evo.G - 1}`;
     const m = evo.history[g];
     const collapsed = m.sustainability < 0.02;
