@@ -110,6 +110,8 @@
   .field > label .info { text-transform: none; letter-spacing: 0; font-weight: 400; opacity: .55; cursor: help; }
   .field .val { font-family: var(--mono); color: var(--text); font-size: 12px; font-variant-numeric: tabular-nums; }
   .regime-desc { font-size: 12px; color: var(--muted); line-height: 1.45; margin: 8px 2px 0; min-height: 3.4em; }
+  .composition { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; font-variant-numeric: tabular-nums; }
+  .composition b { color: var(--text); font-weight: 600; }
   select, input[type="range"] { width: 100%; }
   select {
     font-family: var(--sans); font-size: 14px; color: var(--text);
@@ -222,12 +224,16 @@
             <option value="cooperative">cooperative</option>
             <option value="conditional_cooperator">conditional (retaliate)</option>
             <option value="compensating_cooperator">compensating (restrain)</option>
-            <option value="sanctioning">sanctioning (enforce)</option>
           </select>
+        </div>
+        <div class="field">
+          <label for="mon">Monitors (enforce) <span class="val" id="mon_v">0</span></label>
+          <input type="range" id="mon" min="0" max="8" step="1" value="0" />
         </div>
         <div class="field">
           <label for="nsel">Selfish agents <span class="val" id="nsel_v">0</span></label>
           <input type="range" id="nsel" min="0" max="8" step="1" value="0" />
+          <p class="composition" id="composition"></p>
         </div>
         <div class="field">
           <label for="info">Information</label>
@@ -273,17 +279,7 @@
 
       <!-- ── stage ─────────────────────────────────────── -->
       <div class="stage">
-        <div class="card stage-top">
-          <canvas id="ring" width="640" height="640" aria-label="animation of agents drawing from the resource pool"></canvas>
-        </div>
-
-        <div class="card playbar">
-          <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
-          <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
-          <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
-          <span class="tcount" id="tcount">round 1 / 40</span>
-        </div>
-
+        <!-- 1. headline metrics -->
         <div class="metrics">
           <div class="card tile">
             <div class="k">Stock <span class="tag live" id="m_round">round 0</span></div>
@@ -307,15 +303,31 @@
           <b>Sustainability</b> (final stock ÷ capacity), <b>Fairness</b> and
           <b>Total harvest</b> are the run's outcome at the end.</p>
 
+        <!-- 2. resource stock over rounds -->
         <div class="card foot">
-          <div class="foot-row">
-            <span class="foot-label">Agents — colour = strategy:</span>
-            <div class="legend" id="legend"></div>
-          </div>
           <div class="foot-row col">
             <span class="foot-label">Resource stock over rounds (grey dotted = healthy K/2; red dashed = shock; purple dashed = agent failure)</span>
             <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over rounds"></canvas>
           </div>
+        </div>
+
+        <!-- 3. main visual + legend -->
+        <div class="card stage-top">
+          <canvas id="ring" width="640" height="640" aria-label="animation of agents drawing from the resource pool"></canvas>
+        </div>
+        <div class="card foot">
+          <div class="foot-row">
+            <span class="foot-label">Agents — colour = strategy, number = net payoff (harvest − monitoring cost):</span>
+            <div class="legend" id="legend"></div>
+          </div>
+        </div>
+
+        <!-- 4. playback / stepping -->
+        <div class="card playbar">
+          <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
+          <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
+          <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
+          <span class="tcount" id="tcount">round 1 / 40</span>
         </div>
       </div>
     </div>
@@ -520,8 +532,8 @@
       const total = h.reduce((x, y) => x + y, 0);
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
       level -= total; lastTotal = total;
-      frames.push({ harv: h, stock: level, collapsed: level <= THRESH, shock: shocked,
-                    fail: failed, active: agents.map((a) => a.active) });
+      frames.push({ harv: h, pen: pen.slice(), stock: level, collapsed: level <= THRESH,
+                    shock: shocked, fail: failed, active: agents.map((a) => a.active) });
     }
     return { kinds: agents.map((a) => a.kind), frames, payoff, n };
   }
@@ -539,22 +551,23 @@
     "🌱 Sustainable cooperation (baseline)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🪝 Free-riding erodes it (E2)": { ctype: "cooperative", nsel: 3, info: "global", kb: 1, noise: 0, bcast: 0 },
     "↩️ Reciprocity collapses it (E2)": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🛡️ Enforcement holds (E3)": { ctype: "sanctioning", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
     "💥 Shock — observing recovers (E8)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — free-riders break it (E9)": { ctype: "cooperative", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
-    "💥 Shock — enforcement recovers it (E9)": { ctype: "sanctioning", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
-    "🔌 Enforcer fails → collapse (E10)": { ctype: "sanctioning", nsel: 6, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
+    "💥 Shock — enforcement recovers it (E9)": { ctype: "cooperative", mon: 6, nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
+    "🔌 Enforcer fails → collapse (E10)": { ctype: "cooperative", mon: 2, nsel: 6, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
     "🧩 A member fails, commons holds (E10)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
   const $ = (id) => document.getElementById(id);
   const els = {
-    regime: $("regime"), ctype: $("ctype"), nsel: $("nsel"), info: $("info"),
+    regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
     shock: $("shock"), fail: $("fail"), rounds: $("rounds"), seed: $("seed"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
@@ -572,8 +585,9 @@
   // hover help on every control (native tooltip on the field + a visible ⓘ cue)
   const HELP = {
     regime: "A preset scenario. Picking one sets the dials below; change any dial to switch to 'custom'.",
-    ctype: "How the non-selfish agents behave. cooperative = take only the surplus above a healthy level; conditional = cooperate until others over-use, then retaliate with a selfish grab; compensating = withhold (take nothing) when others over-use; sanctioning = enforce a shared sustainable quota on everyone (at a small monitoring cost).",
-    nsel: "How many of the 8 agents are selfish — grabbing as large a share as they can each round.",
+    ctype: "How the plain (non-monitor, non-selfish) cooperators behave. cooperative = take only the surplus above a healthy level; conditional = cooperate until others over-use, then retaliate with a selfish grab; compensating = withhold (take nothing) when others over-use.",
+    mon: "How many of the 8 agents are monitors (sanctioning): they cooperate AND enforce a sustainable quota on everyone (excess is confiscated back to the pool), but each pays a small monitoring cost every round. Compare their net payoff to the cooperators they protect — that gap is the second-order free-rider problem (E3).",
+    nsel: "How many of the 8 agents are selfish — grabbing as large a share as they can each round. Monitors + cooperators + selfish always sum to 8.",
     info: "global: agents see the current stock and self-correct. private: agents are blind to the stock and rely on their own estimate.",
     kb: "How accurate a blind agent's estimate of the sustainable yield is. 1.0 = accurate; >1 = overconfident (over-harvests); <1 = over-cautious. Only matters under private information.",
     init: "Starting resource stock (out of capacity 100). K/2 = 50 is the healthy, maximum-yield level. Below 50, observing agents (global) still recover; blind agents (private) cannot see they must hold back — the second half of experiment E1.",
@@ -601,7 +615,8 @@
     "🌱 Sustainable cooperation (baseline)": "All cooperators with full information harvest only the regrowth, so the pool holds steady at half-full, indefinitely.",
     "🪝 Free-riding erodes it (E2)": "A few selfish agents among cooperators. The cooperators keep subsidising them until the pool collapses — and the free-riders get rich (high inequality).",
     "↩️ Reciprocity collapses it (E2)": "Conditional cooperators retaliate when they detect over-use. That starves the free-riders (fairer) but the retaliation spiral collapses the resource.",
-    "🛡️ Enforcement holds (E3)": "Sanctioning agents cap everyone's harvest at a sustainable quota — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost.",
+    "🛡️ Enforcement holds (E3)": "4 monitors enforce a sustainable quota on everyone (4 selfish included) — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost to do it.",
+    "🕵️ Second-order free-rider (E3)": "4 monitors + 4 plain cooperators, all harvesting the same sustainable amount. But the monitors pay to enforce, so their NET payoff ends up BELOW the cooperators they protect — watch their numbers fall behind. Nobody wants to be the monitor: the second-order free-rider problem.",
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
@@ -615,8 +630,16 @@
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
   function syncLabels() {
-    els.nsel_v = $("nsel_v"); // noop guard
     $("nsel_v").textContent = els.nsel.value;
+    $("mon_v").textContent = els.mon.value;
+    const nsel = +els.nsel.value, nmon = +els.mon.value, ncoop = Math.max(0, 8 - nsel - nmon);
+    const cshort = { cooperative: "cooperative", conditional_cooperator: "conditional",
+                     compensating_cooperator: "compensating" }[els.ctype.value];
+    const parts = [];
+    if (ncoop > 0) parts.push(`<b>${ncoop}</b> ${cshort}`);
+    if (nmon > 0) parts.push(`<b>${nmon}</b> monitors`);
+    if (nsel > 0) parts.push(`<b>${nsel}</b> selfish`);
+    $("composition").innerHTML = "= " + (parts.join(" + ") || "—") + " (of 8)";
     $("kb_v").textContent = (+els.kb.value).toFixed(1) + "×";
     $("init_v").textContent = els.init.value;
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
@@ -634,10 +657,11 @@
     applying = true;
     els.ctype.value = r.ctype; els.nsel.value = r.nsel; els.info.value = r.info;
     els.kb.value = r.kb; els.noise.value = r.noise; els.bcast.value = r.bcast;
+    els.mon.value = r.mon ?? 0;
     els.init.value = r.init ?? 50;
     els.shock.value = r.shock ?? 0;
     els.fail.value = r.fail ?? 0;
-    if (r.rounds) els.rounds.value = r.rounds;
+    els.rounds.value = r.rounds ?? 40;
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -646,7 +670,16 @@
   }
   els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
-  ["nsel", "kb", "init", "noise", "bcast", "shock", "fail"].forEach((k) =>
+  // monitors + selfish must sum to ≤ 8 (the rest are plain cooperators); clamp the other one.
+  const clampPop = (changed) => {
+    if (+els.nsel.value + +els.mon.value > 8) {
+      const other = changed === "nsel" ? "mon" : "nsel";
+      els[other].value = 8 - +els[changed].value;
+    }
+  };
+  els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); scheduleRun(); });
+  els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); scheduleRun(); });
+  ["kb", "init", "noise", "bcast", "shock", "fail"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -656,9 +689,14 @@
   const FPS = 5;
 
   function currentSpecs() {
-    const nsel = +els.nsel.value, coop = 8 - nsel, kind = els.ctype.value, kb = +els.kb.value;
+    const nsel = +els.nsel.value, nmon = +els.mon.value;
+    const ncoop = Math.max(0, 8 - nsel - nmon);
+    const kind = els.ctype.value, kb = +els.kb.value;
     const specs = [];
-    if (coop > 0) specs.push({ kind, count: coop, kb });
+    // Monitors first, so an agent_failure disturbance (which fails the first agents)
+    // removes the enforcers — the E10 "enforcer fails" case.
+    if (nmon > 0) specs.push({ kind: "sanctioning", count: nmon });
+    if (ncoop > 0) specs.push({ kind, count: ncoop, kb });
     if (nsel > 0) specs.push({ kind: "selfish", count: nsel });
     return specs;
   }
@@ -672,10 +710,13 @@
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
     };
     sim = runSim(specs, opts);
-    // cumulative payoff per frame for agent sizing
+    // cumulative NET payoff per frame (harvest − monitoring cost) for agent sizing & labels
     sim.cum = [];
     const acc = new Array(sim.n).fill(0);
-    for (const f of sim.frames) { f.harv.forEach((h, i) => (acc[i] += h)); sim.cum.push(acc.slice()); }
+    for (const f of sim.frames) {
+      f.harv.forEach((h, i) => (acc[i] += h - (f.pen ? f.pen[i] : 0)));
+      sim.cum.push(acc.slice());
+    }
     sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
     // prepend a display-only "round 0": the starting pool, before anyone harvests
     sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: init, collapsed: false,
@@ -701,7 +742,7 @@
   function buildLegend() {
     const present = [...new Set(sim.kinds)];
     const nice = { selfish: "selfish", cooperative: "cooperative",
-      conditional_cooperator: "conditional", compensating_cooperator: "compensating", sanctioning: "sanctioning" };
+      conditional_cooperator: "conditional", compensating_cooperator: "compensating", sanctioning: "monitor" };
     els.legend.innerHTML = "";
     for (const k of STRATS) if (present.includes(k)) {
       const s = document.createElement("span");
