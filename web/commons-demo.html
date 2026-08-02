@@ -328,15 +328,15 @@
           </div>
         </div>
 
-        <!-- 3. main visual + legend -->
-        <div class="card stage-top">
-          <canvas id="ring" width="640" height="640" aria-label="animation of agents drawing from the resource pool"></canvas>
-        </div>
+        <!-- 3. legend above the main visual -->
         <div class="card foot">
           <div class="foot-row">
             <span class="foot-label">Agents — colour = strategy, number = net payoff (harvest − monitoring cost):</span>
             <div class="legend" id="legend"></div>
           </div>
+        </div>
+        <div class="card stage-top">
+          <canvas id="ring" width="640" height="640" aria-label="animation of agents drawing from the resource pool"></canvas>
         </div>
 
         <!-- 4. playback / stepping -->
@@ -759,8 +759,7 @@
   let evo = null;           // { history, sims, gen, G } when in evolution mode
   const FPS = 5;
   const EVO_N = 40;         // agents per generation (matches the Python E5 study)
-  const EVO_FPS = 20;       // evolution plays faster (many generations to get through)
-  const EVO_FRAMES = 12;    // rounds shown per generation while playing (scrub sees all 60)
+  const EVO_GEN_FPS = 4;    // evolution plays generation-by-generation (~10s for 40 gens)
 
   function currentSpecs() {
     const nsel = +els.nsel.value, nmon = +els.mon.value;
@@ -887,12 +886,36 @@
     ctx.fillText(Math.round(f.stock), cx, cy);
 
     if (mode === "evolution") {
-      // composition view: uniform coloured dots (which strategy each agent is), no labels
+      // composition view: uniform coloured dots per agent...
       const r = Math.max(3.5, size * 0.011);
       for (let i = 0; i < n; i++) {
         ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
         ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
         ctx.lineWidth = 1.5; ctx.strokeStyle = css("--panel"); ctx.stroke();
+      }
+      // ...plus one label per strategy group: how many, and their average net payoff
+      const cum = sim.cum[frame], groups = [];
+      for (let i = 0; i < n; i++) {
+        const last = groups[groups.length - 1];
+        if (last && last.k === sim.kinds[i]) last.idx.push(i);
+        else groups.push({ k: sim.kinds[i], idx: [i] });
+      }
+      const labelR = ringR + size * 0.085;
+      const short = { sanctioning: "monitor", cooperative: "coop", selfish: "selfish" };
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      for (const g of groups) {
+        const ang = angs[g.idx[Math.floor(g.idx.length / 2)]];
+        const lx = cx + labelR * Math.cos(ang), ly = cy + labelR * Math.sin(ang);
+        const avg = g.idx.reduce((a, i) => a + cum[i], 0) / g.idx.length;
+        ctx.font = `700 ${Math.round(size * 0.028)}px ${css("--mono")}`;
+        ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
+        const top = `${g.idx.length} ${short[g.k] || g.k}`;
+        ctx.strokeText(top, lx, ly - size * 0.016);
+        ctx.fillStyle = stratColor(g.k); ctx.fillText(top, lx, ly - size * 0.016);
+        ctx.font = `600 ${Math.round(size * 0.021)}px ${css("--mono")}`;
+        ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
+        ctx.strokeText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
+        ctx.fillStyle = css("--muted"); ctx.fillText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
       }
     } else {
       // agents: dot size ∝ payoff-so-far (normalised), with the payoff number alongside
@@ -983,19 +1006,16 @@
   // ── playback loop ─────────────────────────────────────────────────────────
   function loop(ts) {
     if (!lastT) lastT = ts;
-    const fps = mode === "evolution" ? EVO_FPS : FPS;
+    const fps = mode === "evolution" ? EVO_GEN_FPS : FPS;
     if (playing && sim && ts - lastT > 1000 / fps) {
       lastT = ts;
-      frame++;
-      const cap = mode === "evolution" ? Math.min(EVO_FRAMES, sim.frames.length) : sim.frames.length;
-      if (frame >= cap) {
-        if (mode === "evolution" && evo && evo.gen < evo.G - 1) {
-          setEvoGeneration(evo.gen + 1); frame = 0;   // advance to the next generation
-        } else if (mode === "evolution") {
-          frame = cap - 1; playing = false; setBtn();  // final generation reached
-        } else {
-          frame = 0;  // single run loops
-        }
+      if (mode === "evolution") {
+        // play advances one generation per tick, showing its outcome (not the rounds)
+        if (evo && evo.gen < evo.G - 1) setEvoGeneration(evo.gen + 1);
+        else { playing = false; setBtn(); }
+      } else {
+        frame++;
+        if (frame >= sim.frames.length) { frame = sim.frames.length - 1; playing = false; setBtn(); }
       }
     }
     if (sim) draw();
@@ -1156,6 +1176,7 @@
     evo.gen = g;
     sim = evo.sims[g];
     els.scrub.max = sim.frames.length - 1;
+    frame = sim.frames.length - 1;   // show the generation's OUTCOME (scrub to see its rounds)
     buildLegend();
     drawEvo(evo.history, g);
     $("gcount").textContent = `gen ${g} / ${evo.G - 1}`;
