@@ -344,6 +344,7 @@
           <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
           <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
           <input type="range" id="scrub" min="0" max="39" step="1" value="0" aria-label="round" />
+          <span class="tcount" id="gcount" style="display:none"></span>
           <span class="tcount" id="tcount">round 1 / 40</span>
         </div>
       </div>
@@ -358,13 +359,14 @@
       Python repository is the canonical source of the results.
     </p>
 
-    <!-- ── evolution (E5) ─────────────────────────────────── -->
-    <section class="evolution">
+    <!-- ── evolution (E5) — shown only in evolution mode ──── -->
+    <section class="evolution" id="evo_section" style="display:none">
       <h2>🧬 Evolution — does voluntary monitoring survive? (E5)</h2>
-      <p class="section-lede">Everything above is one run of a <i>fixed</i> group. This is one level up:
-        each <b>generation</b> runs a whole simulation, then strategies that earned an above-average
-        payoff grow their share of the population (replicator dynamics). Monitors <b>cooperate and
-        pay to enforce</b>; cooperators cooperate but free-ride on that enforcement; selfish defect.
+      <p class="section-lede">One level up from a single run: each <b>generation</b> runs a whole
+        simulation, then strategies that earned an above-average payoff grow their share of the
+        population (replicator dynamics). Monitors <b>cooperate and pay to enforce</b>; cooperators
+        cooperate but free-ride on that enforcement; selfish defect. <b>Press ▶ above</b> to play the
+        generations (the ring shows the current one); set the starting mix here and it recomputes.
         The question: if monitoring is optional, does it last?</p>
       <div class="card evo-controls">
         <div class="field">
@@ -383,7 +385,7 @@
           <label for="evo_gen">Generations <span class="val" id="evo_gen_v">40</span></label>
           <input type="range" id="evo_gen" min="20" max="60" step="10" value="40" />
         </div>
-        <button class="run" id="evo_run" type="button">🧬 Run evolution</button>
+        <button class="run" id="evo_run" type="button">↻ Recompute</button>
         <p class="evo-comp" id="evo_comp"></p>
       </div>
       <div class="evo-charts">
@@ -613,6 +615,7 @@
     "🎲 Reciprocity breaks under noise (E4)": { ctype: "conditional_cooperator", nsel: 0, info: "global", kb: 1, noise: 0.1, bcast: 0 },
     "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🧬 Evolution — monitoring erodes (E5)": { evolution: true },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
@@ -678,6 +681,7 @@
     "🎲 Reciprocity breaks under noise (E4)": "NO free-riders at all — just 8 conditional cooperators, but with decision noise on (each request wobbles ±10%). Random dips in the stock get misread as 'someone over-used', the retaliation ratchet fires by mistake, and the pool collapses. Turn noise to 0 → it holds. E4's point: reciprocity is fragile to noise, while enforcement shrugs it off (try adding noise to 'Enforcement holds').",
     "🛡️ Enforcement holds (E3)": "4 monitors enforce a sustainable quota on everyone (4 selfish included) — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost to do it.",
     "🕵️ Second-order free-rider (E3)": "4 monitors + 4 plain cooperators, all harvesting the same sustainable amount. But the monitors pay to enforce, so their NET payoff ends up BELOW the cooperators they protect — watch their numbers fall behind. Nobody wants to be the monitor: the second-order free-rider problem.",
+    "🧬 Evolution — monitoring erodes (E5)": "Evolution mode. Over generations, strategies that earn above-average payoff grow their share. Press ▶ to play: the ring shows the current generation's population (green monitors slowly vanish, red selfish take over), and the charts below track each strategy's share and the resource across generations. Monitoring quietly erodes, then the commons collapses — voluntary monitoring is not evolutionarily stable.",
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
@@ -714,7 +718,7 @@
   let applying = false;
   function applyRegime() {
     const r = REGIMES[els.regime.value];
-    if (!r) return;
+    if (!r || r.evolution) return;  // evolution regime switches mode instead of setting dials
     applying = true;
     els.ctype.value = r.ctype; els.nsel.value = r.nsel; els.info.value = r.info;
     els.kb.value = r.kb; els.noise.value = r.noise; els.bcast.value = r.bcast;
@@ -729,7 +733,11 @@
     if (!applying && els.regime.value !== "— custom —") { els.regime.value = "— custom —"; updateRegimeDesc(); }
     syncLabels();
   }
-  els.regime.addEventListener("change", () => { applyRegime(); updateRegimeDesc(); run(); });
+  els.regime.addEventListener("change", () => {
+    const r = REGIMES[els.regime.value];
+    setMode(r && r.evolution ? "evolution" : "single");
+    applyRegime(); updateRegimeDesc(); run();
+  });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
   // monitors + selfish must sum to ≤ 8 (the rest are plain cooperators); clamp the other one.
   const clampPop = (changed) => {
@@ -747,7 +755,12 @@
 
   // ── run + animation state ───────────────────────────────────────────────
   let sim = null, frame = 0, playing = false, raf = null, lastT = 0;
+  let mode = "single";      // "single" | "evolution"
+  let evo = null;           // { history, sims, gen, G } when in evolution mode
   const FPS = 5;
+  const EVO_N = 40;         // agents per generation (matches the Python E5 study)
+  const EVO_FPS = 20;       // evolution plays faster (many generations to get through)
+  const EVO_FRAMES = 12;    // rounds shown per generation while playing (scrub sees all 60)
 
   function currentSpecs() {
     const nsel = +els.nsel.value, nmon = +els.mon.value;
@@ -761,7 +774,24 @@
     if (nsel > 0) specs.push({ kind: "selfish", count: nsel });
     return specs;
   }
+  // Run one simulation and attach the display fields (cumulative net payoff per
+  // frame, a "round 0" frame). Shared by the single-run view and evolution mode.
+  function buildDisplaySim(specs, opts) {
+    const s = runSim(specs, opts);
+    s.cum = [];
+    const acc = new Array(s.n).fill(0);
+    for (const f of s.frames) {
+      f.harv.forEach((h, i) => (acc[i] += h - (f.pen ? f.pen[i] : 0)));
+      s.cum.push(acc.slice());
+    }
+    s.maxCum = Math.max(1, ...s.cum[s.cum.length - 1]);
+    s.frames.unshift({ harv: new Array(s.n).fill(0), stock: opts.init ?? INIT,
+                       collapsed: false, active: new Array(s.n).fill(true) });
+    s.cum.unshift(new Array(s.n).fill(0));
+    return s;
+  }
   function run() {
+    if (mode === "evolution") { runEvo(); return; }
     const specs = currentSpecs();
     const rounds = +els.rounds.value, init = +els.init.value;
     const opts = {
@@ -770,19 +800,7 @@
       shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
     };
-    sim = runSim(specs, opts);
-    // cumulative NET payoff per frame (harvest − monitoring cost) for agent sizing & labels
-    sim.cum = [];
-    const acc = new Array(sim.n).fill(0);
-    for (const f of sim.frames) {
-      f.harv.forEach((h, i) => (acc[i] += h - (f.pen ? f.pen[i] : 0)));
-      sim.cum.push(acc.slice());
-    }
-    sim.maxCum = Math.max(1, ...sim.cum[sim.cum.length - 1]);
-    // prepend a display-only "round 0": the starting pool, before anyone harvests
-    sim.frames.unshift({ harv: new Array(sim.n).fill(0), stock: init, collapsed: false,
-                         active: new Array(sim.n).fill(true) });
-    sim.cum.unshift(new Array(sim.n).fill(0));
+    sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];
     const m = { sustain: final.stock / K, collapsed: sim.frames.some((f) => f.collapsed),
                 gini: gini(sim.payoff), harvest: sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0) };
@@ -844,16 +862,18 @@
     ctx.strokeStyle = css("--pool-ring"); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, 2 * Math.PI); ctx.stroke();
 
-    // harvest lines
-    const maxH = Math.max(1e-6, ...f.harv);
-    for (let i = 0; i < n; i++) {
-      const h = f.harv[i]; if (h <= 1e-6) continue;
-      ctx.strokeStyle = css("--muted");
-      ctx.globalAlpha = 0.12 + 0.5 * (h / maxH);
-      ctx.lineWidth = 1 + 6 * (h / maxH);
-      ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(cx, cy); ctx.stroke();
+    // harvest lines (single-run detail only; too busy for 40 evolving agents)
+    if (mode !== "evolution") {
+      const maxH = Math.max(1e-6, ...f.harv);
+      for (let i = 0; i < n; i++) {
+        const h = f.harv[i]; if (h <= 1e-6) continue;
+        ctx.strokeStyle = css("--muted");
+        ctx.globalAlpha = 0.12 + 0.5 * (h / maxH);
+        ctx.lineWidth = 1 + 6 * (h / maxH);
+        ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(cx, cy); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
     }
-    ctx.globalAlpha = 1;
 
     // pool
     const grad = ctx.createRadialGradient(cx, cy - poolR * 0.3, poolR * 0.2, cx, cy, poolR);
@@ -866,32 +886,42 @@
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(Math.round(f.stock), cx, cy);
 
-    // agents: dot size ∝ payoff-so-far (normalised), with the payoff number alongside
-    const cum = sim.cum[frame];
-    const labelR = ringR + size * 0.075;
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    for (let i = 0; i < n; i++) {
-      const dead = f.active && !f.active[i];  // a failed agent (agent_failure)
-      ctx.globalAlpha = dead ? 0.28 : 1;
-      const r = size * (0.014 + 0.032 * (cum[i] / sim.maxCum));
-      ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
-      ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = css("--panel"); ctx.stroke();
-      if (dead) {  // small ✕ to mark a dropped-out agent
-        const d = r * 0.9;
-        ctx.strokeStyle = css("--text"); ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(pos[i][0] - d, pos[i][1] - d); ctx.lineTo(pos[i][0] + d, pos[i][1] + d);
-        ctx.moveTo(pos[i][0] - d, pos[i][1] + d); ctx.lineTo(pos[i][0] + d, pos[i][1] - d);
-        ctx.stroke();
+    if (mode === "evolution") {
+      // composition view: uniform coloured dots (which strategy each agent is), no labels
+      const r = Math.max(3.5, size * 0.011);
+      for (let i = 0; i < n; i++) {
+        ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
+        ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
+        ctx.lineWidth = 1.5; ctx.strokeStyle = css("--panel"); ctx.stroke();
       }
-      // payoff ("resource collected") number, just outside the ring
-      const lx = cx + labelR * Math.cos(angs[i]), ly = cy + labelR * Math.sin(angs[i]);
-      const txt = Math.round(cum[i]);
-      ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
-      ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
-      ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
-      ctx.globalAlpha = 1;
+    } else {
+      // agents: dot size ∝ payoff-so-far (normalised), with the payoff number alongside
+      const cum = sim.cum[frame];
+      const labelR = ringR + size * 0.075;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      for (let i = 0; i < n; i++) {
+        const dead = f.active && !f.active[i];  // a failed agent (agent_failure)
+        ctx.globalAlpha = dead ? 0.28 : 1;
+        const r = size * (0.014 + 0.032 * (cum[i] / sim.maxCum));
+        ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
+        ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = css("--panel"); ctx.stroke();
+        if (dead) {  // small ✕ to mark a dropped-out agent
+          const d = r * 0.9;
+          ctx.strokeStyle = css("--text"); ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(pos[i][0] - d, pos[i][1] - d); ctx.lineTo(pos[i][0] + d, pos[i][1] + d);
+          ctx.moveTo(pos[i][0] - d, pos[i][1] + d); ctx.lineTo(pos[i][0] + d, pos[i][1] - d);
+          ctx.stroke();
+        }
+        // payoff ("resource collected") number, just outside the ring
+        const lx = cx + labelR * Math.cos(angs[i]), ly = cy + labelR * Math.sin(angs[i]);
+        const txt = Math.round(cum[i]);
+        ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
+        ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
+        ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
+        ctx.globalAlpha = 1;
+      }
     }
 
     els.scrub.value = frame;
@@ -953,9 +983,20 @@
   // ── playback loop ─────────────────────────────────────────────────────────
   function loop(ts) {
     if (!lastT) lastT = ts;
-    if (playing && sim && ts - lastT > 1000 / FPS) {
+    const fps = mode === "evolution" ? EVO_FPS : FPS;
+    if (playing && sim && ts - lastT > 1000 / fps) {
       lastT = ts;
-      frame = (frame + 1) % sim.frames.length;
+      frame++;
+      const cap = mode === "evolution" ? Math.min(EVO_FRAMES, sim.frames.length) : sim.frames.length;
+      if (frame >= cap) {
+        if (mode === "evolution" && evo && evo.gen < evo.G - 1) {
+          setEvoGeneration(evo.gen + 1); frame = 0;   // advance to the next generation
+        } else if (mode === "evolution") {
+          frame = cap - 1; playing = false; setBtn();  // final generation reached
+        } else {
+          frame = 0;  // single run loops
+        }
+      }
     }
     if (sim) draw();
     raf = requestAnimationFrame(loop);
@@ -965,7 +1006,11 @@
   function togglePlay() {
     if (!sim) return;
     if (playing) { playing = false; }
-    else { if (frame >= sim.frames.length - 1) frame = 0; lastT = 0; playing = true; }
+    else {
+      if (mode === "evolution" && evo && evo.gen >= evo.G - 1) { setEvoGeneration(0); frame = 0; }
+      else if (frame >= sim.frames.length - 1) frame = 0;
+      lastT = 0; playing = true;
+    }
     setBtn();
   }
   const stepTo = (i) => {
@@ -983,7 +1028,6 @@
   // ── evolution (E5): replicator dynamics on top of the single-run engine ────
   const STRATS3 = ["sanctioning", "cooperative", "selfish"];
   const EVO_NICE = { sanctioning: "monitor", cooperative: "cooperator", selfish: "selfish" };
-  let lastEvoHistory = null;
 
   // round fractional shares to integer counts summing to `total` (largest remainder)
   function largestRemainder(shares, total) {
@@ -1037,8 +1081,14 @@
     ctx.clearRect(0, 0, w, h);
     return { ctx, w, h };
   }
-  function drawEvo(history) {
+  function drawEvo(history, genMark) {
     const G = history.length, PAD = 30;
+    const mark = (ctx, X, h) => {
+      if (genMark == null) return;
+      ctx.strokeStyle = css("--accent"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(X(genMark), 4); ctx.lineTo(X(genMark), h - PAD); ctx.stroke();
+      ctx.setLineDash([]);
+    };
     // A. strategy shares (0..1)
     {
       const { ctx, w, h } = evoSetup($("evo_shares"));
@@ -1051,12 +1101,13 @@
         ctx.beginPath(); ctx.moveTo(PAD, Y(t)); ctx.lineTo(w - 8, Y(t)); ctx.stroke(); ctx.globalAlpha = 1;
         ctx.fillText(t.toFixed(1), PAD - 4, Y(t));
       }
+      mark(ctx, X, h);
       for (const s of STRATS3) {
         ctx.strokeStyle = stratColor(s); ctx.lineWidth = 2; ctx.beginPath();
         history.forEach((r, i) => (i ? ctx.lineTo(X(i), Y(r.shares[s])) : ctx.moveTo(X(i), Y(r.shares[s]))));
         ctx.stroke();
       }
-      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = css("--muted"); ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText("gen 0", X(0), h - PAD + 6); ctx.fillText(String(G - 1), X(G - 1), h - PAD + 6);
     }
     // B. sustainability (0..0.6)
@@ -1069,10 +1120,11 @@
       ctx.font = `10px ${css("--mono")}`; ctx.fillStyle = css("--muted");
       ctx.textAlign = "right"; ctx.textBaseline = "middle";
       ctx.fillText("0.5", PAD - 4, Y(0.5)); ctx.fillText("0", PAD - 4, Y(0));
+      mark(ctx, X, h);
       ctx.strokeStyle = css("--bad"); ctx.lineWidth = 2; ctx.beginPath();
       history.forEach((r, i) => (i ? ctx.lineTo(X(i), Y(r.sustainability)) : ctx.moveTo(X(i), Y(r.sustainability))));
       ctx.stroke();
-      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      ctx.fillStyle = css("--muted"); ctx.textAlign = "center"; ctx.textBaseline = "top";
       ctx.fillText("gen 0", X(0), h - PAD + 6); ctx.fillText(String(G - 1), X(G - 1), h - PAD + 6);
     }
   }
@@ -1084,28 +1136,76 @@
       el.appendChild(span);
     }
   }
+  // show/hide the single-run vs evolution controls and charts
+  function setMode(m) {
+    mode = m;
+    const evoOn = m === "evolution";
+    ["ctype", "mon", "nsel", "info", "kb", "init", "noise", "bcast", "shock", "fail",
+     "rounds", "seed"].forEach((id) => {
+      const fld = els[id] && els[id].closest(".field");
+      if (fld) fld.style.display = evoOn ? "none" : "";
+    });
+    $("evo_section").style.display = evoOn ? "" : "none";
+    $("gcount").style.display = evoOn ? "" : "none";
+    if (!evoOn) { evo = null; playing = false; setBtn(); }
+  }
+
+  // point the ring + metric tiles at generation g and mark it on the charts
+  function setEvoGeneration(g) {
+    if (!evo) return;
+    evo.gen = g;
+    sim = evo.sims[g];
+    els.scrub.max = sim.frames.length - 1;
+    buildLegend();
+    drawEvo(evo.history, g);
+    $("gcount").textContent = `gen ${g} / ${evo.G - 1}`;
+    const m = evo.history[g];
+    const collapsed = m.sustainability < 0.02;
+    els.m_sustain.textContent = m.sustainability.toFixed(2);
+    els.m_status.className = "pill " + (collapsed ? "bad" : "good");
+    els.m_status.textContent = collapsed ? "COLLAPSED" : "SUSTAINED";
+    els.m_gini.textContent = gini(sim.payoff).toFixed(2);
+    els.m_harvest.textContent =
+      Math.round(sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0));
+  }
+
   function runEvo() {
     const monP = +$("evo_mon").value / 100, selP = +$("evo_sel").value / 100;
     const coopP = Math.max(0, 1 - monP - selP);
     const pct = (x) => Math.round(x * 100);
     $("evo_comp").innerHTML =
       `Start: <b>${pct(monP)}%</b> monitors + <b>${pct(coopP)}%</b> cooperators + `
-      + `<b>${pct(selP)}%</b> selfish · N = 40`;
+      + `<b>${pct(selP)}%</b> selfish · N = ${EVO_N}`;
     const gens = +$("evo_gen").value, sel = +$("evo_str").value;
-    lastEvoHistory = runEvolution({ sanctioning: monP, cooperative: coopP, selfish: selP }, sel, gens, 40);
-    drawEvo(lastEvoHistory);
-    const last = lastEvoHistory[lastEvoHistory.length - 1];
-    const monGone = lastEvoHistory.findIndex((r) => r.shares.sanctioning < 0.01);
+    const history = runEvolution({ sanctioning: monP, cooperative: coopP, selfish: selP }, sel, gens, EVO_N);
+    // one display-ready simulation (ring animation) per generation
+    evo = {
+      history,
+      sims: history.map((r) => {
+        const c = largestRemainder(r.shares, EVO_N);
+        const specs = [];
+        if (c.sanctioning > 0) specs.push({ kind: "sanctioning", count: c.sanctioning });
+        if (c.cooperative > 0) specs.push({ kind: "cooperative", count: c.cooperative, kb: 1 });
+        if (c.selfish > 0) specs.push({ kind: "selfish", count: c.selfish });
+        return buildDisplaySim(specs, { info: "global", noise: 0, broadcast: 0, rounds: 60,
+          seed: 1, init: 50, shock: 0, shockRound: -1, failCount: 0, failRound: -1 });
+      }),
+      gen: 0, G: history.length,
+    };
+    const last = history[history.length - 1];
+    const monGone = history.findIndex((r) => r.shares.sanctioning < 0.01);
     const collapsed = last.sustainability < 0.25;
     let msg = `After ${gens} generations: <b>${pct(last.shares.sanctioning)}%</b> monitors, `
       + `<b>${pct(last.shares.cooperative)}%</b> cooperators, <b>${pct(last.shares.selfish)}%</b> selfish. `;
     if (monGone >= 0 && collapsed)
       msg += `Monitoring eroded to ~0 by generation ${monGone}, then the commons <b>collapsed</b> `
-        + `— voluntary monitoring is not evolutionarily stable.`;
+        + `— press ▶ to watch it. Voluntary monitoring is not evolutionarily stable.`;
     else if (!collapsed)
       msg += `The commons is <b>still alive</b> (sustainability ${last.sustainability.toFixed(2)}).`;
     else msg += `The commons <b>collapsed</b> (sustainability ${last.sustainability.toFixed(2)}).`;
     $("evo_readout").innerHTML = msg;
+    buildEvoLegend();
+    frame = 0; playing = false; setEvoGeneration(0); setBtn(); draw();
   }
   let evoTimer = null;
   const scheduleEvo = () => { clearTimeout(evoTimer); evoTimer = setTimeout(runEvo, 150); };
@@ -1126,12 +1226,11 @@
   ["evo_str", "evo_gen"].forEach((k) =>
     $(k).addEventListener("input", () => { evoLabels(); scheduleEvo(); }));
   $("evo_run").addEventListener("click", runEvo);
-  window.addEventListener("resize", () => { if (lastEvoHistory) drawEvo(lastEvoHistory); });
+  window.addEventListener("resize", () => { if (evo) drawEvo(evo.history, evo.gen); });
 
   // ── go ──────────────────────────────────────────────────────────────────
   els.regime.value = "🛡️ Enforcement holds (E3)";
-  applyRegime(); updateRegimeDesc(); syncLabels(); run();
-  buildEvoLegend(); evoLabels(); runEvo();
+  applyRegime(); updateRegimeDesc(); syncLabels(); evoLabels(); run();
   requestAnimationFrame(loop);
 })();
 </script>

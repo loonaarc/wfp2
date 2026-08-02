@@ -18,9 +18,11 @@ enforcement is a single point of failure).
 
 It also has a mixed-population mode (a `Monitors` slider — sanctioners, cooperators
 and selfish in one group — with the ring showing **net payoff** so E3's second-order
-free-rider is visible), and a separate **Evolution (E5)** section that runs replicator
-dynamics over generations (reusing the same engine) and charts the two-stage collapse:
-monitors quietly erode, then the commons cliff-drops.
+free-rider is visible), and an **Evolution (E5)** mode (pick the `🧬 Evolution` regime):
+the ring animates the current *generation's* population while replicator dynamics play
+out across generations, and the charts below track each strategy's share and the
+resource — you watch monitors quietly erode (the ring loses its green), then the
+commons cliff-drops. Reuses the same engine; validated against the Python E5.
 
 ## Status: presentation layer, not the science
 
