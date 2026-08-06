@@ -94,6 +94,11 @@ should link here rather than re-enumerate.
   the enforcer bears a monitoring cost. Caps every agent's harvest at a sustainable
   quota. *(model term: `sanctioning`, via `SanctionPolicy` + the engine's enforcement
   step.)*
+- **Loner (opt-out)** — declines the shared resource entirely; requests nothing and
+  never enters the pool. Used to test whether *optional participation* rescues costly
+  monitoring from the second-order free-rider problem (Hauert et al. 2007; E11).
+  Earns a fixed payoff set at the experiment level, not by the engine. *(model term:
+  `loner`.)*
 
 Related concepts:
 

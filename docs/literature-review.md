@@ -209,8 +209,10 @@ The foundational set is now read (Hardin, Ostrom, Axelrod & Hamilton, Nowak, Feh
 Gächter, Hauert, Schill, Janssen, Piatti, Folke, Walker, ODD). Next actions from the
 reading:
 
-1. **Act on Hauert (2007)** — add a *loner* opt-out to the E5 replicator to test
-   whether monitoring becomes stable (flip E5's negative result).
+1. ✅ **Act on Hauert (2007)** — added a *loner* opt-out to the E5 replicator
+   ([E11](experiments/E11-loner-rescue.md), [ADR-0009](decisions/0009-loner-and-defector-scaled-monitoring-cost.md)).
+   Result: delays E5's collapse ~4–5× but does not prevent it — points to Sigmund et
+   al. (2010)'s pool-punishment mechanism as the more promising next attempt.
 2. **Act on ODD (2020)** — write an ODD-structured model description for the thesis.
 3. **Candidate new strategy from Nowak** — an *indirect-reciprocity / reputation*
    agent (ties to the information and communication axes).

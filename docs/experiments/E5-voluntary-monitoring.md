@@ -73,8 +73,11 @@ quietly eroded away — then it fails suddenly, not gradually.
 
 ## Follow-ups
 
-- Add the **loner / optional-participation** rescue (Hauert et al.) and/or mutation —
-  does monitoring persist via cycles?
+- ✅ **Loner / optional-participation rescue (Hauert et al.) — tried, see
+  [E11](E11-loner-rescue.md).** Result: substantially delays the collapse (~4–5×)
+  but does not prevent it — our continuous replicator dynamics lack the
+  finite-population fixation step Hauert's mechanism relies on. Mutation (re-invasion
+  after extinction) is still untried.
 - **Second-order sanctioning:** let sanctioners also penalise non-monitoring
   cooperators — can that stabilise monitoring?
 - **Proportional enforcement** (ADR-0005 follow-up) for a gradual rather than

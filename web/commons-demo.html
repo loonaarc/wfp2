@@ -27,6 +27,7 @@
     --s-conditional_cooperator: #ff7f0e;
     --s-compensating_cooperator: #9467bd;
     --s-sanctioning: #2ca02c;
+    --s-loner: #bcbd22;
     --serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -347,7 +348,7 @@
 
         <!-- 3b. count of each strategy group (evolution mode only) -->
         <div class="card evo-count-card" id="evo_count_card" style="display:none">
-          <span class="foot-label">Population this generation — count of each strategy (of 40)</span>
+          <span class="foot-label">Population this generation — count of each strategy, incl. loners (of 40)</span>
           <div class="count-bar" id="evo_count"></div>
         </div>
 
@@ -375,13 +376,17 @@
 
     <!-- ── evolution (E5) — shown only in evolution mode ──── -->
     <section class="evolution" id="evo_section" style="display:none">
-      <h2>🧬 Evolution — does voluntary monitoring survive? (E5)</h2>
+      <h2>🧬 Evolution — does voluntary monitoring survive? (E5 / E11)</h2>
       <p class="section-lede">One level up from a single run: each <b>generation</b> runs a whole
         simulation, then strategies that earned an above-average payoff grow their share of the
         population (replicator dynamics). Monitors <b>cooperate and pay to enforce</b>; cooperators
         cooperate but free-ride on that enforcement; selfish defect. <b>Press ▶ above</b> to play the
         generations (the ring shows the current one); set the starting mix here and it recomputes.
-        The question: if monitoring is optional, does it last?</p>
+        The question: if monitoring is optional, does it last? Leave <b>start loner %</b> at 0 for
+        plain E5. Set it above 0 to try <b>E11</b>: a fourth option that opts out entirely for a
+        fixed, safe payoff — Hauert et al. (2007)'s attempt to rescue monitoring by making it cheap
+        to enforce when free-riders are rare. It delays the collapse a lot, but — in this browser
+        model, same as the Python one — does not prevent it.</p>
       <div class="card evo-controls">
         <div class="field">
           <label for="evo_mon">Start monitors % <span class="val" id="evo_mon_v">40</span></label>
@@ -390,6 +395,10 @@
         <div class="field">
           <label for="evo_sel">Start selfish % <span class="val" id="evo_sel_v">20</span></label>
           <input type="range" id="evo_sel" min="0" max="80" step="5" value="20" />
+        </div>
+        <div class="field">
+          <label for="evo_loner">Start loner % <span class="val" id="evo_loner_v">0</span></label>
+          <input type="range" id="evo_loner" min="0" max="60" step="5" value="0" />
         </div>
         <div class="field">
           <label for="evo_str">Selection strength <span class="val" id="evo_str_v">0.30</span></label>
@@ -420,7 +429,7 @@
     <section class="explain">
       <h2>What this project is about</h2>
       <p class="section-lede">A small, reproducible model to study <b>when and why decentralized
-        cooperation emerges, and how fragile it is</b>. Ten experiments (E1–E10) build one story;
+        cooperation emerges, and how fragile it is</b>. Eleven experiments (E1–E11) build one story;
         every regime above is a slice of it, and every claim below is a runnable, seed-reproducible
         result — not a new algorithm, but a systematic, literature-grounded measurement.</p>
       <div class="findings-grid">
@@ -468,7 +477,7 @@
           </ul>
         </div>
         <div class="card repo-col">
-          <h3>The experiments (E1–E10)</h3>
+          <h3>The experiments (E1–E11)</h3>
           <ul>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/README.md">All reports <span class="m">— index</span></a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E1-information-and-knowledge.md">E1 — information &amp; knowledge</a></li>
@@ -481,6 +490,7 @@
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E8-resilience.md">E8 — resilience (the shock)</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E9-resilience-with-free-riders.md">E9 — shock + free-riders</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E10-agent-failure.md">E10 — agent failure</a></li>
+            <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E11-loner-rescue.md">E11 — loner rescue attempt</a></li>
           </ul>
         </div>
         <div class="card repo-col">
@@ -570,7 +580,7 @@
     const agents = [];
     for (const s of specs) for (let i = 0; i < s.count; i++) agents.push({
       kind: s.kind,
-      p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: 0.2 },
+      p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
     });
     const n = agents.length, rng = mulberry32(o.seed);
@@ -629,7 +639,8 @@
     "🎲 Reciprocity breaks under noise (E4)": { ctype: "conditional_cooperator", nsel: 0, info: "global", kb: 1, noise: 0.1, bcast: 0 },
     "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🧬 Evolution — monitoring erodes (E5)": { evolution: true },
+    "🧬 Evolution — monitoring erodes (E5)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0 },
+    "🧭 Evolution — loner rescue attempt (E11)": { evolution: true, evoMon: 35, evoSel: 15, evoLoner: 15 },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
@@ -696,6 +707,7 @@
     "🛡️ Enforcement holds (E3)": "4 monitors enforce a sustainable quota on everyone (4 selfish included) — the only setup that keeps the pool alive AND payoffs fair. Monitors pay a small cost to do it.",
     "🕵️ Second-order free-rider (E3)": "4 monitors + 4 plain cooperators, all harvesting the same sustainable amount. But the monitors pay to enforce, so their NET payoff ends up BELOW the cooperators they protect — watch their numbers fall behind. Nobody wants to be the monitor: the second-order free-rider problem.",
     "🧬 Evolution — monitoring erodes (E5)": "Evolution mode. Over generations, strategies that earn above-average payoff grow their share. Press ▶ to play: the ring shows the current generation's population (green monitors slowly vanish, red selfish take over), and the charts below track each strategy's share and the resource across generations. Monitoring quietly erodes, then the commons collapses — voluntary monitoring is not evolutionarily stable.",
+    "🧭 Evolution — loner rescue attempt (E11)": "Same evolution mode, but 15% of the population starts as loners — agents that opt out of the resource entirely for a fixed, safe payoff. This makes monitoring cheaper when free-riders are rare (Hauert et al. 2007). Watch the yellow loner line: it fades fast once the commons looks healthy, and monitoring still erodes eventually — just about 4–5× slower than plain E5. The opt-out delays the collapse; it does not prevent it.",
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
@@ -750,6 +762,12 @@
   els.regime.addEventListener("change", () => {
     const r = REGIMES[els.regime.value];
     setMode(r && r.evolution ? "evolution" : "single");
+    if (r && r.evolution) {
+      $("evo_mon").value = r.evoMon ?? 40;
+      $("evo_sel").value = r.evoSel ?? 20;
+      $("evo_loner").value = r.evoLoner ?? 0;
+      evoLabels();
+    }
     applyRegime(); updateRegimeDesc(); run();
   });
   ["ctype", "info"].forEach((k) => els[k].addEventListener("change", () => { toCustom(); run(); }));
@@ -1069,49 +1087,64 @@
   });
   window.addEventListener("resize", () => { if (sim) { drawTraj(); draw(); } });
 
-  // ── evolution (E5): replicator dynamics on top of the single-run engine ────
-  const STRATS3 = ["sanctioning", "cooperative", "selfish"];
-  const EVO_NICE = { sanctioning: "monitor", cooperative: "cooperator", selfish: "selfish" };
+  // ── evolution (E5/E11): replicator dynamics on top of the single-run engine ─
+  // E5's three strategies, plus `loner` (E11, Hauert et al. 2007's opt-out
+  // rescue attempt — see ADR-0009). A loner never enters `runSim` (it touches
+  // nothing); it earns a fixed payoff SIGMA instead, applied directly below.
+  // Leaving the loner's starting share at 0% reproduces plain E5 exactly,
+  // since a strategy can't grow from an exact 0% share under replicator
+  // dynamics (0 × any fitness ratio is still 0) — no branching needed.
+  const EVO_STRATS = ["sanctioning", "cooperative", "selfish", "loner"];
+  const EVO_NICE = { sanctioning: "monitor", cooperative: "cooperator", selfish: "selfish", loner: "loner (opt-out)" };
+  const LONER_SIGMA = 6.0;          // fixed payoff; between the measured all-selfish (~1.5)
+  const BASE_MONITORING_COST = 0.2; // and all-cooperative (~15.0) fitness at N=40/60 rounds.
 
   // round fractional shares to integer counts summing to `total` (largest remainder)
   function largestRemainder(shares, total) {
     const raw = {}, counts = {};
-    for (const s of STRATS3) { raw[s] = shares[s] * total; counts[s] = Math.floor(raw[s]); }
-    const rem = total - STRATS3.reduce((a, s) => a + counts[s], 0);
-    const order = [...STRATS3].sort((a, b) => (raw[b] - counts[b]) - (raw[a] - counts[a]));
+    for (const s of EVO_STRATS) { raw[s] = shares[s] * total; counts[s] = Math.floor(raw[s]); }
+    const rem = total - EVO_STRATS.reduce((a, s) => a + counts[s], 0);
+    const order = [...EVO_STRATS].sort((a, b) => (raw[b] - counts[b]) - (raw[a] - counts[a]));
     for (let i = 0; i < rem; i++) counts[order[i]]++;
     return counts;
   }
 
-  // one generation: run a full simulation, return each strategy's mean NET payoff + sustainability
+  // one generation: run a full simulation (loner excluded — it never plays),
+  // return each strategy's mean NET payoff + sustainability. The sanctioner's
+  // monitoring cost scales with the selfish share of the *active* (non-loner)
+  // population — cheap when free-riders are rare (the E11 / Hauert mechanism).
   function measureEvo(counts) {
+    const nActive = counts.sanctioning + counts.cooperative + counts.selfish;
+    const selfishShare = nActive > 0 ? counts.selfish / nActive : 0;
+    const monitoringCost = BASE_MONITORING_COST * selfishShare;
     const specs = [];
-    if (counts.sanctioning > 0) specs.push({ kind: "sanctioning", count: counts.sanctioning });
+    if (counts.sanctioning > 0) specs.push({ kind: "sanctioning", count: counts.sanctioning, mc: monitoringCost });
     if (counts.cooperative > 0) specs.push({ kind: "cooperative", count: counts.cooperative, kb: 1 });
     if (counts.selfish > 0) specs.push({ kind: "selfish", count: counts.selfish });
+    const fitness = { loner: LONER_SIGMA };
+    if (specs.length === 0) return { fitness, sustainability: NaN, monitoringCost };
     const sim = runSim(specs, { info: "global", noise: 0, broadcast: 0, rounds: 60, seed: 1,
       init: 50, shock: 0, shockRound: -1, failCount: 0, failRound: -1 });
     const sum = {}, cnt = {};
     sim.kinds.forEach((k, i) => { sum[k] = (sum[k] || 0) + sim.payoff[i]; cnt[k] = (cnt[k] || 0) + 1; });
-    const fitness = {};
-    for (const s of STRATS3) fitness[s] = cnt[s] ? sum[s] / cnt[s] : 0;
-    return { fitness, sustainability: sim.frames[sim.frames.length - 1].stock / K };
+    for (const s of ["sanctioning", "cooperative", "selfish"]) fitness[s] = cnt[s] ? sum[s] / cnt[s] : 0;
+    return { fitness, sustainability: sim.frames[sim.frames.length - 1].stock / K, monitoringCost };
   }
 
-  // softened replicator: above-average strategies grow (mirrors the Python E5 update)
+  // softened replicator: above-average strategies grow (mirrors the Python E5/E11 update)
   function runEvolution(shares0, selection, generations, n) {
     let shares = { ...shares0 };
     const history = [];
     for (let gen = 0; gen < generations; gen++) {
-      const { fitness, sustainability } = measureEvo(largestRemainder(shares, n));
-      history.push({ shares: { ...shares }, sustainability });
-      const fAvg = Math.max(1e-9, STRATS3.reduce((a, s) => a + shares[s] * fitness[s], 0));
+      const { fitness, sustainability, monitoringCost } = measureEvo(largestRemainder(shares, n));
+      history.push({ shares: { ...shares }, sustainability, monitoringCost });
+      const fAvg = Math.max(1e-9, EVO_STRATS.reduce((a, s) => a + shares[s] * fitness[s], 0));
       const nw = {};
-      for (const s of STRATS3)
+      for (const s of EVO_STRATS)
         nw[s] = Math.max(0, shares[s] * (1 + selection * (Math.max(0, fitness[s]) / fAvg - 1)));
-      const z = STRATS3.reduce((a, s) => a + nw[s], 0) || 1;
+      const z = EVO_STRATS.reduce((a, s) => a + nw[s], 0) || 1;
       const next = {};
-      for (const s of STRATS3) next[s] = nw[s] / z;
+      for (const s of EVO_STRATS) next[s] = nw[s] / z;
       shares = next;
     }
     return history;
@@ -1146,7 +1179,7 @@
         ctx.fillText(t.toFixed(1), PAD - 4, Y(t));
       }
       mark(ctx, X, h);
-      for (const s of STRATS3) {
+      for (const s of EVO_STRATS) {
         ctx.strokeStyle = stratColor(s); ctx.lineWidth = 2; ctx.beginPath();
         history.forEach((r, i) => (i ? ctx.lineTo(X(i), Y(r.shares[s])) : ctx.moveTo(X(i), Y(r.shares[s]))));
         ctx.stroke();
@@ -1174,23 +1207,26 @@
   }
   function buildEvoLegend() {
     const el = $("evo_legend"); el.innerHTML = "";
-    for (const s of STRATS3) {
+    for (const s of EVO_STRATS) {
       const span = document.createElement("span");
       span.innerHTML = `<i style="background:${stratColor(s)}"></i>${EVO_NICE[s]}`;
       el.appendChild(span);
     }
   }
-  // stacked bar of how many agents are each strategy this generation
+  // stacked bar of how many (of 40) agents are each strategy this generation,
+  // including loners — even though a loner opts out of the simulated round
+  // itself (it never appears in the ring), it's still part of the population
+  // the replicator dynamics is tracking, so it belongs in this count.
   function drawCountBar(g) {
-    const kinds = evo.sims[g].kinds, counts = { sanctioning: 0, cooperative: 0, selfish: 0 };
-    kinds.forEach((k) => (counts[k] += 1));
-    const nice = { sanctioning: "monitors", cooperative: "cooperators", selfish: "selfish" };
+    const counts = evo.counts[g];
+    const nice = { sanctioning: "monitors", cooperative: "cooperators", selfish: "selfish", loner: "loners (opted out)" };
     const el = $("evo_count"); el.innerHTML = "";
-    for (const s of STRATS3) {
-      const c = counts[s]; if (c === 0) continue;
+    for (const s of EVO_STRATS) {
+      const c = counts[s]; if (!c) continue;
       const seg = document.createElement("div");
       seg.style.flex = String(c);
       seg.style.background = stratColor(s);
+      seg.style.opacity = s === "loner" ? "0.85" : "1";
       seg.textContent = c >= 8 ? `${c} ${nice[s]}` : `${c}`;
       seg.title = `${c} ${nice[s]}`;
       el.appendChild(seg);
@@ -1236,18 +1272,25 @@
 
   function runEvo() {
     const monP = +$("evo_mon").value / 100, selP = +$("evo_sel").value / 100;
-    const coopP = Math.max(0, 1 - monP - selP);
+    const lonerP = +$("evo_loner").value / 100;
+    const coopP = Math.max(0, 1 - monP - selP - lonerP);
     const pct = (x) => Math.round(x * 100);
     $("evo_comp").innerHTML =
       `Start: <b>${pct(monP)}%</b> monitors + <b>${pct(coopP)}%</b> cooperators + `
-      + `<b>${pct(selP)}%</b> selfish · N = ${EVO_N}`;
+      + `<b>${pct(selP)}%</b> selfish + <b>${pct(lonerP)}%</b> loner · N = ${EVO_N}`;
     const gens = +$("evo_gen").value, sel = +$("evo_str").value;
-    const history = runEvolution({ sanctioning: monP, cooperative: coopP, selfish: selP }, sel, gens, EVO_N);
-    // one display-ready simulation (ring animation) per generation
+    const history = runEvolution(
+      { sanctioning: monP, cooperative: coopP, selfish: selP, loner: lonerP }, sel, gens, EVO_N
+    );
+    // one integer head-count per generation (all four strategies, incl. loner)
+    // and one display-ready simulation (ring animation) per generation — the
+    // loner is excluded from the *simulation*, exactly as measureEvo excludes
+    // it from the simulated round, but its count is kept for drawCountBar.
+    const countsPerGen = history.map((r) => largestRemainder(r.shares, EVO_N));
     evo = {
       history,
-      sims: history.map((r) => {
-        const c = largestRemainder(r.shares, EVO_N);
+      counts: countsPerGen,
+      sims: countsPerGen.map((c) => {
         const specs = [];
         if (c.sanctioning > 0) specs.push({ kind: "sanctioning", count: c.sanctioning });
         if (c.cooperative > 0) specs.push({ kind: "cooperative", count: c.cooperative, kb: 1 });
@@ -1261,13 +1304,20 @@
     const monGone = history.findIndex((r) => r.shares.sanctioning < 0.01);
     const collapsed = last.sustainability < 0.25;
     let msg = `After ${gens} generations: <b>${pct(last.shares.sanctioning)}%</b> monitors, `
-      + `<b>${pct(last.shares.cooperative)}%</b> cooperators, <b>${pct(last.shares.selfish)}%</b> selfish. `;
-    if (monGone >= 0 && collapsed)
+      + `<b>${pct(last.shares.cooperative)}%</b> cooperators, <b>${pct(last.shares.selfish)}%</b> selfish`
+      + (lonerP > 0 ? `, <b>${pct(last.shares.loner)}%</b> loner` : "") + `. `;
+    if (monGone >= 0 && collapsed) {
       msg += `Monitoring eroded to ~0 by generation ${monGone}, then the commons <b>collapsed</b> `
-        + `— press ▶ to watch it. Voluntary monitoring is not evolutionarily stable.`;
-    else if (!collapsed)
+        + `— press ▶ to watch it. `;
+      msg += lonerP > 0
+        ? `The opt-out delayed the collapse (compare to 0% loner) but did not prevent it — `
+          + `see <a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E11-loner-rescue.md" target="_blank" rel="noopener">E11</a>.`
+        : `Voluntary monitoring is not evolutionarily stable (E5). Try adding a starting loner % above — E11's rescue attempt.`;
+    } else if (!collapsed) {
       msg += `The commons is <b>still alive</b> (sustainability ${last.sustainability.toFixed(2)}).`;
-    else msg += `The commons <b>collapsed</b> (sustainability ${last.sustainability.toFixed(2)}).`;
+    } else {
+      msg += `The commons <b>collapsed</b> (sustainability ${last.sustainability.toFixed(2)}).`;
+    }
     $("evo_readout").innerHTML = msg;
     buildEvoLegend();
     frame = 0; playing = false; setEvoGeneration(0); setBtn(); draw();
@@ -1277,16 +1327,26 @@
   function evoLabels() {
     $("evo_mon_v").textContent = $("evo_mon").value;
     $("evo_sel_v").textContent = $("evo_sel").value;
+    $("evo_loner_v").textContent = $("evo_loner").value;
     $("evo_str_v").textContent = (+$("evo_str").value).toFixed(2);
     $("evo_gen_v").textContent = $("evo_gen").value;
   }
-  const clampEvo = (changed) => {  // start monitors% + selfish% ≤ 100 (rest = cooperators)
-    if (+$("evo_mon").value + +$("evo_sel").value > 100) {
-      const other = changed === "evo_mon" ? "evo_sel" : "evo_mon";
-      $(other).value = 100 - +$(changed).value;
+  // start monitors% + selfish% + loner% ≤ 100 (the rest are cooperators)
+  const clampEvo = (changed) => {
+    const ids = ["evo_mon", "evo_sel", "evo_loner"];
+    const total = ids.reduce((a, id) => a + +$(id).value, 0);
+    if (total > 100) {
+      const others = ids.filter((id) => id !== changed);
+      // take the overflow off the other two sliders, proportionally to their current value
+      let over = total - 100;
+      const otherTotal = others.reduce((a, id) => a + +$(id).value, 0) || 1;
+      for (const id of others) {
+        const take = Math.min(+$(id).value, Math.round((over * +$(id).value) / otherTotal));
+        $(id).value = +$(id).value - take;
+      }
     }
   };
-  ["evo_mon", "evo_sel"].forEach((k) =>
+  ["evo_mon", "evo_sel", "evo_loner"].forEach((k) =>
     $(k).addEventListener("input", () => { clampEvo(k); evoLabels(); scheduleEvo(); }));
   ["evo_str", "evo_gen"].forEach((k) =>
     $(k).addEventListener("input", () => { evoLabels(); scheduleEvo(); }));

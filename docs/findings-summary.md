@@ -4,7 +4,7 @@
 are the resilience phase (disturbances). This is the narrative spine for the writeup;
 each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-07-27 · 5 strategies · 10 experiments (E1–E10) · 80 tests · results
+**Status:** 2026-08-06 · 6 strategies · 11 experiments (E1–E11) · 86 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -60,6 +60,55 @@ Two organizing axes emerged: an **information/knowledge** axis (E1) and a
 
 Full detail: [architecture.md](architecture.md), [metrics.md](metrics.md). Design
 decisions: [decisions/](decisions/).
+
+---
+
+## How the experiments fit together
+
+Each experiment either closes a question the previous one opened, or fixes a
+failure mode the previous one exposed. This is the map; the sections below walk
+through it one piece at a time.
+
+```mermaid
+flowchart TD
+    subgraph P1["Phase 1 — mechanism ladder (WFP2)"]
+        E1["E1 — information / knowledge<br/>cooperation needs info OR knowledge"]
+        E2["E2 — reciprocity<br/>protects fairness, not the resource"]
+        E3["E3 — sanctioning<br/>protects both — but monitors pay"]
+        E4["E4 — robustness & sensitivity<br/>E1–E3 hold under noise"]
+        E1 --> E2 --> E3
+        E3 -.validated by.-> E4
+    end
+
+    subgraph P2["Phase 2 — adaptation & communication"]
+        E5["E5 — voluntary monitoring<br/>NOT evolutionarily stable"]
+        E11["E11 — loner rescue attempt<br/>delays collapse ~4-5x, doesn't prevent it"]
+        E6["E6 — communication<br/>substitutes for info (fairness only)"]
+        E7["E7 — response rules<br/>only enforcement saves the commons"]
+        E5 --> E11
+        E6 --> E7
+    end
+
+    subgraph P3["Phase 3 — disturbances & resilience"]
+        E8["E8 — resource shock<br/>information decides recovery"]
+        E9["E9 — shock + free-riders<br/>enforcement also needed"]
+        E10["E10 — agent failure<br/>losing the enforcer is fatal"]
+        E8 --> E9 --> E10
+    end
+
+    E3 -.the cost E5 explains.-> E5
+    E3 -.the mechanism E7 confirms.-> E7
+    E3 -.extended into a shock.-> E8
+```
+
+Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
+failure (blind cooperation fails → add reciprocity → reciprocity still fails the
+*resource* → add enforcement). **E4** is a robustness check on that spine, not a new
+mechanism. **E5** asks whether E3's enforcement survives if agents can choose it
+freely (no), and **E11** is one attempt — only partly successful — at fixing that.
+**E6/E7** add a new axis (communication) on top of the same mechanisms. **E8–E10**
+take the whole mechanism set and ask what survives a disturbance, building up from a
+single shock (E8) to a shock plus free-riders (E9) to losing agents outright (E10).
 
 ---
 
@@ -288,5 +337,6 @@ python scripts/experiment_response_rules.py          # E7
 python scripts/experiment_resilience.py              # E8
 python scripts/experiment_resilience_freeriders.py   # E9
 python scripts/experiment_agent_failure.py           # E10
-pytest                                               # 80 tests
+python scripts/experiment_voluntary_monitoring_loner.py  # E11
+pytest                                               # 86 tests
 ```

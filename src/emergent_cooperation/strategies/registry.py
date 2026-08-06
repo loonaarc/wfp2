@@ -13,6 +13,7 @@ from .base import Strategy
 from .compensating import CompensatingCooperatorStrategy
 from .conditional import ConditionalCooperatorStrategy
 from .cooperative import CooperativeStrategy
+from .loner import LonerStrategy
 from .sanctioning import SanctioningStrategy
 from .selfish import SelfishStrategy
 
@@ -60,3 +61,4 @@ register_strategy(CooperativeStrategy)
 register_strategy(ConditionalCooperatorStrategy)
 register_strategy(SanctioningStrategy)
 register_strategy(CompensatingCooperatorStrategy)
+register_strategy(LonerStrategy)

@@ -67,6 +67,11 @@ Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
 ### Phase 2 — Adaptation & communication (thesis, started) — 🔄 in progress
 - ✅ **Voluntary monitoring (E5):** replicator dynamics (ADR-0006) — is monitoring
   evolutionarily stable? (No.)
+- ✅ **Loner rescue attempt (E11, ADR-0009):** does an opt-out strategy (Hauert et
+  al. 2007) rescue E5's monitoring collapse? Delays it ~4–5×, does not prevent it —
+  our continuous replicator dynamics lack the finite-population fixation step the
+  mechanism relies on. Points to Sigmund et al. (2010)'s pool-punishment as the next
+  attempt.
 - ✅ **Broadcast communication (E6, ADR-0007):** `broadcast_reliability` +
   `Observation.signal`; does communication substitute for information? (For fairness.)
 - ✅ **Response rules (E7):** given communication, only enforcement saves the commons.
