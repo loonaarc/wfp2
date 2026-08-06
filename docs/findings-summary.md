@@ -228,7 +228,8 @@ gracefully.
 - **Janssen et al. (2022):** conditional cooperators dominate; Gini is standard;
   communication works via trust — motivates the next phase.
 - **Piatti et al. (2024, GovSim):** survival/efficiency/over-usage metrics; default to
-  collapse; communication reduces over-usage — adopted here.
+  collapse (best LLM survival rate only 53.3%); removing communication raises
+  over-usage 22% — adopted here.
 
 (Verified citations and analysed notes: [literature-review.md](literature-review.md),
 [paper-notes/](paper-notes/).)

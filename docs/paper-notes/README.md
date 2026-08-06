@@ -40,7 +40,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [2016-schill-cooperation-not-enough](2016-schill-cooperation-not-enough.md) | 🟢 | Cooperation ≠ sustainability; you also need ecological knowledge (reframes our info axis) |
 | [2020-grimm-odd-protocol](2020-grimm-odd-protocol.md) | 🟢 | ODD standard for describing ABMs reproducibly → structure our model write-up |
 | [2022-janssen-communication-trust-inequality](2022-janssen-communication-trust-inequality.md) | 🟢 | Communication→trust→restraint; conditional cooperators dominate; Gini standard |
-| [2024-piatti-govsim-cooperate-or-collapse](2024-piatti-govsim-cooperate-or-collapse.md) | 🟢 | CPR benchmark; survival/efficiency/over-usage metrics; communication cuts over-usage ~21% |
+| [2024-piatti-govsim-cooperate-or-collapse](2024-piatti-govsim-cooperate-or-collapse.md) | 🟢 | 15-LLM CPR benchmark, best survival rate 53.3%; no communication → over-usage +22%; names multi-resource/varying-regrowth as future work |
 
 More candidate leads and reading priorities are in
 [../literature-review.md](../literature-review.md).

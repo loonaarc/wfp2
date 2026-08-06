@@ -7,12 +7,15 @@ full analysed note in [paper-notes/](paper-notes/); this file is the map and the
 Read status: 🔴 not read · 🟡 skimmed · 🟢 analysed note exists in `paper-notes/` ·
 ⚪ reference only (not a reading lead).
 
-> **Status (2026-07):** all core sources have now been read from the primary PDFs
+> **Status (2026-08-06):** all core sources have now been read from the primary PDFs
 > (obtained via library access, in `references/papers/`, git-ignored) and have full
-> analysed notes (🟢). The one textbook, Oliehoek & Amato, is analysed for the
-> framework/model/complexity chapters we use; its solver chapters (4–8) are out of
-> scope. Citations verified from the PDFs. A few thematic leads (below) remain 🔴 as
-> candidates.
+> analysed notes (🟢). This includes Schill (2016), Janssen et al. (2022), and Piatti
+> et al. (2024), whose notes were originally written from web sources rather than
+> PDFs and have since been rewritten against the actual PDFs, correcting one
+> transcription error in the Janssen note (Model 1's harvest-probability parameter).
+> The one textbook, Oliehoek & Amato, is analysed for the framework/model/complexity
+> chapters we use; its solver chapters (4–8) are out of scope. Citations verified
+> from the PDFs. A few thematic leads (below) remain 🔴 as candidates.
 
 ## How this maps to the project
 
@@ -69,9 +72,9 @@ third strategy and suggests a **trust/reciprocity** formulation.
 
 ### ➕ Communication design for Phase 2 (evidence-based)
 Model communication as a **trust/reputation** state that raises restraint (Janssen
-et al. 2022), and expect a concrete effect size (**GovSim: communication reduced
-over-usage ~21%**). "Cheap talk" works via trust, and cooperation can persist after
-communication stops.
+et al. 2022), and expect a concrete effect size (**GovSim: removing communication
+raises over-usage 22%**, p<0.001, on the subset of models with survival rate >10%).
+"Cheap talk" works via trust, and cooperation can persist after communication stops.
 
 ### A well-grounded specific research question this suggests
 > *Under what information conditions does cooperative intent produce sustainable
@@ -150,8 +153,10 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   [note](paper-notes/2022-janssen-communication-trust-inequality.md). Communication →
   trust → restraint; heterogeneous types; Gini.
 - 🟢 **Piatti et al. (2024), "Cooperate or Collapse" (GovSim), arXiv:2404.16698.** →
-  [note](paper-notes/2024-piatti-govsim-cooperate-or-collapse.md). CPR benchmark;
-  survival/efficiency/over-usage metrics; communication reduces over-usage ~21%.
+  [note](paper-notes/2024-piatti-govsim-cooperate-or-collapse.md). CPR benchmark, 15
+  LLMs; survival/efficiency/over-usage metrics; best model (GPT-4o) survival rate
+  only 53.3%; removing communication raises over-usage 22%; universalization
+  reasoning (+4 months survival) is the strongest single intervention.
 - 🟢 **Ostrom, Walker & Gardner (1992), "Covenants With and Without a Sword: Self-
   Governance Is Possible", *American Political Science Review* 86(2), 404–417.** →
   [note](paper-notes/1992-ostrom-walker-gardner-covenants.md). *The* CPR lab
