@@ -143,8 +143,9 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   institutions for governing the commons", *Nature* 466, 861–863.** →
   [note](paper-notes/2010-sigmund-social-learning-institutions.md). **Pool**
   (pre-committed) vs **peer** punishment: pool punishment is stable *only* if it also
-  punishes second-order free-riders. A direct one-variable follow-up to flip E5
-  (efficiency-for-stability trade-off).
+  punishes second-order free-riders. **Acted on: [E12](experiments/E12-pool-punishment.md)
+  — it works**, sanctioning grows to ~100% instead of eroding (efficiency-for-stability
+  trade-off confirmed).
 
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 
@@ -211,8 +212,11 @@ reading:
 
 1. ✅ **Act on Hauert (2007)** — added a *loner* opt-out to the E5 replicator
    ([E11](experiments/E11-loner-rescue.md), [ADR-0009](decisions/0009-loner-and-defector-scaled-monitoring-cost.md)).
-   Result: delays E5's collapse ~4–5× but does not prevent it — points to Sigmund et
-   al. (2010)'s pool-punishment mechanism as the more promising next attempt.
+   Result: delays E5's collapse ~4–5× but does not prevent it.
+1b. ✅ **Act on Sigmund (2010)** — added pool punishment + a second-order fine
+   ([E12](experiments/E12-pool-punishment.md), [ADR-0010](decisions/0010-pool-punishment-symmetric-fine.md)).
+   Result: works — sanctioning grows monotonically to ~100%, no collapse. The
+   first of the two monitoring-stability mechanisms tried that actually succeeds.
 2. **Act on ODD (2020)** — write an ODD-structured model description for the thesis.
 3. **Candidate new strategy from Nowak** — an *indirect-reciprocity / reputation*
    agent (ties to the information and communication axes).

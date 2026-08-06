@@ -116,13 +116,11 @@ population fixation dynamic appears to be the load-bearing ingredient**, not jus
 
 ## Follow-ups
 
-- **Sigmund, De Silva, Traulsen & Hauert (2010)'s pool-punishment + second-order
-  sanctioning** is a *different* fix for the same second-order problem, and — unlike
-  Hauert's loner mechanism — does not obviously depend on reaching fixation. Worth
-  trying next as Experiment E12; see
-  [`docs/paper-notes/2010-sigmund-social-learning-institutions.md`](../paper-notes/2010-sigmund-social-learning-institutions.md)
-  for the concrete design (a pre-committed pool with second-order punishment of
-  non-monitoring cooperators).
+- ✅ **Sigmund, De Silva, Traulsen & Hauert (2010)'s pool-punishment + second-order
+  sanctioning — tried, see [E12](E12-pool-punishment.md).** Unlike this loner
+  rescue, it works: sanctioning grows monotonically to ~100% instead of eroding
+  (design in
+  [`docs/paper-notes/2010-sigmund-social-learning-institutions.md`](../paper-notes/2010-sigmund-social-learning-institutions.md)).
 - **A finite-population, stochastic (Moran-process) replicator variant** would let
   Hauert's mechanism be tested as originally specified, with fixation and mutation —
   a more involved change to the experiment harness, but the most direct way to

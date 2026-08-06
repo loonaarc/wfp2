@@ -4,7 +4,7 @@
 are the resilience phase (disturbances). This is the narrative spine for the writeup;
 each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-08-06 · 6 strategies · 11 experiments (E1–E11) · 86 tests · results
+**Status:** 2026-08-06 · 6 strategies · 12 experiments (E1–E12) · 86 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -83,9 +83,10 @@ flowchart TD
     subgraph P2["Phase 2 — adaptation & communication"]
         E5["E5 — voluntary monitoring<br/>NOT evolutionarily stable"]
         E11["E11 — loner rescue attempt<br/>delays collapse ~4-5x, doesn't prevent it"]
+        E12["E12 — pool punishment<br/>stabilises monitoring — grows to ~100%"]
         E6["E6 — communication<br/>substitutes for info (fairness only)"]
         E7["E7 — response rules<br/>only enforcement saves the commons"]
-        E5 --> E11
+        E5 --> E11 --> E12
         E6 --> E7
     end
 
@@ -105,8 +106,8 @@ Reading it: **E1–E3 is the spine** — each experiment fixes the previous one'
 failure (blind cooperation fails → add reciprocity → reciprocity still fails the
 *resource* → add enforcement). **E4** is a robustness check on that spine, not a new
 mechanism. **E5** asks whether E3's enforcement survives if agents can choose it
-freely (no), and **E11** is one attempt — only partly successful — at fixing that.
-**E6/E7** add a new axis (communication) on top of the same mechanisms. **E8–E10**
+freely (no); **E11** is one attempt — only partly successful — at fixing that, and
+**E12** is a second attempt that actually succeeds. **E6/E7** add a new axis (communication) on top of the same mechanisms. **E8–E10**
 take the whole mechanism set and ask what survives a disturbance, building up from a
 single shock (E8) to a shock plus free-riders (E9) to losing agents outright (E10).
 
@@ -338,5 +339,6 @@ python scripts/experiment_resilience.py              # E8
 python scripts/experiment_resilience_freeriders.py   # E9
 python scripts/experiment_agent_failure.py           # E10
 python scripts/experiment_voluntary_monitoring_loner.py  # E11
+python scripts/experiment_pool_punishment.py         # E12
 pytest                                               # 86 tests
 ```

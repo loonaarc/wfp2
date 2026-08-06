@@ -70,8 +70,11 @@ Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
 - ✅ **Loner rescue attempt (E11, ADR-0009):** does an opt-out strategy (Hauert et
   al. 2007) rescue E5's monitoring collapse? Delays it ~4–5×, does not prevent it —
   our continuous replicator dynamics lack the finite-population fixation step the
-  mechanism relies on. Points to Sigmund et al. (2010)'s pool-punishment as the next
-  attempt.
+  mechanism relies on.
+- ✅ **Pool punishment (E12, ADR-0010):** does Sigmund et al. (2010)'s pre-committed
+  pool + second-order fine on all non-monitors succeed where E11 didn't? Yes —
+  sanctioning grows monotonically to ~100%, sustainability never drops. The first
+  monitoring-stability mechanism tried that actually works.
 - ✅ **Broadcast communication (E6, ADR-0007):** `broadcast_reliability` +
   `Observation.signal`; does communication substitute for information? (For fairness.)
 - ✅ **Response rules (E7):** given communication, only enforcement saves the commons.

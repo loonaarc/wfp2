@@ -376,17 +376,18 @@
 
     <!-- ── evolution (E5) — shown only in evolution mode ──── -->
     <section class="evolution" id="evo_section" style="display:none">
-      <h2>🧬 Evolution — does voluntary monitoring survive? (E5 / E11)</h2>
+      <h2>🧬 Evolution — does voluntary monitoring survive? (E5 / E11 / E12)</h2>
       <p class="section-lede">One level up from a single run: each <b>generation</b> runs a whole
         simulation, then strategies that earned an above-average payoff grow their share of the
         population (replicator dynamics). Monitors <b>cooperate and pay to enforce</b>; cooperators
         cooperate but free-ride on that enforcement; selfish defect. <b>Press ▶ above</b> to play the
         generations (the ring shows the current one); set the starting mix here and it recomputes.
-        The question: if monitoring is optional, does it last? Leave <b>start loner %</b> at 0 for
-        plain E5. Set it above 0 to try <b>E11</b>: a fourth option that opts out entirely for a
-        fixed, safe payoff — Hauert et al. (2007)'s attempt to rescue monitoring by making it cheap
-        to enforce when free-riders are rare. It delays the collapse a lot, but — in this browser
-        model, same as the Python one — does not prevent it.</p>
+        The question: if monitoring is optional, does it last? Leave <b>start loner %</b> and
+        <b>pool fine</b> both at 0 for plain E5. <b>Start loner %</b> tries E11 (Hauert et al. 2007):
+        agents can opt out entirely for a fixed, safe payoff, making enforcement cheap when
+        free-riders are rare — it delays the collapse a lot but does not prevent it. <b>Pool fine</b>
+        tries E12 (Sigmund et al. 2010): a pre-committed fee every non-monitor pays every round,
+        funding the monitors — this one actually works, and monitoring takes over instead of eroding.</p>
       <div class="card evo-controls">
         <div class="field">
           <label for="evo_mon">Start monitors % <span class="val" id="evo_mon_v">40</span></label>
@@ -399,6 +400,10 @@
         <div class="field">
           <label for="evo_loner">Start loner % <span class="val" id="evo_loner_v">0</span></label>
           <input type="range" id="evo_loner" min="0" max="60" step="5" value="0" />
+        </div>
+        <div class="field">
+          <label for="evo_fine">Pool fine / round <span class="val" id="evo_fine_v">0.00</span></label>
+          <input type="range" id="evo_fine" min="0" max="0.4" step="0.05" value="0" />
         </div>
         <div class="field">
           <label for="evo_str">Selection strength <span class="val" id="evo_str_v">0.30</span></label>
@@ -429,7 +434,7 @@
     <section class="explain">
       <h2>What this project is about</h2>
       <p class="section-lede">A small, reproducible model to study <b>when and why decentralized
-        cooperation emerges, and how fragile it is</b>. Eleven experiments (E1–E11) build one story;
+        cooperation emerges, and how fragile it is</b>. Twelve experiments (E1–E12) build one story;
         every regime above is a slice of it, and every claim below is a runnable, seed-reproducible
         result — not a new algorithm, but a systematic, literature-grounded measurement.</p>
       <div class="findings-grid">
@@ -477,7 +482,7 @@
           </ul>
         </div>
         <div class="card repo-col">
-          <h3>The experiments (E1–E11)</h3>
+          <h3>The experiments (E1–E12)</h3>
           <ul>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/README.md">All reports <span class="m">— index</span></a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E1-information-and-knowledge.md">E1 — information &amp; knowledge</a></li>
@@ -491,6 +496,7 @@
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E9-resilience-with-free-riders.md">E9 — shock + free-riders</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E10-agent-failure.md">E10 — agent failure</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E11-loner-rescue.md">E11 — loner rescue attempt</a></li>
+            <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E12-pool-punishment.md">E12 — pool punishment</a></li>
           </ul>
         </div>
         <div class="card repo-col">
@@ -639,8 +645,9 @@
     "🎲 Reciprocity breaks under noise (E4)": { ctype: "conditional_cooperator", nsel: 0, info: "global", kb: 1, noise: 0.1, bcast: 0 },
     "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🧬 Evolution — monitoring erodes (E5)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0 },
-    "🧭 Evolution — loner rescue attempt (E11)": { evolution: true, evoMon: 35, evoSel: 15, evoLoner: 15 },
+    "🧬 Evolution — monitoring erodes (E5)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0 },
+    "🧭 Evolution — loner rescue attempt (E11)": { evolution: true, evoMon: 35, evoSel: 15, evoLoner: 15, evoFine: 0 },
+    "🏛️ Evolution — pool punishment (E12)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0.2 },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
@@ -708,6 +715,7 @@
     "🕵️ Second-order free-rider (E3)": "4 monitors + 4 plain cooperators, all harvesting the same sustainable amount. But the monitors pay to enforce, so their NET payoff ends up BELOW the cooperators they protect — watch their numbers fall behind. Nobody wants to be the monitor: the second-order free-rider problem.",
     "🧬 Evolution — monitoring erodes (E5)": "Evolution mode. Over generations, strategies that earn above-average payoff grow their share. Press ▶ to play: the ring shows the current generation's population (green monitors slowly vanish, red selfish take over), and the charts below track each strategy's share and the resource across generations. Monitoring quietly erodes, then the commons collapses — voluntary monitoring is not evolutionarily stable.",
     "🧭 Evolution — loner rescue attempt (E11)": "Same evolution mode, but 15% of the population starts as loners — agents that opt out of the resource entirely for a fixed, safe payoff. This makes monitoring cheaper when free-riders are rare (Hauert et al. 2007). Watch the yellow loner line: it fades fast once the commons looks healthy, and monitoring still erodes eventually — just about 4–5× slower than plain E5. The opt-out delays the collapse; it does not prevent it.",
+    "🏛️ Evolution — pool punishment (E12)": "Same evolution mode, but with a pool fine: every round, every non-monitor (cooperators AND selfish alike) pays 0.2 into a pool that's paid out to the monitors — a pre-committed institution, per Sigmund et al. (2010), rather than E11's opt-out. Watch the green monitor line climb to ~100% instead of eroding: this is the one mechanism tried here that actually stabilises monitoring, not just delays its collapse.",
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
@@ -766,6 +774,7 @@
       $("evo_mon").value = r.evoMon ?? 40;
       $("evo_sel").value = r.evoSel ?? 20;
       $("evo_loner").value = r.evoLoner ?? 0;
+      $("evo_fine").value = r.evoFine ?? 0;
       evoLabels();
     }
     applyRegime(); updateRegimeDesc(); run();
@@ -1110,10 +1119,13 @@
   }
 
   // one generation: run a full simulation (loner excluded — it never plays),
-  // return each strategy's mean NET payoff + sustainability. The sanctioner's
-  // monitoring cost scales with the selfish share of the *active* (non-loner)
-  // population — cheap when free-riders are rare (the E11 / Hauert mechanism).
-  function measureEvo(counts) {
+  // return each strategy's mean NET payoff + sustainability. Two independent
+  // mechanisms can each be dialled in: (a) the sanctioner's monitoring cost
+  // scales with the selfish share of the active (non-loner) population —
+  // cheap when free-riders are rare (E11 / Hauert); (b) a flat POOL FINE
+  // charged every round to *every* non-monitor (cooperative and selfish
+  // alike) once any sanctioners exist, redistributed to them (E12 / Sigmund).
+  function measureEvo(counts, poolFine) {
     const nActive = counts.sanctioning + counts.cooperative + counts.selfish;
     const selfishShare = nActive > 0 ? counts.selfish / nActive : 0;
     const monitoringCost = BASE_MONITORING_COST * selfishShare;
@@ -1128,15 +1140,23 @@
     const sum = {}, cnt = {};
     sim.kinds.forEach((k, i) => { sum[k] = (sum[k] || 0) + sim.payoff[i]; cnt[k] = (cnt[k] || 0) + 1; });
     for (const s of ["sanctioning", "cooperative", "selfish"]) fitness[s] = cnt[s] ? sum[s] / cnt[s] : 0;
+    // pool fine (E12): every non-monitor pays in, redistributed to sanctioners
+    if (poolFine > 0 && counts.sanctioning > 0) {
+      const finePerAgent = poolFine * 60; // 60 rounds/generation, matching the Python script
+      let fineTotal = 0;
+      if (counts.cooperative > 0) { fitness.cooperative -= finePerAgent; fineTotal += finePerAgent * counts.cooperative; }
+      if (counts.selfish > 0) { fitness.selfish -= finePerAgent; fineTotal += finePerAgent * counts.selfish; }
+      fitness.sanctioning += fineTotal / counts.sanctioning;
+    }
     return { fitness, sustainability: sim.frames[sim.frames.length - 1].stock / K, monitoringCost };
   }
 
-  // softened replicator: above-average strategies grow (mirrors the Python E5/E11 update)
-  function runEvolution(shares0, selection, generations, n) {
+  // softened replicator: above-average strategies grow (mirrors the Python E5/E11/E12 update)
+  function runEvolution(shares0, selection, generations, n, poolFine) {
     let shares = { ...shares0 };
     const history = [];
     for (let gen = 0; gen < generations; gen++) {
-      const { fitness, sustainability, monitoringCost } = measureEvo(largestRemainder(shares, n));
+      const { fitness, sustainability, monitoringCost } = measureEvo(largestRemainder(shares, n), poolFine);
       history.push({ shares: { ...shares }, sustainability, monitoringCost });
       const fAvg = Math.max(1e-9, EVO_STRATS.reduce((a, s) => a + shares[s] * fitness[s], 0));
       const nw = {};
@@ -1273,14 +1293,16 @@
   function runEvo() {
     const monP = +$("evo_mon").value / 100, selP = +$("evo_sel").value / 100;
     const lonerP = +$("evo_loner").value / 100;
+    const poolFine = +$("evo_fine").value;
     const coopP = Math.max(0, 1 - monP - selP - lonerP);
     const pct = (x) => Math.round(x * 100);
     $("evo_comp").innerHTML =
       `Start: <b>${pct(monP)}%</b> monitors + <b>${pct(coopP)}%</b> cooperators + `
-      + `<b>${pct(selP)}%</b> selfish + <b>${pct(lonerP)}%</b> loner · N = ${EVO_N}`;
+      + `<b>${pct(selP)}%</b> selfish + <b>${pct(lonerP)}%</b> loner · N = ${EVO_N}`
+      + (poolFine > 0 ? ` · pool fine <b>${poolFine.toFixed(2)}</b>/round` : "");
     const gens = +$("evo_gen").value, sel = +$("evo_str").value;
     const history = runEvolution(
-      { sanctioning: monP, cooperative: coopP, selfish: selP, loner: lonerP }, sel, gens, EVO_N
+      { sanctioning: monP, cooperative: coopP, selfish: selP, loner: lonerP }, sel, gens, EVO_N, poolFine
     );
     // one integer head-count per generation (all four strategies, incl. loner)
     // and one display-ready simulation (ring animation) per generation — the
@@ -1302,17 +1324,23 @@
     };
     const last = history[history.length - 1];
     const monGone = history.findIndex((r) => r.shares.sanctioning < 0.01);
+    const monDominant = last.shares.sanctioning > 0.9;
     const collapsed = last.sustainability < 0.25;
     let msg = `After ${gens} generations: <b>${pct(last.shares.sanctioning)}%</b> monitors, `
       + `<b>${pct(last.shares.cooperative)}%</b> cooperators, <b>${pct(last.shares.selfish)}%</b> selfish`
       + (lonerP > 0 ? `, <b>${pct(last.shares.loner)}%</b> loner` : "") + `. `;
-    if (monGone >= 0 && collapsed) {
+    if (monDominant && poolFine > 0) {
+      msg += `Monitoring <b>took over</b> the population and the commons never left health `
+        + `(sustainability ${last.sustainability.toFixed(2)} throughout) — the pool fine stabilises `
+        + `it, unlike the loner opt-out above. See `
+        + `<a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E12-pool-punishment.md" target="_blank" rel="noopener">E12</a>.`;
+    } else if (monGone >= 0 && collapsed) {
       msg += `Monitoring eroded to ~0 by generation ${monGone}, then the commons <b>collapsed</b> `
         + `— press ▶ to watch it. `;
       msg += lonerP > 0
         ? `The opt-out delayed the collapse (compare to 0% loner) but did not prevent it — `
           + `see <a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E11-loner-rescue.md" target="_blank" rel="noopener">E11</a>.`
-        : `Voluntary monitoring is not evolutionarily stable (E5). Try adding a starting loner % above — E11's rescue attempt.`;
+        : `Voluntary monitoring is not evolutionarily stable (E5). Try a starting loner % (E11) or a pool fine (E12) above.`;
     } else if (!collapsed) {
       msg += `The commons is <b>still alive</b> (sustainability ${last.sustainability.toFixed(2)}).`;
     } else {
@@ -1328,6 +1356,7 @@
     $("evo_mon_v").textContent = $("evo_mon").value;
     $("evo_sel_v").textContent = $("evo_sel").value;
     $("evo_loner_v").textContent = $("evo_loner").value;
+    $("evo_fine_v").textContent = (+$("evo_fine").value).toFixed(2);
     $("evo_str_v").textContent = (+$("evo_str").value).toFixed(2);
     $("evo_gen_v").textContent = $("evo_gen").value;
   }
@@ -1348,7 +1377,7 @@
   };
   ["evo_mon", "evo_sel", "evo_loner"].forEach((k) =>
     $(k).addEventListener("input", () => { clampEvo(k); evoLabels(); scheduleEvo(); }));
-  ["evo_str", "evo_gen"].forEach((k) =>
+  ["evo_fine", "evo_str", "evo_gen"].forEach((k) =>
     $(k).addEventListener("input", () => { evoLabels(); scheduleEvo(); }));
   $("evo_run").addEventListener("click", runEvo);
   window.addEventListener("resize", () => { if (evo) drawEvo(evo.history, evo.gen); });

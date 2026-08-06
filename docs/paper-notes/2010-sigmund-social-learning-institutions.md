@@ -134,7 +134,22 @@ collapses to defectors for large imitation strength (Fig. 2a).
   population — no spatial or network structure; clean analytics live in the rare-mutation limit.
 
 ## Relevance to This Project
-This paper is the **direct next step after our Experiment E5**. E5 ran replicator dynamics on
+
+**Acted on 2026-08-06: see [E12](../experiments/E12-pool-punishment.md) and
+[ADR-0010](../decisions/0010-pool-punishment-symmetric-fine.md).** The
+pool-punishment + second-order-fine mechanism this note describes was
+implemented and works: sanctioning grows monotonically to ~100% of the
+population instead of eroding, unlike E5 (collapses) or the Hauert loner
+rescue in E11 (delays but does not prevent collapse). One correction to note
+for future reference: a first implementation that fined only free-riding
+*cooperators* (the literal "second-order" half of the mechanism) made things
+*worse*, because this project's enforcement caps selfish agents' harvest
+without fining them below cooperators' payoff — unlike Sigmund's model, where
+ordinary defectors are already fined below cooperators before any
+second-order addition. Fining *all* non-monitors (selfish and cooperative
+alike) was needed to faithfully reproduce both halves of the mechanism.
+
+This paper was the **direct next step after our Experiment E5**. E5 ran replicator dynamics on
 `sanctioning` (cooperate + pay to monitor) vs `cooperative` (cooperate, free-ride on monitoring)
 vs `selfish`, and found **voluntary monitoring is not evolutionarily stable**: monitors erode
 because non-monitoring cooperators enjoy enforcement without paying for it (the classic
