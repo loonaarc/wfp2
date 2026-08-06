@@ -55,16 +55,25 @@ we get a reproducible testbed others can extend and compare against.
 
 ## Scope
 
-**Wahlfachprojekt 2:** the engine, five strategies, the information/knowledge
-conditions, a broadcast communication channel, seeds + `decision_noise`, metrics,
-reproducible export, and ten documented experiments (E1–E10; see the
-[findings summary](findings-summary.md)) — done. This already reaches into thesis
-territory.
+**Wahlfachprojekt 2 (submitted):** the engine, five strategies, the
+information/knowledge conditions, a broadcast communication channel, seeds +
+`decision_noise`, metrics, reproducible export, and ten documented experiments
+(E1–E10; see the [findings summary](findings-summary.md)) — done and graded.
 
-**Bachelor's thesis (later):** a binding-agreement / collective-choice mechanism,
-disturbance scenarios (resilience), richer communication, statistical evaluation,
-scalability, and possibly one small original
-strategy or measurement method.
+**Since then (thesis-track work, ongoing):** a sixth strategy (`loner`) and three
+more experiments probing whether monitoring can be made evolutionarily stable
+(E11, E12) and whether a voted, jointly-funded agreement can substitute for
+individually pre-committed enforcement (E13) — the latter required the project's
+first core-engine change since WFP2 (`CollectiveChoiceConfig`, ADR-0011). The
+bachelor thesis direction itself (which of several possible framings — equifinality,
+further disturbance work, etc. — to commit to) is **not yet decided**; see
+[thesis-direction-equifinality.md](thesis-direction-equifinality.md) for the
+current, still-speculative brainstorming.
+
+**Still open, regardless of thesis framing:** richer communication (per-agent
+messages, deception, delay, topology), further disturbance kinds (communication
+failure, a sustained "press" disturbance, agents rejoining), statistical evaluation
+at scale, and possibly one small original strategy or measurement method.
 
 See [research-direction.md](research-direction.md) for the reasoning behind this
 direction and [research-questions.md](research-questions.md) for the questions we

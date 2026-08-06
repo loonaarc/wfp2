@@ -30,6 +30,12 @@ class RoundRecord:
         penalties: Per-agent monitoring/sanction penalty paid this round.
         disturbed: Whether an environmental disturbance (e.g. a resource shock)
             fired this round. ``resource_after_regen`` already reflects its effect.
+        vote_taken: Whether the collective-choice vote (ADR-0011) was tallied this
+            round (whichever way it went); ``False`` if no vote is configured or it
+            already fired in an earlier round.
+        collective_enforcement_active: Whether collectively-chosen enforcement is
+            in effect as of this round (``False`` before any vote, or if the vote
+            failed).
     """
 
     round_index: int
@@ -41,6 +47,8 @@ class RoundRecord:
     collapsed: bool
     penalties: tuple[float, ...] = ()
     disturbed: bool = False
+    vote_taken: bool = False
+    collective_enforcement_active: bool = False
 
     @property
     def total_requested(self) -> float:

@@ -213,14 +213,14 @@ reading:
 1. ✅ **Act on Hauert (2007)** — added a *loner* opt-out to the E5 replicator
    ([E11](experiments/E11-loner-rescue.md), [ADR-0009](decisions/0009-loner-and-defector-scaled-monitoring-cost.md)).
    Result: delays E5's collapse ~4–5× but does not prevent it.
-1b. ✅ **Act on Sigmund (2010)** — added pool punishment + a second-order fine
+2. ✅ **Act on Sigmund (2010)** — added pool punishment + a second-order fine
    ([E12](experiments/E12-pool-punishment.md), [ADR-0010](decisions/0010-pool-punishment-symmetric-fine.md)).
    Result: works — sanctioning grows monotonically to ~100%, no collapse. The
    first of the two monitoring-stability mechanisms tried that actually succeeds.
-2. **Act on ODD (2020)** — write an ODD-structured model description for the thesis.
-3. **Candidate new strategy from Nowak** — an *indirect-reciprocity / reputation*
+3. **Act on ODD (2020)** — write an ODD-structured model description for the thesis.
+4. **Candidate new strategy from Nowak** — an *indirect-reciprocity / reputation*
    agent (ties to the information and communication axes).
-4. **Before Phase 3** — operationalise the Folke/Walker resilience metrics
+5. **Before Phase 3** — operationalise the Folke/Walker resilience metrics
    (precariousness = distance to collapse; absorbed-disturbance magnitude).
 
 ## Open literature questions

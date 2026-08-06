@@ -1,10 +1,12 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E10. E1–E7 study the calm commons; E8–E10
-are the resilience phase (disturbances). This is the narrative spine for the writeup;
+*A consolidated synthesis of experiments E1–E13. E1–E7 study the calm commons; E8–E10
+are the resilience phase (disturbances); E11–E13 are thesis-track follow-ups probing
+whether monitoring can be made evolutionarily stable and whether a voted agreement can
+substitute for pre-committed enforcement. This is the narrative spine for the writeup;
 each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-08-06 · 6 strategies · 12 experiments (E1–E12) · 86 tests · results
+**Status:** 2026-08-06 · 6 strategies · 13 experiments (E1–E13) · 94 tests · results
 reproducible from `scripts/` and the committed `results/` data.
 
 ---
@@ -86,8 +88,10 @@ flowchart TD
         E12["E12 — pool punishment<br/>stabilises monitoring — grows to ~100%"]
         E6["E6 — communication<br/>substitutes for info (fairness only)"]
         E7["E7 — response rules<br/>only enforcement saves the commons"]
+        E13["E13 — binding agreement<br/>voted enforcement matches E7, up to 4 free-riders"]
         E5 --> E11 --> E12
-        E6 --> E7
+        E6 --> E7 --> E13
+        E5 -.unifies with E7.-> E13
     end
 
     subgraph P3["Phase 3 — disturbances & resilience"]
@@ -107,7 +111,7 @@ failure (blind cooperation fails → add reciprocity → reciprocity still fails
 *resource* → add enforcement). **E4** is a robustness check on that spine, not a new
 mechanism. **E5** asks whether E3's enforcement survives if agents can choose it
 freely (no); **E11** is one attempt — only partly successful — at fixing that, and
-**E12** is a second attempt that actually succeeds. **E6/E7** add a new axis (communication) on top of the same mechanisms. **E8–E10**
+**E12** is a second attempt that actually succeeds. **E6/E7** add a new axis (communication) on top of the same mechanisms, and **E13** unifies E5's "chosen vs. imposed enforcement" question with E7's communication axis — a voted, jointly-funded agreement tested against E7's imposed enforcement. **E8–E10**
 take the whole mechanism set and ask what survives a disturbance, building up from a
 single shock (E8) to a shock plus free-riders (E9) to losing agents outright (E10).
 
@@ -340,5 +344,6 @@ python scripts/experiment_resilience_freeriders.py   # E9
 python scripts/experiment_agent_failure.py           # E10
 python scripts/experiment_voluntary_monitoring_loner.py  # E11
 python scripts/experiment_pool_punishment.py         # E12
-pytest                                               # 86 tests
+python scripts/experiment_binding_agreement.py       # E13
+pytest                                               # 94 tests
 ```

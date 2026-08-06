@@ -18,16 +18,20 @@ reproducible and comparable. It is the contract every experiment should follow.
 
 ### Independent variables (things we vary)
 - **Information model:** `global` | `private` *(local/aggregated/outdated planned)*.
-- **Strategy composition:** counts of the five strategies (`selfish`, `cooperative`,
-  `conditional_cooperator`, `compensating_cooperator`, `sanctioning`) — see
+- **Strategy composition:** counts of the six strategies (`selfish`, `cooperative`,
+  `conditional_cooperator`, `compensating_cooperator`, `sanctioning`, `loner`) — see
   [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
 - **Ecological knowledge:** `knowledge_bias` (cooperative / conditional strategies).
 - **Decision noise:** `decision_noise` (stochastic perturbation of requests).
 - **Communication:** `broadcast_reliability` (broadcast channel; message loss).
+- **Disturbances:** scheduled `resource_shock` and `agent_failure` (ADR-0008; E8–E10).
+- **Collective choice:** whether `collective_choice` is configured, and its
+  `vote_round`, `overuse_threshold`, `cost_share` (ADR-0011; E13).
 - **Group size (N):** total number of agents.
 - **Resource parameters:** `initial_level`, `capacity` (K), `regeneration_rate` (g),
   `regeneration_rule`, `collapse_threshold`.
-- *(Planned)* per-agent communication (deception, delay, topology); disturbances.
+- *(Planned)* per-agent communication (deception, delay, topology); communication
+  failure and *press* disturbances.
 
 ### Controlled variables (held fixed within a comparison)
 Everything not being studied. E.g. when comparing information models, keep N,
@@ -56,7 +60,7 @@ Any new mechanism (a strategy, a communication model, a disturbance) is evaluate
 **against these baselines**, not in isolation.
 
 Systematic studies use the sweep runner (`experiments.sweep.run_grid`) to cover a
-grid of parameter values; worked examples are the ten experiments E1–E10
+grid of parameter values; worked examples are the thirteen experiments E1–E13
 (`scripts/experiment_*.py`, written up in [experiments/](experiments/) and the
 [findings summary](findings-summary.md)).
 

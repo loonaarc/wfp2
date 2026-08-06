@@ -19,3 +19,6 @@ proposed decision and its trade-offs.
 | [0006](0006-evolutionary-dynamics-at-experiment-level.md) | Model strategy adaptation as replicator dynamics at the experiment level | Accepted |
 | [0007](0007-broadcast-communication-signal.md) | A minimal broadcast communication signal via the observation | Accepted |
 | [0008](0008-disturbances-as-scheduled-config.md) | Disturbances as deterministic, config-scheduled events | Accepted |
+| [0009](0009-loner-and-defector-scaled-monitoring-cost.md) | A loner (opt-out) strategy and defector-scaled monitoring cost | Accepted |
+| [0010](0010-pool-punishment-symmetric-fine.md) | Pool punishment with a symmetric fine on all non-monitors | Accepted |
+| [0011](0011-collective-choice-enforcement.md) | A collective-choice (voted, jointly-funded) enforcement mechanism | Accepted |

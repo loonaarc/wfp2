@@ -43,12 +43,13 @@ Available strategies:
   - compensating_cooperator
   - conditional_cooperator
   - cooperative
+  - loner
   - sanctioning
   - selfish
 ```
 
 A **strategy** is an agent's decision rule — given what the agent sees, how much
-of the shared resource does it try to take this round? There are five (defined in
+of the shared resource does it try to take this round? There are six (defined in
 [terminology.md](terminology.md#cooperation-mechanisms-the-strategies)):
 
 - **`selfish`** — grab a large share of whatever is currently available.
@@ -60,9 +61,13 @@ of the shared resource does it try to take this round? There are five (defined i
   recover (restraint).
 - **`sanctioning`** — cooperate *and* enforce a sustainable quota on everyone, at a
   monitoring cost.
+- **`loner`** — opt out of the shared resource entirely for a fixed side payoff;
+  used only in the evolution-mode experiments (E11), see
+  [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
 
 The first two are the core contrast (and where this walkthrough focuses); the rest
-are studied in experiments E2–E7 — see the [findings summary](findings-summary.md).
+are studied in experiments E2–E7 and E11 — see the
+[findings summary](findings-summary.md).
 
 ---
 
@@ -253,7 +258,7 @@ real part of the project's contribution, not bookkeeping
 You've seen the whole system. Good follow-ups, in order:
 
 0. **[findings-summary.md](findings-summary.md)** — the actual results (experiments
-   E1–E10) in one page, with the overview figure. Read this to see what the tool has
+   E1–E13) in one page, with the overview figure. Read this to see what the tool has
    *found*, not just how it works.
 1. **[project-overview.md](project-overview.md)** — the problem in plain language,
    now that you've seen it in action.

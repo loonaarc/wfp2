@@ -75,8 +75,9 @@ into a binding constraint — protects both the resource and fairness.*
 
 ## Follow-ups
 
-- A **binding agreement / quota** reached by communication (collective choice) rather
-  than a reactive rule — does *consented* enforcement match imposed enforcement?
-- Combine with E5: can communication **fund/coordinate monitoring** so enforcement is
-  self-sustaining despite the second-order free-rider problem?
+- ✅ **A binding agreement / quota reached by communication (collective choice)
+  rather than a reactive rule — tried, see [E13](E13-binding-agreement.md).**
+  Yes, consented enforcement matches imposed enforcement — but only if the
+  group votes fast enough (round 2, not round 10) relative to the free-rider
+  count; it matches exactly for 0–4 free-riders and breaks down at 5+.
 - Deception in the signal; imperfect/partial enforcement.

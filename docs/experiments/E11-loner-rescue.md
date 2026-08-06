@@ -19,22 +19,32 @@ cheap when defectors are rare. Does the same mechanism rescue *our* monitors?
 ## Method
 
 Same replicator-dynamics harness as E5 (no core-engine change; see
-[ADR-0006](../decisions/0006-evolutionary-dynamics-at-experiment-level.md)), extended
+[ADR-0006](../decisions/0006-evolutionary-dynamics-at-experiment-level.md)) —
+`N = 40` agents, `60` rounds/generation, `80` generations, resource `K=100,
+g=0.4` (so `MSY = g·K/4 = 10`), `initial_level=50` — extended
 with a fourth strategy and one behavioural change:
 
-- **`loner`** — opts out of the shared resource entirely (never enters the
-  simulation) and earns a fixed payoff **σ = 6.0** every generation, calibrated
-  between the measured all-selfish/collapsed payoff (≈1.5) and the measured
-  all-cooperative/healthy payoff (≈15.0) at this population scale — see ADR-0009.
-- **Defector-scaled monitoring cost.** Instead of a flat `0.2`, the sanctioner's
-  `monitoring_cost` is recomputed each generation as
-  `0.2 × (selfish share of the active, non-loner population)` — cheap when
-  free-riders are rare, back up to the full `0.2` when they are common.
+- **`loner`** — excluded from the simulated round itself (never appears in
+  `run_simulation`'s agent list) and instead earns a fixed payoff **σ = 6.0**
+  every generation, applied directly in the replicator bookkeeping, not
+  computed by the engine. Calibrated between two numbers measured at this
+  exact population scale: an all-selfish/collapsed population nets **≈1.5**
+  per agent; an all-cooperative/healthy population nets **≈15.0** per agent —
+  σ=6.0 sits inside that range (worse than success, better than collapse).
+- **Defector-scaled monitoring cost.** The sanctioner's `monitoring_cost`,
+  flat at `0.2` in E5, is recomputed *every generation* as
+  `0.2 × (selfish_count / n_active)`, where `n_active` = the sanctioning +
+  cooperative + selfish agents actually in that generation's simulation
+  (loners excluded). E.g. at the starting composition below,
+  `n_active = 40 × (0.35+0.35+0.15) = 34` and `selfish_count ≈ 6`, giving
+  `monitoring_cost ≈ 0.2 × 6/34 ≈ 0.035` — about a sixth of E5's flat cost.
 
-`N = 40`, 60 rounds/generation, 80 generations, starting composition
-`sanctioning=0.35, cooperative=0.35, selfish=0.15, loner=0.15` (the loner must start
-*present* — replicator dynamics cannot grow a strategy from an exact 0% share; see
-ADR-0009).
+**Starting composition:** `sanctioning=0.35, cooperative=0.35, selfish=0.15,
+loner=0.15` (14/14/6/6 of 40 agents). The loner *must* start
+present at a nonzero share, not 0% — replicator dynamics cannot grow a strategy
+from an exact 0% share (`0 × any fitness ratio = 0`); see ADR-0009. Seed: 1
+(deterministic — no decision noise, no broadcast — so a single seed is exact,
+as in E5).
 
 ![E11 results](../../results/E11_voluntary_monitoring_loner/figure.png)
 

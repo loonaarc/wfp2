@@ -78,9 +78,13 @@ Minimal deterministic CPR engine; `selfish` and `cooperative` strategies;
 - ✅ **Broadcast communication (E6, ADR-0007):** `broadcast_reliability` +
   `Observation.signal`; does communication substitute for information? (For fairness.)
 - ✅ **Response rules (E7):** given communication, only enforcement saves the commons.
-- ⏳ Next: a **binding agreement / collective-choice** mechanism (a consented quota,
-  and communication that funds monitoring — unifying E5 + E7); then the fuller
-  `CommunicationModel` (per-agent messages, deception, delay, topology).
+- ✅ **Binding agreement / collective choice (E13, ADR-0011):** a voted,
+  jointly-funded quota — the first core-engine change since E1–E10 — unifying
+  E5 + E7. Matches individually pre-committed enforcement exactly for 0–4
+  free-riders (if the group votes fast: round 2, not round 10), breaks down
+  at 5+ regardless of timing.
+- ⏳ Next: the fuller `CommunicationModel` (per-agent messages, deception,
+  delay, topology).
 
 ### Phase 3 — Disturbances & resilience (thesis) — 🔄 in progress
 Implement the `Disturbance` interface (was stubbed): resource shocks, agent failure,

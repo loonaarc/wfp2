@@ -49,6 +49,17 @@ class Simulation:
         self._last_total_harvest: float = 0.0
         # Scheduled environmental disturbances (empty unless configured).
         self._disturbances = build_disturbances(config.disturbances)
+        # Collective-choice enforcement (ADR-0011): rounds so far whose total
+        # harvest exceeded the sustainable yield, whether the vote has fired yet,
+        # and whether it passed.
+        self._overuse_rounds: int = 0
+        self._vote_taken: bool = False
+        self._collective_enforcement_active: bool = False
+
+    def _sustainable_yield(self) -> float:
+        """Reference sustainable total harvest for logistic growth (``g*K/4``)."""
+        r = self.config.resource
+        return r.regeneration_rate * r.capacity / 4.0
 
     @staticmethod
     def _build_agents(config: SimulationConfig) -> list[Agent]:
@@ -116,12 +127,19 @@ class Simulation:
         forfeits its monitoring cost. With no sanctioner present this is a no-op, so
         non-sanctioning runs are unchanged (see ADR-0005).
 
+        If the group has voted to adopt **collective-choice enforcement** (ADR-0011),
+        the same per-capita quota is enforced even with no individually-sanctioning
+        agent present, funded by a ``cost_share`` charged to every active agent that
+        does not already carry its own :class:`SanctionPolicy` (avoids double-charging
+        an agent that already pays individually).
+
         Args:
             harvests: Per-agent realised harvests after feasibility scaling.
 
         Returns:
             A ``(harvests, total_harvested, penalties)`` triple, where ``penalties``
-            is the per-agent monitoring cost paid this round (0 for non-sanctioners).
+            is the per-agent monitoring/collective-fee cost paid this round (0 for
+            agents subject to neither).
         """
         # A failed (inactive) sanctioner no longer enforces.
         policies = [
@@ -129,10 +147,15 @@ class Simulation:
         ]
         active = [p for p in policies if p is not None]
         penalties = [0.0] * len(self.agents)
-        if not active:
+        collective = self._collective_enforcement_active
+        if not active and not collective:
             return harvests, sum(harvests), penalties
 
-        quota_per_capita = min(p.quota_total for p in active) / len(self.agents)
+        quota_per_capita = (
+            min(p.quota_total for p in active) / len(self.agents)
+            if active
+            else self._sustainable_yield() / len(self.agents)
+        )
         capped = [min(h, quota_per_capita) for h in harvests]
 
         # Sanctioners pay the ongoing cost of monitoring (a payoff forfeit).
@@ -141,7 +164,44 @@ class Simulation:
                 penalties[i] = policy.monitoring_cost
                 self.agents[i].total_payoff -= policy.monitoring_cost
 
+        # Collective-choice enforcement is jointly funded by everyone who does not
+        # already pay individually (ADR-0011).
+        if collective:
+            share = self.config.collective_choice.cost_share  # type: ignore[union-attr]
+            for i, agent in enumerate(self.agents):
+                if agent.active and policies[i] is None:
+                    penalties[i] += share
+                    agent.total_payoff -= share
+
         return capped, sum(capped), penalties
+
+    def _maybe_vote(self, round_index: int) -> bool:
+        """Tally the collective-choice vote at its scheduled round (ADR-0011).
+
+        Called *before* :meth:`_enforce` so that, if the vote passes, enforcement
+        applies starting this very round. Decided from over-use tracked over rounds
+        ``0..round_index-1`` (this round hasn't happened yet).
+
+        Returns:
+            ``True`` exactly in the round the vote is tallied (whichever way it
+            goes), for the round record; ``False`` otherwise.
+        """
+        cc = self.config.collective_choice
+        if cc is None or self._vote_taken or round_index != cc.vote_round:
+            return False
+        self._vote_taken = True
+        if round_index > 0:
+            overuse_fraction = self._overuse_rounds / round_index
+            self._collective_enforcement_active = overuse_fraction > cc.overuse_threshold
+        return True
+
+    def _track_overuse(self, total_harvested: float) -> None:
+        """Record whether this round's harvest exceeded the sustainable yield.
+
+        Only affects the still-pending vote; a no-op once the vote has fired.
+        """
+        if self.config.collective_choice is not None and total_harvested > self._sustainable_yield():
+            self._overuse_rounds += 1
 
     def _disturb(self, round_index: int) -> bool:
         """Apply any scheduled disturbances for this round; report if any fired."""
@@ -176,7 +236,11 @@ class Simulation:
             for i, agent in enumerate(self.agents)
         ]
         harvests, total_harvested = self._allocate(requests)
+        # The collective-choice vote (ADR-0011), if scheduled this round, is
+        # tallied before enforcement so a passing vote takes effect immediately.
+        vote_taken = self._maybe_vote(round_index)
         harvests, total_harvested, penalties = self._enforce(harvests)
+        self._track_overuse(total_harvested)
 
         for agent, amount in zip(self.agents, harvests, strict=True):
             agent.record_harvest(amount)
@@ -194,6 +258,8 @@ class Simulation:
             collapsed=self.pool.is_collapsed,
             penalties=tuple(penalties),
             disturbed=disturbed,
+            vote_taken=vote_taken,
+            collective_enforcement_active=self._collective_enforcement_active,
         )
 
     def run(self) -> RunResult:

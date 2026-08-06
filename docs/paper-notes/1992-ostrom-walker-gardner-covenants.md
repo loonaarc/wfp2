@@ -152,7 +152,18 @@ Aggregate net CPR yields (Table 3; "net of fees/fines" and defection where repor
   (disequilibrium stakes), so exact percentages are environment-specific.
 
 ## Relevance to This Project
-This is the canonical human-subjects experiment on *exactly* our E6/E7 question — does
+
+**Acted on 2026-08-06: see [E13](../experiments/E13-binding-agreement.md) and
+[ADR-0011](../decisions/0011-collective-choice-enforcement.md).** This paper's
+"endogenously chosen sword" is now a real engine mechanism — a group vote,
+triggered by observed over-use, that adopts a jointly-funded quota with no
+agent individually pre-committed to sanctioning. It works: matches imposed
+enforcement exactly for 0–4 free-riders (of 8), provided the vote fires fast
+(round 2 of 100, not round 10 — timing turned out to be the load-bearing
+variable, echoing this paper's own point that a group's history/speed of
+response shapes whether the sword helps).
+
+This was the canonical human-subjects experiment on *exactly* our E6/E7 question — does
 communication alone help, does sanctioning alone help, does communication + sanctioning
 help most — and it is the closest empirical analog we have. The mapping is illuminating
 precisely where it **disagrees** with our abstract model.

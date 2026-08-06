@@ -49,6 +49,8 @@ rest.
 src/emergent_cooperation/
 ├── core/            The machinery: config, randomness, run-state, the engine
 │   ├── config.py        Turns YAML into validated settings objects
+│   │                     (incl. CollectiveChoiceConfig — the voted, jointly-funded
+│   │                     enforcement mechanism, ADR-0011)
 │   ├── rng.py           Reproducible random-number generators
 │   ├── state.py         Plain data records of what happened (results)
 │   └── simulation.py    THE ENGINE — the per-round loop
@@ -128,8 +130,10 @@ flowchart LR
     EC --> seeds["seeds: (1,2,3,...)"]
     SC --> RC[ResourceConfig]
     SC --> AS["agents: (AgentSpec, ...)"]
+    SC --> CC["collective_choice: CollectiveChoiceConfig | None"]
     AS --> spec["strategy, count, params"]
     RC --> rc["capacity, regen_rate, ..."]
+    CC --> ccf["vote_round, overuse_threshold, cost_share"]
 ```
 
 - **`ResourceConfig`** — the resource: `initial_level`, `capacity` (K),
@@ -140,6 +144,9 @@ flowchart LR
   the list of agent groups.
 - **`ExperimentConfig`** — a simulation config **plus the list of seeds** to run it
   with.
+- **`CollectiveChoiceConfig`** *(optional, `None` by default)* — a group vote on
+  jointly-funded enforcement: `vote_round`, `overuse_threshold`, `cost_share`.
+  See §5's enforcement step and ADR-0011.
 
 Each has a `__post_init__` method that **validates** on creation — e.g. it rejects a
 negative capacity or an unknown information model immediately, so bad configs fail
@@ -274,7 +281,8 @@ flowchart TB
     S --> Cc["ConditionalCooperatorStrategy"]
     S --> Cp["CompensatingCooperatorStrategy"]
     S --> Sa["SanctioningStrategy"]
-    R["registry: name → class"] -.builds.-> Se & Co & Cc & Cp & Sa
+    S --> Lo["LonerStrategy"]
+    R["registry: name → class"] -.builds.-> Se & Co & Cc & Cp & Sa & Lo
 ```
 
 **Selfish** (`selfish.py`) — grab an equal share of the *visible* stock, scaled by
@@ -328,16 +336,23 @@ sanctioner a monitoring cost. Because it limits defectors' *extraction* (not jus
 their payoff), it protects the resource even against fixed selfish agents — the only
 mechanism that protects both resource and fairness (experiment E3).
 
+**Loner** (`loner.py`) — opts out entirely: `decide` always returns `0.0`. It never
+touches the pool, so it's deliberately excluded from evolution-mode simulations
+rather than run through them; its fixed side payoff is applied by the experiment
+script (E11), not the engine. It exists to test whether an opt-out option rescues
+voluntary monitoring from collapse (Hauert et al. 2007) — it delays the collapse but
+doesn't prevent it (E11, ADR-0009).
+
 **The registry** (`registry.py`) maps a name string to a strategy class, so a config
 can say `strategy: cooperative` and the code can build it:
 
 ```python
 make_strategy("cooperative", {"capacity": 100.0})   # → CooperativeStrategy(capacity=100.0)
 available_strategies()  # → ["compensating_cooperator", "conditional_cooperator",
-                        #    "cooperative", "sanctioning", "selfish"]
+                        #    "cooperative", "loner", "sanctioning", "selfish"]
 ```
 
-The full set of five strategies (and what each does) is defined in
+The full set of six strategies (and what each does) is defined in
 [terminology.md](terminology.md#cooperation-mechanisms-the-strategies); this section
 walks through `selfish` and `cooperative` as the core contrast.
 
@@ -355,7 +370,8 @@ from the config, gives each agent its own RNG stream, and advances the rounds.
 **Construction** expands the agent *specs* into actual agents (a group with
 `count: 8` becomes eight `Agent` objects) and spawns the per-agent RNG streams.
 
-**The round** (`step`) follows a fixed order — **regenerate → observe → harvest**:
+**The round** (`step`) follows a fixed order — **regenerate → disturb → observe →
+decide → allocate → vote → enforce → harvest**:
 
 ```mermaid
 sequenceDiagram
@@ -368,6 +384,7 @@ sequenceDiagram
     Note over Sim: resource_start = pool.level
     Sim->>Pool: regenerate()
     Pool-->>Sim: resource_after_regen
+    Sim->>Sim: disturb() — apply a scheduled shock/failure, if any (ADR-0008)
     loop for each agent (fixed order)
         Sim->>A: decide(observation, rng)
         A->>St: decide(obs, rng)
@@ -375,12 +392,17 @@ sequenceDiagram
         A-->>Sim: request
     end
     Sim->>Sim: allocate() — scale down if Σrequests > stock
-    Sim->>Sim: enforce() — if any sanctioner, cap each harvest at the quota
+    Sim->>Sim: maybe_vote() — tally the collective-choice vote, if scheduled (ADR-0011)
+    Sim->>Sim: enforce() — if any sanctioner, or the vote passed, cap each harvest at the quota
     Sim->>A: record_harvest(share)  (updates payoff)
     Sim->>Pool: withdraw(total harvested)
     Note over Sim: resource_after_harvest = pool.level<br/>collapsed = pool.is_collapsed
     Sim-->>Sim: append a RoundRecord
 ```
+
+The `disturb` and `vote` steps are both no-ops unless configured — a plain config
+with no `disturbances` and no `collective_choice` behaves exactly as before either
+was added.
 
 The **allocation** step is the rationing rule. If agents collectively ask for more
 than exists, everyone is scaled by the same factor so the total exactly equals the
@@ -396,11 +418,22 @@ else:
     harvests = [r * scale for r in requests]
 ```
 
+Between allocation and enforcement, `_maybe_vote` tallies the **collective-choice
+vote** (ADR-0011) if one is scheduled for this round: it looks back at every round
+simulated so far and checks whether total harvest exceeded the sustainable yield
+(`g·K/4`) in more than `overuse_threshold` of them; if so, collective enforcement
+switches on starting *this* round. This is what lets a population with **no**
+individually-sanctioning agent still end up enforced — see [E13](experiments/E13-binding-agreement.md).
+
 The **enforcement** step (`_enforce`) runs next. If any agent exposes a
-`SanctionPolicy`, every agent's harvest is capped at the per-capita quota
-(`min(quota_total) / N`), the confiscated excess stays in the pool (protecting the
-resource), and each sanctioner forfeits its monitoring cost. With no sanctioner
-present it is a no-op, so ordinary runs are unchanged (ADR-0005).
+`SanctionPolicy`, **or** the collective-choice vote has passed, every agent's
+harvest is capped at the per-capita quota (`min(quota_total) / N`, or
+`sustainable_yield / N` when enforcement is purely collective), and the confiscated
+excess stays in the pool (protecting the resource). Each individual sanctioner
+forfeits its own `monitoring_cost`; if enforcement is collectively chosen, every
+*other* active agent additionally forfeits the shared `cost_share` (an individual
+sanctioner is not double-charged). With neither present it is a no-op, so ordinary
+runs are unchanged (ADR-0005; ADR-0011).
 
 `run()` just calls `step()` for every round and collects the records into a
 `RunResult`. Because the pool, the agents, and the RNG are all determined by
@@ -543,6 +576,12 @@ collapse.** That's the phenomenon this whole codebase exists to study.
   [E9](experiments/E9-resilience-with-free-riders.md) (the shock) and
   [E10](experiments/E10-agent-failure.md) (agent failure — enforcement is a single
   point of failure). Communication failure is the next kind.
+- **`collective_choice`** *(not a stub — fully implemented, ADR-0011)* — the one
+  mechanism that lives directly in `core.config`/`core.simulation` rather than a
+  separate package, because it has to change behaviour *within* a single run (a
+  vote at round `k` must affect every round after it), unlike E11/E12's
+  replicator-dynamics tricks which stay entirely at the experiment-script level
+  (ADR-0006). See §5 above and [E13](experiments/E13-binding-agreement.md).
 
 ---
 

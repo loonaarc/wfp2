@@ -291,6 +291,10 @@
           <input type="range" id="fail" min="0" max="4" step="1" value="0" />
         </div>
         <div class="field">
+          <label for="cvote">Collective vote round <span class="val" id="cvote_v">off</span></label>
+          <input type="range" id="cvote" min="0" max="20" step="1" value="0" />
+        </div>
+        <div class="field">
           <label for="rounds">Rounds <span class="val" id="rounds_v">40</span></label>
           <input type="range" id="rounds" min="20" max="60" step="10" value="40" />
         </div>
@@ -330,7 +334,7 @@
         <!-- 2. resource stock over rounds -->
         <div class="card foot">
           <div class="foot-row col">
-            <span class="foot-label">Resource stock over rounds (grey dotted = healthy K/2; red dashed = shock; purple dashed = agent failure)</span>
+            <span class="foot-label">Resource stock over rounds (grey dotted = healthy K/2; red dashed = shock; purple dashed = agent failure; olive line = collective vote, solid=passed/dashed=failed)</span>
             <canvas class="traj" id="traj" width="900" height="108" aria-label="resource stock over rounds"></canvas>
           </div>
         </div>
@@ -434,7 +438,7 @@
     <section class="explain">
       <h2>What this project is about</h2>
       <p class="section-lede">A small, reproducible model to study <b>when and why decentralized
-        cooperation emerges, and how fragile it is</b>. Twelve experiments (E1–E12) build one story;
+        cooperation emerges, and how fragile it is</b>. Thirteen experiments (E1–E13) build one story;
         every regime above is a slice of it, and every claim below is a runnable, seed-reproducible
         result — not a new algorithm, but a systematic, literature-grounded measurement.</p>
       <div class="findings-grid">
@@ -482,7 +486,7 @@
           </ul>
         </div>
         <div class="card repo-col">
-          <h3>The experiments (E1–E12)</h3>
+          <h3>The experiments (E1–E13)</h3>
           <ul>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/README.md">All reports <span class="m">— index</span></a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E1-information-and-knowledge.md">E1 — information &amp; knowledge</a></li>
@@ -497,6 +501,7 @@
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E10-agent-failure.md">E10 — agent failure</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E11-loner-rescue.md">E11 — loner rescue attempt</a></li>
             <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E12-pool-punishment.md">E12 — pool punishment</a></li>
+            <li><a href="https://github.com/loonaarc/wfp2/blob/main/docs/experiments/E13-binding-agreement.md">E13 — binding agreement</a></li>
           </ul>
         </div>
         <div class="card repo-col">
@@ -536,6 +541,9 @@
   "use strict";
   // ── model (validated against the Python engine) ─────────────────────────
   const K = 100, G = 0.4, INIT = 50, THRESH = 1.0, MSY = (G * K) / 4, SENS = 1e-9;
+  // Collective choice (E13 / ADR-0011): fixed to match the Python script's
+  // defaults rather than exposed as extra sliders, to keep the panel legible.
+  const COLLECTIVE_OVERUSE_THRESHOLD = 0.5, COLLECTIVE_COST_SHARE = 0.2;
   const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning"];
 
   function mulberry32(seed) {
@@ -591,6 +599,9 @@
     });
     const n = agents.length, rng = mulberry32(o.seed);
     let level = o.init ?? INIT, lastTotal = 0;
+    // Collective-choice vote state (E13): rounds observed as over-using so far,
+    // whether the vote has fired, and whether it passed.
+    let overuseRounds = 0, voteTaken = false, collectiveActive = false;
     const payoff = new Array(n).fill(0), frames = [];
     for (let t = 0; t < o.rounds; t++) {
       level = regen(level);
@@ -615,16 +626,30 @@
       const tot = req.reduce((x, y) => x + y, 0);
       let h = tot <= level || tot === 0 ? req.slice() : req.map((r) => (r * level) / tot);
       const pen = new Array(n).fill(0);
-      if (agents.some((a) => a.isS && a.active)) {  // a failed sanctioner stops enforcing
+      // Collective-choice vote (E13): tallied before enforcement so a passing
+      // vote applies starting this very round; decided from rounds 0..t-1.
+      let voted = false;
+      if (o.cvoteRound > 0 && t === o.cvoteRound && !voteTaken) {
+        voteTaken = true;
+        voted = true;
+        if (t > 0) collectiveActive = (overuseRounds / t) > COLLECTIVE_OVERUSE_THRESHOLD;
+      }
+      const hasIndividualSanctioner = agents.some((a) => a.isS && a.active);  // a failed sanctioner stops enforcing
+      if (hasIndividualSanctioner || collectiveActive) {
         const q = MSY / n;
         h = h.map((x) => Math.min(x, q));
         agents.forEach((a, i) => { if (a.isS && a.active) pen[i] = a.p.mc; });
+        if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually
+          agents.forEach((a, i) => { if (a.active && !a.isS) pen[i] += COLLECTIVE_COST_SHARE; });
+        }
       }
       const total = h.reduce((x, y) => x + y, 0);
+      if (o.cvoteRound > 0 && total > MSY) overuseRounds++;
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
       level -= total; lastTotal = total;
       frames.push({ harv: h, pen: pen.slice(), stock: level, collapsed: level <= THRESH,
-                    shock: shocked, fail: failed, active: agents.map((a) => a.active) });
+                    shock: shocked, fail: failed, vote: voted, voteActive: collectiveActive,
+                    active: agents.map((a) => a.active) });
     }
     return { kinds: agents.map((a) => a.kind), frames, payoff, n };
   }
@@ -657,6 +682,8 @@
     "💥 Shock — enforcement recovers it (E9)": { ctype: "cooperative", mon: 6, nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "🔌 Enforcer fails → collapse (E10)": { ctype: "cooperative", mon: 2, nsel: 6, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
     "🧩 A member fails, commons holds (E10)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
+    "🗳️ Vote fast — matches enforcement (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 2, rounds: 40 },
+    "🗳️ Vote slow — too late (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 10, rounds: 40 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -664,7 +691,7 @@
   const els = {
     regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
-    shock: $("shock"), fail: $("fail"), rounds: $("rounds"), seed: $("seed"),
+    shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
@@ -690,6 +717,7 @@
     bcast: "Chance each round that agents hear a broadcast of the group's total harvest. off = silent; 1.0 = always heard. Lets blind agents detect over-use.",
     shock: "A one-off disturbance: remove this fraction of the stock at the half-way round (a drought/die-off). off = none. Reveals resilience — who recovers and who collapses (experiments E8–E9).",
     fail: "Agents that drop out at the half-way round (they stop harvesting and, if a sanctioner, stop enforcing). They fail in order, so the cooperator/enforcer group fails first. Losing the enforcer collapses the commons; losing a member of a self-correcting group does not (experiment E10).",
+    cvote: "off = no vote. At this round, the group (no born monitors needed) tallies whether it has been over-using the commons and, if so, adopts a quota funded equally by everyone from then on — a voted, jointly-funded agreement rather than enforcement some agents are simply born with. Timing matters a lot: voting late lets damage accumulate that a flat quota can't undo (experiment E13). If any monitor is present (see above), the vote can never pass — enforcement already prevents the over-use that would trigger it.",
     rounds: "How many rounds to simulate.",
     seed: "Random seed — only changes the outcome when decision noise or partial communication is on.",
   };
@@ -725,6 +753,8 @@
     "💥 Shock — enforcement recovers it (E9)": "Same mix and shock, but the cooperators enforce a quota. The cap contains the free-riders during the fragile recovery, and the pool returns to half-full. With free-riders, you need enforcement too.",
     "🔌 Enforcer fails → collapse (E10)": "Enforcement is holding a commons of 2 sanctioners + 6 selfish. At mid-run the 2 enforcers drop out — and with the quota gone, the free-riders empty the pool. Enforcement is a single point of failure.",
     "🧩 A member fails, commons holds (E10)": "A self-correcting cooperative commons loses 2 of its 8 members mid-run. The rest still observe and self-correct, so the pool is unharmed — distributed protection has no single point of failure.",
+    "🗳️ Vote fast — matches enforcement (E13)": "No agent is a born monitor — just 4 cooperators + 4 selfish. At round 2 the group tallies whether it's been over-using the commons and votes to adopt a quota funded by everyone. It passes almost immediately, before much damage is done, and holds the pool at the healthy level — matching individually pre-committed enforcement exactly, with nobody hard-coded as a monitor (experiment E13).",
+    "🗳️ Vote slow — too late (E13)": "Same population, same eventual vote — but this time the group waits until round 10 to decide. By then the free-riders have already driven the stock too low: the flat quota (sized for a healthy pool) can't out-grow that much depletion, and the vote can't rescue it. Compare to the fast-vote regime above — timing, not just whether the vote passes, decides the outcome (experiment E13).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -745,6 +775,7 @@
     $("bcast_v").textContent = +els.bcast.value === 0 ? "off" : (+els.bcast.value).toFixed(1);
     $("shock_v").textContent = +els.shock.value === 0 ? "off" : "−" + Math.round(+els.shock.value * 100) + "%";
     $("fail_v").textContent = +els.fail.value === 0 ? "off" : +els.fail.value + " agent" + (+els.fail.value > 1 ? "s" : "");
+    $("cvote_v").textContent = +els.cvote.value === 0 ? "off" : "round " + els.cvote.value;
     $("rounds_v").textContent = els.rounds.value;
     $("seed_v").textContent = els.seed.value;
   }
@@ -760,6 +791,7 @@
     els.init.value = r.init ?? 50;
     els.shock.value = r.shock ?? 0;
     els.fail.value = r.fail ?? 0;
+    els.cvote.value = r.cvote ?? 0;
     els.rounds.value = r.rounds ?? 40;
     applying = false; syncLabels();
   }
@@ -789,7 +821,7 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "fail"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -840,6 +872,7 @@
       rounds, seed: +els.seed.value, init,
       shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
+      cvoteRound: +els.cvote.value,
     };
     sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];
@@ -1023,6 +1056,15 @@
     if (fi >= 0) {
       ctx.strokeStyle = css("--s-compensating_cooperator"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(X(fi), pad); ctx.lineTo(X(fi), h - pad); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // collective-choice vote marker (E13) — solid if it passed, dashed if it failed
+    const vi = sim.frames.findIndex((f) => f.vote);
+    if (vi >= 0) {
+      ctx.strokeStyle = css("--s-loner");
+      ctx.setLineDash(sim.frames[vi].voteActive ? [] : [2, 3]);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(X(vi), pad); ctx.lineTo(X(vi), h - pad); ctx.stroke();
       ctx.setLineDash([]);
     }
     // area + line

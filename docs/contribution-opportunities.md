@@ -20,9 +20,11 @@ communication, and disturbance models, and reproducible experiment tooling.
 - **Risks:** over-engineering; scope creep into a "framework". Mitigate by growing
   from concrete experiments.
 - **Dependencies:** none. **Evaluation:** tests + demonstrated experiments.
-- **Verdict:** ✅ The safe backbone contribution; **built** (engine, 5 strategies,
-  broadcast communication, sweep + replicator tooling, reproducible export) — only the
-  disturbance model and the full per-agent communication protocol remain.
+- **Verdict:** ✅ The safe backbone contribution; **built** (engine, 6 strategies,
+  broadcast communication, sweep + replicator tooling, reproducible export, two
+  disturbance kinds (E8–E10), and a collective-choice enforcement mechanism (E13,
+  ADR-0011) — the project's first core-engine change since WFP2). Only the full
+  per-agent communication protocol (deception, delay, topology) remains.
 
 ## C2. Systematic comparison of known strategies under controlled conditions *(primary target)*
 Compare selfish / cooperative / conditional-cooperative (and mixes) across
@@ -38,7 +40,8 @@ information conditions and group sizes, with proper seed statistics.
 - **Evaluation:** distributions across ≥20 seeds; effect sizes; sensitivity sweeps.
 - **Verdict:** ✅ Strongest bachelor-appropriate target — **realized** across
   experiments E1–E10 ([findings-summary.md](findings-summary.md)), including robustness
-  and sensitivity (E4). Remaining: larger seed sets once a genuinely *stochastic
+  and sensitivity (E4), and extended by E11–E13's comparison of monitoring-stability
+  and enforcement mechanisms. Remaining: larger seed sets once a genuinely *stochastic
   strategy* exists.
 
 ## C3. Benchmark / collection of reproducible cooperation scenarios

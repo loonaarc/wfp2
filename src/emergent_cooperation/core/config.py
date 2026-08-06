@@ -84,6 +84,39 @@ class ResourceConfig:
 
 
 @dataclass(frozen=True)
+class CollectiveChoiceConfig:
+    """A group vote on whether to adopt a binding, jointly-funded enforcement rule.
+
+    Models Ostrom, Walker & Gardner (1992)'s "covenant with an endogenously chosen
+    sword": the group observes its own over-use pattern and, at a scheduled round,
+    votes on whether to adopt a binding harvest quota funded by *everyone* -- not
+    only agents individually pre-committed to the ``sanctioning`` strategy. See
+    ADR-0011.
+
+    Attributes:
+        vote_round: Zero-based round at which the vote is tallied, after the group
+            has had rounds to build a track record.
+        overuse_threshold: The vote passes if the fraction of rounds so far whose
+            total harvest exceeded the sustainable yield (``g*K/4``) exceeds this
+            threshold, in ``[0, 1]``.
+        cost_share: Payoff each active agent without its own individual sanction
+            policy forfeits per round once the vote passes, funding the quota.
+    """
+
+    vote_round: int = 10
+    overuse_threshold: float = 0.5
+    cost_share: float = 0.2
+
+    def __post_init__(self) -> None:
+        if self.vote_round < 0:
+            raise ValueError("vote_round must be non-negative")
+        if not 0 <= self.overuse_threshold <= 1:
+            raise ValueError("overuse_threshold must be in [0, 1]")
+        if self.cost_share < 0:
+            raise ValueError("cost_share must be non-negative")
+
+
+@dataclass(frozen=True)
 class AgentSpec:
     """A homogeneous group of agents sharing one strategy.
 
@@ -124,6 +157,9 @@ class SimulationConfig:
         agents: Ordered agent-group specifications.
         disturbances: Scheduled environmental perturbations (empty by default, so
             existing experiments are unchanged). Each fires at its own round.
+        collective_choice: An optional group vote on jointly-funded enforcement
+            (``None`` by default, so existing experiments are unchanged; see
+            :class:`CollectiveChoiceConfig` and ADR-0011).
     """
 
     name: str = "unnamed"
@@ -135,6 +171,7 @@ class SimulationConfig:
     resource: ResourceConfig = field(default_factory=ResourceConfig)
     agents: tuple[AgentSpec, ...] = field(default_factory=tuple)
     disturbances: tuple[DisturbanceConfig, ...] = field(default_factory=tuple)
+    collective_choice: CollectiveChoiceConfig | None = None
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -153,6 +190,11 @@ class SimulationConfig:
                 raise ValueError(
                     f"disturbance round {d.round} is outside the run ({self.rounds} rounds)"
                 )
+        if self.collective_choice is not None and self.collective_choice.vote_round >= self.rounds:
+            raise ValueError(
+                f"collective_choice.vote_round {self.collective_choice.vote_round} is outside "
+                f"the run ({self.rounds} rounds)"
+            )
 
     @property
     def num_agents(self) -> int:
@@ -166,7 +208,19 @@ class SimulationConfig:
         resource = ResourceConfig(**data.pop("resource", {}))
         agents = tuple(AgentSpec(**spec) for spec in data.pop("agents", []))
         disturbances = tuple(DisturbanceConfig(**d) for d in data.pop("disturbances", []))
-        return cls(resource=resource, agents=agents, disturbances=disturbances, **data)
+        collective_choice_data = data.pop("collective_choice", None)
+        collective_choice = (
+            CollectiveChoiceConfig(**collective_choice_data)
+            if collective_choice_data is not None
+            else None
+        )
+        return cls(
+            resource=resource,
+            agents=agents,
+            disturbances=disturbances,
+            collective_choice=collective_choice,
+            **data,
+        )
 
 
 @dataclass(frozen=True)

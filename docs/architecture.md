@@ -19,7 +19,8 @@
 ```
 src/emergent_cooperation/
 ├── core/
-│   ├── config.py       ResourceConfig, AgentSpec, SimulationConfig, ExperimentConfig; YAML loading
+│   ├── config.py       ResourceConfig, AgentSpec, SimulationConfig, ExperimentConfig,
+│   │                     CollectiveChoiceConfig (ADR-0011); YAML loading
 │   ├── rng.py          make_rng, spawn_streams (independent per-agent streams)
 │   ├── state.py        RoundRecord, RunResult (plain data, no behaviour)
 │   └── simulation.py   Simulation engine + run_simulation()
@@ -88,9 +89,11 @@ enforce a harvest quota (ADR-0005). New decision rules are added by subclassing
 ### `core.Simulation` (the engine)
 Owns one run. Builds the pool and agents from the config, spawns one RNG stream
 per agent, and advances rounds. **Round order:** `regenerate → disturb → observe →
-decide → ration → enforce → harvest`; the `disturb` step is a no-op unless a
-disturbance is scheduled for the round (ADR-0008), and the `enforce` step is a no-op
-unless a sanctioning agent is present.
+decide → ration → vote → enforce → harvest`; the `disturb` step is a no-op unless a
+disturbance is scheduled for the round (ADR-0008), `vote` is a no-op unless
+`collective_choice` is configured and this is its scheduled round (ADR-0011), and
+`enforce` is a no-op unless a sanctioning agent is present *or* the collective-choice
+vote has passed.
 
 ### `metrics`
 Pure functions from a `RunResult` to a flat metric dict. No dependency on the
@@ -150,10 +153,17 @@ For round `t` (in `Simulation.step`):
 5. **Decide:** each agent returns a non-negative requested consumption.
 6. **Allocate:** if `Σ requests > stock`, scale every request by the same factor
    `stock / Σ requests` (strategy-neutral rationing); otherwise grant requests.
-7. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, cap every
-   agent's harvest at the per-capita quota (excess stays in the pool) and charge each
-   sanctioner its monitoring cost. No-op when no sanctioner is present (ADR-0005).
-8. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
+7. **Vote (collective choice):** if `collective_choice` is configured and this is its
+   scheduled round, tally whether the group has over-used the commons (harvest >
+   sustainable yield) in more than a threshold share of rounds so far; if so, adopt
+   collective enforcement starting this round. No-op otherwise (ADR-0011).
+8. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, *or* the
+   collective-choice vote has passed, cap every agent's harvest at the per-capita
+   quota (excess stays in the pool) and charge monitoring costs — each individual
+   sanctioner its own `monitoring_cost`, and (if collectively enforced) every other
+   active agent the collective `cost_share`. No-op when neither applies (ADR-0005;
+   ADR-0011).
+9. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
    record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
 
 Regenerating **before** harvest makes the all-cooperative equilibrium exactly
@@ -195,3 +205,9 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
   rejoin/are replaced are not yet implemented.
 - Stochasticity is available (`decision_noise`, broadcast message loss), but the
   strategies themselves are deterministic; a stochastic *strategy* is future work.
+- Collective-choice enforcement (ADR-0011) is a single deterministic threshold vote
+  at one scheduled round, decided from a mechanically observed over-use tally — no
+  per-agent vote, no stochasticity, no institutional memory across configs. It also
+  cannot combine with an individually-`sanctioning` agent: any such agent already
+  caps harvest at the sustainable yield, so over-use (the vote's only trigger) is
+  never observed and the vote deterministically fails.

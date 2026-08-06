@@ -20,17 +20,29 @@ Does *this* mechanism stabilise monitoring where E11's did not?
 
 ## Method
 
-Same replicator-dynamics harness as E5/E11 (no core-engine change; ADR-0006),
-changing exactly one thing relative to plain E5 (per experiment-design.md's
-"change one factor at a time"): a **pool fine**. Every round enforcement holds,
-every non-sanctioning agent — `cooperative` *and* `selfish` alike — pays
-`0.2`/round into the pool, redistributed evenly across `sanctioning` agents.
-Monitoring cost itself stays flat, as in E5 (unlike E11, which scaled it down).
-No loner strategy here — isolating the fine mechanism on its own.
+Same replicator-dynamics harness as E5/E11 (no core-engine change; ADR-0006):
+`N = 40` agents, `60` rounds/generation, `60` generations, resource `K=100,
+g=0.4` (`MSY=10`) — changing exactly one thing relative to plain E5 (per
+experiment-design.md's "change one factor at a time"): a **pool fine**.
 
-`N = 40`, 60 rounds/generation, 60 generations, starting composition
-`sanctioning=0.40, cooperative=0.40, selfish=0.20` (E5's exact starting point,
-for direct comparison).
+- **The fine.** Every round enforcement holds, every non-sanctioning agent —
+  `cooperative` *and* `selfish` alike — pays `POOL_FINE_PER_ROUND = 0.2`/round
+  into the pool, redistributed evenly across `sanctioning` agents. Over one
+  60-round generation that is `0.2 × 60 = 12` per non-sanctioning agent.
+  **Worked example at the starting composition** (16 sanctioning / 16
+  cooperative / 8 selfish of 40): total collected =
+  `12 × (16 cooperative + 8 selfish) = 288`; redistributed across the 16
+  sanctioners = `288 / 16 = 18` extra payoff per sanctioner that generation —
+  enough to more than offset their own `0.2/round` monitoring cost (`12`
+  total), flipping sanctioning from the *worst*-earning strategy in E5 to a
+  net-*positive*-earning one from generation 0.
+- **Monitoring cost itself stays flat** (`0.2`/round, as in E5) — unlike E11,
+  which scaled it down. No loner strategy here, isolating the fine mechanism
+  on its own.
+
+**Starting composition:** `sanctioning=0.40, cooperative=0.40, selfish=0.20`
+(16/16/8 of 40 agents — E5's exact starting point, for direct comparison).
+Seed: 1 (deterministic, as in E5/E11).
 
 **A first version of this fine failed and is documented, not hidden — see
 [ADR-0010](../decisions/0010-pool-punishment-symmetric-fine.md).** Fining only

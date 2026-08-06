@@ -27,7 +27,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [1968-hardin-tragedy-of-the-commons](1968-hardin-tragedy-of-the-commons.md) | 🟢 | The tragedy; "commons" = unmanaged open-access → our all-selfish collapse |
 | [1981-axelrod-hamilton-evolution-of-cooperation](1981-axelrod-hamilton-evolution-of-cooperation.md) | 🟢 | Tit-for-tat / reciprocity; needs *targeted* retaliation (absent in an N-player commons) |
 | [1990-ostrom-governing-the-commons](1990-ostrom-governing-the-commons.md) | 🟢 | Eight design principles; real commons solve the second-order problem — reframes E3/E5/E7 |
-| [1992-ostrom-walker-gardner-covenants](1992-ostrom-walker-gardner-covenants.md) | 🟢 | CPR experiment: communication vs sanctioning; comm+chosen-sword best — backs binding-agreement follow-up |
+| [1992-ostrom-walker-gardner-covenants](1992-ostrom-walker-gardner-covenants.md) | 🟢 | CPR experiment: communication vs sanctioning; comm+chosen-sword best — acted on in E13 (voted enforcement matches imposed, up to 4 free-riders) |
 | [1998-nowak-sigmund-indirect-reciprocity](1998-nowak-sigmund-indirect-reciprocity.md) | 🟢 | Image scoring; `q>c/b`; basis for a reputation strategy (targets individuals) |
 | [2002-fehr-gaechter-altruistic-punishment](2002-fehr-gaechter-altruistic-punishment.md) | 🟢 | Costly punishment sustains cooperation (deterrence); backbone for E3 |
 | [2004-walker-resilience-adaptability](2004-walker-resilience-adaptability.md) | 🟢 | Latitude/resistance/precariousness → measurable resilience for our model |
