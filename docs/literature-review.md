@@ -204,10 +204,16 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
 
 ## 6. Equifinality, bioeconomics, and multi-objective framing (for the thesis direction)
 
-All 12 sources below are now read, with an analysed note each in
+All 12 original sources below are now read, with an analysed note each in
 `paper-notes/` (see [thesis-direction-equifinality.md](thesis-direction-equifinality.md)
 for how this feeds the thesis-direction decision). Citations were verified
-via web search on 2026-08-06 (DOIs/access checked, not just recalled).
+via web search on 2026-08-06 (DOIs/access checked, not just recalled). Two
+further sources (GLUE, below) were added afterward, once QCA (Ragin, 1987,
+above) was judged a poor methodological fit for measuring this project's
+own equifinality claim — QCA needs a small, fixed set of historical cases
+and forces continuous configurations into crisp yes/no conditions, whereas
+this project has a simulator that can generate unlimited data with native
+continuous parameters and outcomes.
 
 **Core anchors:**
 - 🟢 **Gordon (1954), "The Economic Theory of a Common-Property Resource: The
@@ -313,6 +319,36 @@ via web search on 2026-08-06 (DOIs/access checked, not just recalled).
   mechanistically remote from this project (single optimizing planner, not
   heterogeneous rule-based agents). See
   [note](paper-notes/1958-dorfman-samuelson-solow-turnpike.md).
+
+**Methodological anchor for measuring equifinality (added after the 12,
+replacing QCA):**
+- 🟢 **Beven & Binley (1992), "The Future of Distributed Models: Model
+  Calibration and Uncertainty Prediction", *Hydrological Processes* 6(3),
+  279–298.** doi:10.1002/hyp.3360060305. Origin of GLUE (Generalized
+  Likelihood Uncertainty Estimation) — and arguably the more influential
+  origin of "equifinality" for simulation-modelling contexts than Gresov &
+  Drazin's (1997) organization-theory usage above. Monte Carlo sample many
+  parameter sets, score each with an explicit, declared likelihood/
+  performance measure, classify behavioural vs. non-behavioural, and
+  describe the behavioural *set* directly rather than forcing a crisp
+  binary table — a much better fit for this project's own simulator than
+  QCA. Directly usable for the still-unbuilt **E14** (starting-resource
+  sweep) experiment. See [note](paper-notes/1992-beven-binley-glue.md).
+- 🟢 **Beven & Binley (2014), "GLUE: 20 Years On", *Hydrological Processes*
+  28(24), 5897–5918.** doi:10.1002/hyp.10082 (received/published online
+  2013; journal issue dated 2014). Twenty-year retrospective: formalizes
+  the aleatory-vs-epistemic error distinction underlying the GLUE
+  controversy, and introduces the **limits-of-acceptability** refinement
+  (fixed, independently-set acceptance bounds declared *before* running
+  the model, from Beven's 2006 "Manifesto for the Equifinality Thesis")
+  as a more defensible alternative to post-hoc likelihood thresholding.
+  Revisits the original 1992 case study at 500,000 (vs. 500) realizations
+  and shows the model is rejected outright under the stricter criterion —
+  framed as a positive, informative result. Refines this project's E14
+  plan: use fixed, pre-declared acceptance thresholds (e.g. "final
+  resource ≥ 50% of `K`, no permanent collapse") rather than a fitted
+  post-hoc likelihood. See
+  [note](paper-notes/2014-beven-binley-glue-20-years-on.md).
 
 ---
 

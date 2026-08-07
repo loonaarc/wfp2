@@ -37,6 +37,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [1987-ragin-comparative-method](1987-ragin-comparative-method.md) | 🟢 | QCA/Boolean method for "multiple conjunctural causation" — a feasible, off-the-shelf technique to compute the minimal sufficient strategy-mix combinations from our own E1–E13 results (equifinality direction) |
 | [1988-cooper-john-coordination-failures](1988-cooper-john-coordination-failures.md) | 🟢 | One-shot game, no discounting; strategic complementarity ⇒ multiple Pareto-ranked equilibria — cleanest formal anchor for "good vs. bad stable outcome" (equifinality direction) |
 | [1990-ostrom-governing-the-commons](1990-ostrom-governing-the-commons.md) | 🟢 | Eight design principles; real commons solve the second-order problem — reframes E3/E5/E7 |
+| [1992-beven-binley-glue](1992-beven-binley-glue.md) | 🟢 | Origin of GLUE: Monte Carlo + explicit likelihood weighting + behavioural/non-behavioural classification — better-fitted alternative to QCA for E14 (equifinality direction) |
 | [1992-ostrom-walker-gardner-covenants](1992-ostrom-walker-gardner-covenants.md) | 🟢 | CPR experiment: communication vs sanctioning; comm+chosen-sword best — acted on in E13 (voted enforcement matches imposed, up to 4 free-riders) |
 | [1997-gresov-drazin-equifinality](1997-gresov-drazin-equifinality.md) | 🟢 | Where "equifinality" enters organization theory; suboptimal/tradeoff/configurational types — a vocabulary to classify which kind our E1–E13 findings show (equifinality direction) |
 | [1998-nowak-sigmund-indirect-reciprocity](1998-nowak-sigmund-indirect-reciprocity.md) | 🟢 | Image scoring; `q>c/b`; basis for a reputation strategy (targets individuals) |
@@ -48,6 +49,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [2007-hauert-via-freedom-to-coercion](2007-hauert-via-freedom-to-coercion.md) | 🟢 | Loner opt-out rescues punishment (second-order); recipe to flip E5 |
 | [2010-balliet-communication-meta-analysis](2010-balliet-communication-meta-analysis.md) | 🟢 | Communication→cooperation effect *d*≈1.01; measures cooperation not resource (E6 angle) |
 | [2010-sigmund-social-learning-institutions](2010-sigmund-social-learning-institutions.md) | 🟢 | Pool vs peer punishment; 2nd-order punishment stabilises — acted on in E12 (works: sanctioning →~100%) |
+| [2014-beven-binley-glue-20-years-on](2014-beven-binley-glue-20-years-on.md) | 🟢 | Aleatory vs epistemic error; limits-of-acceptability refinement; revisited case study rejects the model outright — refines the GLUE plan for E14 (equifinality direction) |
 | [2016-oliehoek-amato-dec-pomdps](2016-oliehoek-amato-dec-pomdps.md) | 🟢 | Dec-POMDP formalism to define our info models; justifies rule-based agents (solver chapters out of scope) |
 | [2016-schill-cooperation-not-enough](2016-schill-cooperation-not-enough.md) | 🟢 | Cooperation ≠ sustainability; you also need ecological knowledge (reframes our info axis) |
 | [2020-grimm-odd-protocol](2020-grimm-odd-protocol.md) | 🟢 | ODD standard for describing ABMs reproducibly → structure our model write-up |
