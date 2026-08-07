@@ -202,6 +202,118 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   not a reading lead; kept here as a reference for conventions and a possible future
   spatial scenario.
 
+## 6. Equifinality, bioeconomics, and multi-objective framing (for the thesis direction)
+
+All 12 sources below are now read, with an analysed note each in
+`paper-notes/` (see [thesis-direction-equifinality.md](thesis-direction-equifinality.md)
+for how this feeds the thesis-direction decision). Citations were verified
+via web search on 2026-08-06 (DOIs/access checked, not just recalled).
+
+**Core anchors:**
+- 🟢 **Gordon (1954), "The Economic Theory of a Common-Property Resource: The
+  Fishery", *Journal of Political Economy* 62(2), 124–142.**
+  doi:10.1086/257497. The founding bioeconomics paper — answers "did
+  economists already solve the single-planner case" (yes, 70 years ago):
+  rent dissipation under open access, and an economic optimum strictly below
+  maximum sustained physical yield. **Not** the source of `R=K/2`/`MSY=g·K/4`
+  — that's Schaefer (1954), below; see
+  [note](paper-notes/1954-gordon-common-property-fishery.md).
+- 🟢 **Schaefer (1954), "Some Aspects of the Dynamics of Populations…", *Bulletin
+  of the Inter-American Tropical Tuna Commission* 1(2), 27–56.** No DOI
+  (pre-DOI). Companion/co-founding paper to Gordon (1954); this is the actual
+  source of the logistic regeneration rule and the `R=K/2`, `MSY=g·K/4`
+  closed forms — Gordon supplies the economics, Schaefer the biology; the
+  "Gordon–Schaefer model" name refers to both together. See
+  [note](paper-notes/1954-schaefer-population-dynamics-fisheries.md).
+- 🟢 **Friedman (1971), "A Non-cooperative Equilibrium for Supergames", *Review
+  of Economic Studies* 38(1), 1–12.** doi:10.2307/2296617. Grim-trigger folk
+  theorem — many Pareto-optimal points are sustainable as non-cooperative
+  equilibria once players are patient enough; the multiplicity is over
+  *target points and discount thresholds*, not over qualitatively different
+  strategy types, so cite carefully relative to this project's actual
+  equifinality claim. See
+  [note](paper-notes/1971-friedman-noncooperative-supergames.md).
+- 🟢 **Fudenberg & Maskin (1986), "The Folk Theorem in Repeated Games with
+  Discounting or with Incomplete Information", *Econometrica* 54(3), 533–554.**
+  doi:10.2307/1911307. The general, strongest folk theorem — but also proves
+  (Example 3) that low-dimensional/degenerate games can break the
+  "anything sustainable with enough patience" promise for *any* discount
+  factor, a useful caution against assuming frictionless equifinality. See
+  [note](paper-notes/1986-fudenberg-maskin-folk-theorem.md).
+- 🟢 **Gresov & Drazin (1997), "Equifinality: Functional Equivalence in
+  Organization Design", *Academy of Management Review* 22(2), 403–428.**
+  doi:10.5465/AMR.1997.9707154064. Where the term "equifinality" actually
+  enters organization theory — distinguishes suboptimal/tradeoff/configurational
+  equifinality (by conflict-among-demands × structural-latitude); gives this
+  project a vocabulary to classify which kind of "many paths" its own
+  E1–E13 findings actually show, rather than claiming equifinality
+  unqualified. See
+  [note](paper-notes/1997-gresov-drazin-equifinality.md).
+
+**Useful grounding:**
+- 🟢 **Cooper & John (1988), "Coordinating Coordination Failures in Keynesian
+  Models", *Quarterly Journal of Economics* 103(3), 441–463.**
+  doi:10.2307/1885539. One-shot (no discounting) game: strategic
+  complementarity + spillovers ⇒ multiple, strictly Pareto-ranked
+  equilibria — the cleanest formal anchor yet for this project's own
+  "all-selfish collapse is a stable but dominated equilibrium" baseline
+  finding. See
+  [note](paper-notes/1988-cooper-john-coordination-failures.md).
+- 🟢 **McKenzie (1976), "Turnpike Theory", *Econometrica* 44(5), 841–865.**
+  doi:10.2307/1911532 (confirmed). Optimal growth paths from different
+  starting points/targets converge to a common "turnpike" corridor
+  (early/middle/late variants) — metaphorically the closest classical
+  analogue to "many paths converge," but mechanistically remote from this
+  project (single optimizing planner, not heterogeneous rule-based agents);
+  cite carefully. See
+  [note](paper-notes/1976-mckenzie-turnpike-theory.md).
+- 🟢 **von Bertalanffy (1968), *General System Theory: Foundations, Development,
+  Applications*, George Braziller.** ISBN 978-0807604526 (Chapter 5,
+  "Equifinality" section, pp. 131–134, read; rest of book not read in full).
+  The origin of the term: open system + steady state ⇒ final state
+  provably independent of initial conditions; closed systems provably
+  cannot be equifinal. Directly testable against this project's own engine
+  (vary initial resource `R₀` at fixed strategy mix, check steady-state
+  invariance). See
+  [note](paper-notes/1968-bertalanffy-general-system-theory.md).
+
+**Optional / speculative leads:**
+- 🟢 **Ragin (1987), *The Comparative Method*, University of California Press.**
+  ISBN 0-520-05834-8. Qualitative Comparative Analysis (QCA) — confirmed as
+  a genuine fit: a feasible, off-the-shelf Boolean-minimization method for
+  computing the minimal set of strategy-mix combinations *sufficient* for a
+  near-`K/2` outcome directly from this project's existing E1–E13
+  configurations; "multiple conjunctural causation" is Ragin's own term for
+  this project's equifinality claim, precisely distinct from von
+  Bertalanffy's and Cooper & John's senses. See
+  [note](paper-notes/1987-ragin-comparative-method.md) (companion: Miller
+  1987 review, read in full).
+- 🟢 **Zitzler & Thiele (1999), "Multiobjective Evolutionary Algorithms: A
+  Comparative Case Study and the Strength Pareto Approach", *IEEE Trans.
+  Evolutionary Computation* 3(4), 257–271.** doi:10.1109/4235.797969.
+  Confirmed as a measurement-toolkit fit, not an equifinality-claim fit:
+  the hypervolume (`S`) and pairwise-coverage (`C`) measures are directly
+  reusable for quantifying and comparing this project's own outcome sets
+  (e.g. sustainability vs. welfare vs. equality tradeoffs), but the
+  paper's own subject (Pareto tradeoffs between different objectives) is
+  the opposite of "different paths to the same outcome." See
+  [note](paper-notes/1999-zitzler-thiele-strength-pareto.md).
+- 🟢 **Clark, *Mathematical Bioeconomics* (Wiley, 1st ed. 1976).**
+  Read (Ch. 1 §1.3, Ch. 2 §2.1–2.6). Synthesizes Gordon + Schaefer into a
+  dynamic sole-owner optimal-control problem; the "most rapid approach
+  path" (bang-bang harvesting) is a genuinely new mechanism beyond both
+  1954 papers, and the exact formula `z*=½(1+z∞)` closes the "is `K/2`
+  the true economic optimum" question left open in this project's Gordon
+  and Schaefer notes — it is not, `K/2` is the biological MSY point only.
+  See [note](paper-notes/1976-clark-mathematical-bioeconomics.md).
+- 🟢 **Dorfman, Samuelson & Solow (1958), *Linear Programming and Economic
+  Analysis*, McGraw-Hill.** Read (Ch. 12, the founding turnpike-theorem
+  chapter). Origin of the turnpike theorem and its metaphor — the correct
+  primary source to cite ahead of McKenzie (1976)'s generalization, though
+  mechanistically remote from this project (single optimizing planner, not
+  heterogeneous rule-based agents). See
+  [note](paper-notes/1958-dorfman-samuelson-solow-turnpike.md).
+
 ---
 
 ## Reading priorities (updated)
