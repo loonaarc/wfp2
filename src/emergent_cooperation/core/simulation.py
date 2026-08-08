@@ -73,6 +73,7 @@ class Simulation:
                         agent_id=len(agents),
                         strategy=strategy,
                         decision_noise=config.decision_noise,
+                        group=spec.group,
                     )
                 )
         return agents
@@ -121,17 +122,28 @@ class Simulation:
     def _enforce(self, harvests: list[float]) -> tuple[list[float], float, list[float]]:
         """Apply sanctioning: cap harvests at the quota and charge monitoring costs.
 
-        If any agent exposes a :class:`SanctionPolicy`, a per-capita quota
-        (``min(quota_total) / N``) is enforced on *every* agent: harvest above the
-        quota is confiscated (left in the pool, not withdrawn), and each sanctioner
-        forfeits its monitoring cost. With no sanctioner present this is a no-op, so
-        non-sanctioning runs are unchanged (see ADR-0005).
+        Individual sanctioning is scoped to **groups** (``AgentSpec.group``,
+        ADR-0012 — nested enforcement, Ostrom design principle 8): within each
+        group, if any member exposes a :class:`SanctionPolicy`, a per-capita quota
+        (``min(quota_total among that group's sanctioners) / N``, ``N`` the *total*
+        population so the shared pool's overall sustainable draw is unaffected) is
+        enforced on that group's members only — harvest above the quota is
+        confiscated (left in the pool, not withdrawn), and each sanctioner forfeits
+        its monitoring cost. A group with no sanctioner of its own is left
+        unprotected by individual enforcement even if another group has one — unlike
+        the population-wide "any one sanctioner protects everyone" of a flat model.
+        Every ``AgentSpec`` defaults to ``group=0``, so with no group configured
+        this reduces exactly to the original flat, population-wide behaviour (see
+        ADR-0005). The same partition, with an ungoverned outsider group and no new
+        code, is also how "boundaries"/open-access experiments are expressed
+        (ADR-0013).
 
         If the group has voted to adopt **collective-choice enforcement** (ADR-0011),
-        the same per-capita quota is enforced even with no individually-sanctioning
-        agent present, funded by a ``cost_share`` charged to every active agent that
-        does not already carry its own :class:`SanctionPolicy` (avoids double-charging
-        an agent that already pays individually).
+        the same per-capita quota is enforced population-wide regardless of
+        grouping — a separate mechanism (Ostrom principle 3, not 8) — funded by a
+        ``cost_share`` charged to every active agent that does not already carry its
+        own :class:`SanctionPolicy` (avoids double-charging an agent that already
+        pays individually).
 
         Args:
             harvests: Per-agent realised harvests after feasibility scaling.
@@ -141,38 +153,49 @@ class Simulation:
             is the per-agent monitoring/collective-fee cost paid this round (0 for
             agents subject to neither).
         """
+        n_total = len(self.agents)
+        penalties = [0.0] * n_total
+        collective = self._collective_enforcement_active
+
         # A failed (inactive) sanctioner no longer enforces.
-        policies = [
+        own_policies = [
             agent.strategy.sanction_policy() if agent.active else None for agent in self.agents
         ]
-        active = [p for p in policies if p is not None]
-        penalties = [0.0] * len(self.agents)
-        collective = self._collective_enforcement_active
-        if not active and not collective:
-            return harvests, sum(harvests), penalties
 
-        quota_per_capita = (
-            min(p.quota_total for p in active) / len(self.agents)
-            if active
-            else self._sustainable_yield() / len(self.agents)
-        )
-        capped = [min(h, quota_per_capita) for h in harvests]
+        groups: dict[int, list[int]] = {}
+        for i, agent in enumerate(self.agents):
+            groups.setdefault(agent.group, []).append(i)
 
-        # Sanctioners pay the ongoing cost of monitoring (a payoff forfeit).
-        for i, policy in enumerate(policies):
-            if policy is not None:
-                penalties[i] = policy.monitoring_cost
-                self.agents[i].total_payoff -= policy.monitoring_cost
+        capped = list(harvests)
+        any_enforced = False
+        for member_indices in groups.values():
+            active = [own_policies[i] for i in member_indices if own_policies[i] is not None]
+            if not active and not collective:
+                continue
+            any_enforced = True
+            quota_per_capita = (
+                min(p.quota_total for p in active) / n_total
+                if active
+                else self._sustainable_yield() / n_total
+            )
+            for i in member_indices:
+                capped[i] = min(capped[i], quota_per_capita)
+                policy = own_policies[i]
+                if policy is not None:
+                    penalties[i] = policy.monitoring_cost
+                    self.agents[i].total_payoff -= policy.monitoring_cost
 
         # Collective-choice enforcement is jointly funded by everyone who does not
-        # already pay individually (ADR-0011).
+        # already pay individually (ADR-0011); unaffected by grouping.
         if collective:
             share = self.config.collective_choice.cost_share  # type: ignore[union-attr]
             for i, agent in enumerate(self.agents):
-                if agent.active and policies[i] is None:
+                if agent.active and own_policies[i] is None:
                     penalties[i] += share
                     agent.total_payoff -= share
 
+        if not any_enforced:
+            return harvests, sum(harvests), penalties
         return capped, sum(capped), penalties
 
     def _maybe_vote(self, round_index: int) -> bool:
@@ -269,6 +292,7 @@ class Simulation:
             seed=self.seed,
             information_model=self.config.information_model,
             agent_strategies=tuple(a.strategy_name for a in self.agents),
+            agent_groups=tuple(a.group for a in self.agents),
         )
         for round_index in range(self.config.rounds):
             result.rounds.append(self.step(round_index))

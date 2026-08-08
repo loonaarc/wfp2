@@ -14,23 +14,34 @@ from typing import Any
 from ..core.state import RunResult
 
 
-def gini(values: list[float]) -> float:
+def gini(values: list[float]) -> float | None:
     """Return the Gini coefficient of ``values`` (0 = equal, →1 = unequal).
 
-    Uses the mean-absolute-difference definition. Non-negative inputs are
-    assumed (payoffs). An all-zero or empty input is defined as perfectly
-    equal (0.0).
+    Uses the mean-absolute-difference definition, which is only defined for
+    non-negative quantities summing to a positive total. An all-zero or empty
+    input is defined as perfectly equal (0.0). Net payoffs (harvest minus
+    monitoring/sanction costs) *can* go negative -- e.g. a sanctioner paying
+    its monitoring cost while the pool is collapsed and harvest is near zero
+    -- in which case the formula's denominator breaks down (dividing by a
+    near-zero or negative total produces values far outside ``[0, 1)``, not a
+    real Gini coefficient); this is reported as ``None`` (undefined) rather
+    than a misleading number.
 
     Args:
-        values: Non-negative quantities, e.g. per-agent total payoffs.
+        values: Per-agent quantities, e.g. net total payoffs (may be negative).
 
     Returns:
-        The Gini coefficient in ``[0, 1)``.
+        The Gini coefficient in ``[0, 1)``, or ``None`` if undefined (any
+        negative value, or a non-positive total with a nonzero spread).
     """
     n = len(values)
-    total = sum(values)
-    if n == 0 or total == 0:
+    if n == 0:
         return 0.0
+    if any(v < 0 for v in values):
+        return None
+    total = sum(values)
+    if total == 0:
+        return 0.0  # every value is exactly 0 (negatives already ruled out above)
     absolute_differences = sum(abs(a - b) for a in values for b in values)
     return absolute_differences / (2 * n * total)
 
@@ -84,6 +95,7 @@ def compute_metrics(
         else None
     )
     efficiency = _efficiency(gross_harvest, msy, n_rounds)
+    welfare_efficiency = _efficiency(sum(payoffs), msy, n_rounds)
     over_usage_rate = _over_usage_rate(result, msy, collapse_threshold)
     resilience = _resilience_metrics(result)
 
@@ -98,6 +110,10 @@ def compute_metrics(
         "mean_agent_payoff": (sum(payoffs) / len(payoffs)) if payoffs else 0.0,
         "total_sanction_penalty": total_penalty,
         "efficiency": efficiency,
+        # Net-welfare analogue of `efficiency` (payoffs, not gross harvest) — the
+        # GLUE-lite behavioural-classification objective from
+        # docs/thesis-direction-equifinality.md ("Proposed answers", item 2).
+        "welfare_efficiency": welfare_efficiency,
         # Sustainability.
         "final_resource_level": result.final_resource_level,
         "sustainability_ratio": (result.final_resource_level / capacity if capacity else 0.0),

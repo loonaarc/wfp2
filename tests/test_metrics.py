@@ -1,5 +1,7 @@
 """Tests for the summary metrics (survival, efficiency, over-usage)."""
 
+import pytest
+
 from emergent_cooperation.core.config import (
     AgentSpec,
     ResourceConfig,
@@ -54,3 +56,18 @@ def test_survival_time_equals_collapse_round_when_collapsing():
     m = _metrics(result)
     assert m["collapsed"]
     assert m["survival_time"] == m["collapse_round"]
+
+
+def test_welfare_efficiency_matches_gross_efficiency_without_monitoring_cost():
+    m = _metrics(_run("cooperative", regeneration_rate=0.4, capacity=100.0))
+    assert m["welfare_efficiency"] == m["efficiency"] == 1.0
+
+
+def test_welfare_efficiency_is_below_gross_efficiency_with_monitoring_cost():
+    # 8 sanctioners, cost 0.2/round: net payoff 105.0 vs 1000 sustainable benchmark
+    # -> welfare_efficiency = 840/1000 = 0.84, while gross efficiency stays 1.0.
+    m = _metrics(
+        _run("sanctioning", regeneration_rate=0.4, capacity=100.0, monitoring_cost=0.2)
+    )
+    assert m["efficiency"] == 1.0
+    assert m["welfare_efficiency"] == pytest.approx(0.84)

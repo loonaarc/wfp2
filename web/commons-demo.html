@@ -205,15 +205,13 @@
   .playbar input[type="range"] { flex: 1; min-width: 80px; }
 
   .stage { margin-top: 18px; }
-  .stage-grid { display: grid; grid-template-columns: minmax(360px, 440px) 1fr; gap: 18px; align-items: start; }
+  .stage-grid { display: grid; grid-template-columns: minmax(420px, 1fr) minmax(360px, 1fr); gap: 18px; align-items: start; }
   @media (max-width: 900px) { .stage-grid { grid-template-columns: 1fr; } }
   .stage-col { display: flex; flex-direction: column; gap: 16px; }
   .stage-top { padding: 8px; display: grid; grid-template-columns: 1fr; }
   canvas#ring { width: 100%; height: auto; aspect-ratio: 1 / 1; display: block; border-radius: 12px; }
 
-  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-  @media (max-width: 1200px) and (min-width: 901px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
   .tile { padding: 12px 14px; }
   .tile .k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .tag { font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; font-weight: 700; }
@@ -374,7 +372,17 @@
                     <input type="range" id="shock" min="0" max="0.8" step="0.1" value="0" />
                   </div>
                 </td>
-                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="groups">Groups (nested)</label>
+                    <select id="groups">
+                      <option value="1">1 (flat, population-wide)</option>
+                      <option value="2">2</option>
+                      <option value="4">4</option>
+                      <option value="8">8 (every agent alone)</option>
+                    </select>
+                  </div>
+                </td>
                 <td data-scope="single">
                   <div class="field">
                     <label for="seed">Seed <span class="val" id="seed_v">1</span></label>
@@ -408,7 +416,16 @@
                     <input type="range" id="fail" min="0" max="4" step="1" value="0" />
                   </div>
                 </td>
-                <td></td><td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="boundary">Boundary</label>
+                    <select id="boundary">
+                      <option value="closed">closed community</option>
+                      <option value="open">open access (+4 outsiders)</option>
+                    </select>
+                  </div>
+                </td>
+                <td></td>
                 <td data-scope="evo">
                   <div class="field">
                     <label for="evo_loner">Start loner % <span class="val" id="evo_loner_v">0</span></label>
@@ -424,7 +441,19 @@
                     <input type="range" id="bcast" min="0" max="1" step="0.1" value="0" />
                   </div>
                 </td>
-                <td></td><td></td><td></td>
+                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="otype">Outsider type</label>
+                    <select id="otype">
+                      <option value="selfish">selfish</option>
+                      <option value="cooperative">cooperative</option>
+                      <option value="conditional_cooperator">conditional (retaliate)</option>
+                      <option value="compensating_cooperator">compensating (restrain)</option>
+                    </select>
+                  </div>
+                </td>
+                <td></td>
                 <td data-scope="evo">
                   <div class="field">
                     <label for="evo_fine">Pool fine / round <span class="val" id="evo_fine_v">0.00</span></label>
@@ -462,6 +491,7 @@
       <button class="run" id="evo_run" type="button" style="display:none">↻ Recompute</button>
       <button class="run" id="run" type="button">▶ Run &amp; animate</button>
       <button class="stepbtn evo-step" id="gback" type="button" title="Previous generation" style="display:none">⏪</button>
+      <input type="range" id="gscrub" min="0" max="39" step="1" value="0" aria-label="generation" style="display:none" />
       <button class="stepbtn evo-step" id="gfwd" type="button" title="Next generation" style="display:none">⏩</button>
       <button class="stepbtn" id="back" type="button" title="Step back one round" aria-label="step back">⏮</button>
       <button class="stepbtn" id="step" type="button" title="Step forward one round" aria-label="step forward">⏭</button>
@@ -509,10 +539,18 @@
               <div class="k">Total harvest <span class="tag">final</span></div>
               <div class="v" id="m_harvest">—</div>
             </div>
+            <div class="card tile">
+              <div class="k">Welfare efficiency <span class="tag">final</span></div>
+              <div class="v" id="m_welfare">—</div>
+            </div>
           </div>
           <p class="caption" id="metrics_caption"><b>Stock</b> tracks the current round as it plays;
-            <b>Sustainability</b> (final stock ÷ capacity), <b>Fairness</b> and
-            <b>Total harvest</b> are the run's outcome at the end.</p>
+            <b>Sustainability</b> (final stock ÷ capacity), <b>Fairness</b>,
+            <b>Total harvest</b> and <b>Welfare efficiency</b> are the run's outcome at the end.
+            Welfare efficiency is net payoff (harvest minus monitoring cost) relative to the
+            maximum sustainable yield — 1.0 means the population earned exactly the sustainable
+            benchmark; enforcement mechanisms score below 1.0 even at their best, since monitoring
+            itself costs something (see <a href="docs/metrics.md" target="_blank">docs/metrics.md</a>).</p>
 
           <div class="card foot" id="stage_right_single">
             <div class="foot-row col">
@@ -653,10 +691,94 @@
   "use strict";
   // ── model (validated against the Python engine) ─────────────────────────
   const K = 100, G = 0.4, INIT = 50, THRESH = 1.0, MSY = (G * K) / 4, SENS = 1e-9;
+  // Nested enforcement (ADR-0012) and boundaries (ADR-0013): fixed outsider batch
+  // size, matching the Python E14 experiment.
+  const OUTSIDERS = 4;
+  const N_GOVERNED = 8; // the governed population size (fixed; matches the Python E14/E15 sweep)
   // Collective choice (E13 / ADR-0011): fixed to match the Python script's
   // defaults rather than exposed as extra sliders, to keep the panel legible.
   const COLLECTIVE_OVERUSE_THRESHOLD = 0.5, COLLECTIVE_COST_SHARE = 0.2;
   const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning"];
+
+  // A small drawn icon per strategy, on the agent itself in the ring -- so the
+  // *behaviour* is legible at a glance, not just the colour (also helps
+  // colourblind readers, who can't rely on the legend's colour alone). Plain
+  // vector strokes (matching the ✕ used for a dropped-out agent), not emoji --
+  // emoji render inconsistently across platforms and read as a stock icon set
+  // rather than part of this page's own visual language.
+  function drawStrategyIcon(ctx, kind, x, y, s, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = color; ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(1, s * 0.16);
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    if (kind === "sanctioning") {
+      // shield: enforcement / protection
+      ctx.beginPath();
+      ctx.moveTo(0, -s);
+      ctx.lineTo(s * 0.78, -s * 0.5);
+      ctx.lineTo(s * 0.78, s * 0.1);
+      ctx.quadraticCurveTo(s * 0.78, s * 0.85, 0, s * 1.05);
+      ctx.quadraticCurveTo(-s * 0.78, s * 0.85, -s * 0.78, s * 0.1);
+      ctx.lineTo(-s * 0.78, -s * 0.5);
+      ctx.closePath();
+      ctx.stroke();
+    } else if (kind === "cooperative") {
+      // leaf: restraint / growth
+      ctx.rotate(-Math.PI / 4);
+      ctx.beginPath(); ctx.ellipse(0, 0, s * 0.52, s * 0.95, 0, 0, 2 * Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -s * 0.75); ctx.lineTo(0, s * 0.75); ctx.stroke();
+    } else if (kind === "conditional_cooperator") {
+      // reciprocal arrow: mirrors what it sees
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.72, -Math.PI * 0.1, Math.PI * 1.15);
+      ctx.stroke();
+      const ang = Math.PI * 1.15;
+      const ax = s * 0.72 * Math.cos(ang), ay = s * 0.72 * Math.sin(ang);
+      ctx.beginPath();
+      ctx.moveTo(ax - s * 0.32, ay - s * 0.12); ctx.lineTo(ax, ay); ctx.lineTo(ax - s * 0.12, ay - s * 0.34);
+      ctx.stroke();
+    } else if (kind === "compensating_cooperator") {
+      // pause: withholds on detected over-extraction
+      ctx.fillRect(-s * 0.55, -s * 0.85, s * 0.38, s * 1.7);
+      ctx.fillRect(s * 0.17, -s * 0.85, s * 0.38, s * 1.7);
+    } else if (kind === "selfish") {
+      // claw: takes an unconditional share
+      for (const a of [-0.55, 0, 0.55]) {
+        ctx.beginPath();
+        ctx.moveTo(Math.sin(a) * s * 0.85, -s * 0.9);
+        ctx.lineTo(Math.sin(a) * s * 0.28, s * 0.55);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  // Same shapes as small inline SVGs, for the (plain-HTML) legend -- kept
+  // visually consistent with the canvas icons above, drawn independently
+  // since the legend isn't a canvas.
+  const STRAT_ICON_SVG = {
+    sanctioning: '<svg viewBox="-10 -10 20 21" width="13" height="13"><path d="M0 -9 L7.8 -5 L7.8 1 Q7.8 8.5 0 10.5 Q-7.8 8.5 -7.8 1 L-7.8 -5 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+    cooperative: '<svg viewBox="-10 -10 20 20" width="13" height="13" style="transform:rotate(-45deg)"><ellipse cx="0" cy="0" rx="5.2" ry="9.5" fill="none" stroke="currentColor" stroke-width="1.6"/><line x1="0" y1="-7.5" x2="0" y2="7.5" stroke="currentColor" stroke-width="1.6"/></svg>',
+    conditional_cooperator: '<svg viewBox="-10 -10 20 20" width="13" height="13"><path d="M 5.2 -5.9 A 7.2 7.2 0 1 1 -7 5.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M -9.3 3.4 L -7 5.8 L -3.6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+    compensating_cooperator: '<svg viewBox="-10 -10 20 20" width="13" height="13"><rect x="-5.5" y="-8.5" width="3.8" height="17" fill="currentColor"/><rect x="1.7" y="-8.5" width="3.8" height="17" fill="currentColor"/></svg>',
+    selfish: '<svg viewBox="-10 -10 20 20" width="13" height="13"><path d="M -4.7 -9 L -2.4 5.5 M 0 -9 L 0 5.5 M 4.7 -9 L 2.4 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  };
+  // Open/closed eye: whether the population can see the stock (a shared,
+  // population-wide setting here, not per-agent).
+  function drawEye(ctx, x, y, s, open, color) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.strokeStyle = color; ctx.fillStyle = color;
+    ctx.lineWidth = Math.max(1, s * 0.14); ctx.lineCap = "round";
+    if (open) {
+      ctx.beginPath();
+      ctx.moveTo(-s, 0); ctx.quadraticCurveTo(0, -s * 0.72, s, 0);
+      ctx.quadraticCurveTo(0, s * 0.72, -s, 0); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, s * 0.3, 0, 2 * Math.PI); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.moveTo(-s, 0); ctx.quadraticCurveTo(0, s * 0.5, s, 0); ctx.stroke();
+    }
+    ctx.restore();
+  }
 
   function mulberry32(seed) {
     let a = seed >>> 0;
@@ -708,6 +830,7 @@
       kind: s.kind,
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
+      group: s.group ?? 0,
     });
     const n = agents.length, rng = mulberry32(o.seed);
     let level = o.init ?? INIT, lastTotal = 0;
@@ -726,10 +849,12 @@
         let toFail = o.failCount;
         for (const a of agents) { if (toFail <= 0) break; if (a.active) { a.active = false; toFail--; failed = true; } }
       }
-      const req = agents.map((a) => {
+      const afterRegen = level;  // post-regrowth, pre-harvest -- lets the ring animate grow-then-shrink
+      const heard = new Array(n).fill(false);  // who received the broadcast this round (per-agent roll)
+      const req = agents.map((a, i) => {
         if (!a.active) return 0;  // a failed agent requests nothing
         let signal = null;
-        if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) signal = lastTotal;
+        if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) { signal = lastTotal; heard[i] = true; }
         const obs = { level: o.info === "global" ? level : null, signal, n, cap: K };
         let r = decide(a.kind, a.p, obs, a.st);
         if (o.noise > 0) r *= 1 + (rng() * 2 - 1) * o.noise;
@@ -746,30 +871,63 @@
         voted = true;
         if (t > 0) collectiveActive = (overuseRounds / t) > COLLECTIVE_OVERUSE_THRESHOLD;
       }
-      const hasIndividualSanctioner = agents.some((a) => a.isS && a.active);  // a failed sanctioner stops enforcing
-      if (hasIndividualSanctioner || collectiveActive) {
-        const q = MSY / n;
-        h = h.map((x) => Math.min(x, q));
-        agents.forEach((a, i) => { if (a.isS && a.active) pen[i] = a.p.mc; });
-        if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually
-          agents.forEach((a, i) => { if (a.active && !a.isS) pen[i] += COLLECTIVE_COST_SHARE; });
+      // Nested enforcement (ADR-0012): a monitor's quota only caps its own group
+      // (AgentSpec.group), not the whole population — a group with no monitor of
+      // its own (including any open-access outsider group, ADR-0013) is left
+      // uncapped even if another group has one. Every agent defaults to group 0,
+      // so with `m=1` this reduces exactly to the original flat rule.
+      const byGroup = new Map();
+      agents.forEach((a, i) => {
+        const g = a.group ?? 0;
+        if (!byGroup.has(g)) byGroup.set(g, []);
+        byGroup.get(g).push(i);
+      });
+      for (const idxs of byGroup.values()) {
+        const groupHasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active);  // a failed sanctioner stops enforcing
+        if (!groupHasSanctioner && !collectiveActive) continue;
+        const q = MSY / n;  // fair share of the *whole* population's yield, not the group's own size
+        for (const i of idxs) {
+          h[i] = Math.min(h[i], q);
+          if (agents[i].isS && agents[i].active) pen[i] = agents[i].p.mc;
         }
+      }
+      if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually
+        agents.forEach((a, i) => { if (a.active && !a.isS) pen[i] += COLLECTIVE_COST_SHARE; });
       }
       const total = h.reduce((x, y) => x + y, 0);
       if (o.cvoteRound > 0 && total > MSY) overuseRounds++;
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
       level -= total; lastTotal = total;
-      frames.push({ harv: h, pen: pen.slice(), stock: level, collapsed: level <= THRESH,
+      frames.push({ harv: h, pen: pen.slice(), stock: level, afterRegen, collapsed: level <= THRESH,
                     shock: shocked, fail: failed, vote: voted, voteActive: collectiveActive,
-                    active: agents.map((a) => a.active) });
+                    heard, active: agents.map((a) => a.active) });
     }
-    return { kinds: agents.map((a) => a.kind), frames, payoff, n };
+    return { kinds: agents.map((a) => a.kind), groups: agents.map((a) => a.group), frames, payoff, n };
   }
   function gini(v) {
-    const n = v.length, tot = v.reduce((a, b) => a + b, 0);
-    if (!n || tot === 0) return 0;
+    const n = v.length;
+    if (!n) return 0;
+    if (v.some((x) => x < 0)) return null;  // undefined for negative net payoffs -- see docs/metrics.md
+    const tot = v.reduce((a, b) => a + b, 0);
+    if (tot === 0) return 0;
     let s = 0; for (const a of v) for (const b of v) s += Math.abs(a - b);
     return s / (2 * n * tot);
+  }
+  // negative net payoffs make Gini undefined (docs/metrics.md) -- show a short
+  // "n/a" that fits the tile, with the reason in a tooltip rather than wrapped
+  // inline text that would overflow the tile's fixed width.
+  function setGini(g) {
+    els.m_gini.textContent = g === null ? "n/a" : g.toFixed(2);
+    els.m_gini.title = g === null ? "Undefined: at least one agent's net payoff is negative." : "";
+  }
+  // net welfare (harvest minus monitoring/sanction costs) relative to the
+  // maximum sustainable yield -- the same normalisation as docs/metrics.md's
+  // `welfare_efficiency`, using MSY = g*K/4 (see the `MSY` constant above).
+  function welfareEfficiency(s) {
+    const rounds = s.frames.length - 1;  // frame 0 is the synthetic pre-round frame
+    if (rounds <= 0) return 0;
+    const netTotal = s.payoff.reduce((a, b) => a + b, 0);
+    return netTotal / (MSY * rounds);
   }
 
   // ── regimes ─────────────────────────────────────────────────────────────
@@ -777,25 +935,31 @@
     "— custom —": null,
     "🎣 Tragedy of the commons (baseline)": { ctype: "cooperative", nsel: 8, info: "global", kb: 1, noise: 0, bcast: 0 },
     "🌱 Sustainable cooperation (baseline)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🪝 Free-riding erodes it (E2)": { ctype: "cooperative", nsel: 3, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "↩️ Reciprocity collapses it (E2)": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🎲 Reciprocity breaks under noise (E4)": { ctype: "conditional_cooperator", nsel: 0, info: "global", kb: 1, noise: 0.1, bcast: 0 },
-    "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
-    "🧬 Evolution — monitoring erodes (E5)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0 },
-    "🧭 Evolution — loner rescue attempt (E11)": { evolution: true, evoMon: 35, evoSel: 15, evoLoner: 15, evoFine: 0 },
-    "🏛️ Evolution — pool punishment (E12)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0.2 },
     "🙈 Blind & overconfident (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1.3, noise: 0, bcast: 0 },
     "🏜️ Blind + depleted start (E1)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, init: 30 },
+    "🪝 Free-riding erodes it (E2)": { ctype: "cooperative", nsel: 3, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "↩️ Reciprocity collapses it (E2)": { ctype: "conditional_cooperator", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🛡️ Enforcement holds (E3)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🕵️ Second-order free-rider (E3)": { ctype: "cooperative", mon: 4, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0 },
+    "🎲 Reciprocity breaks under noise (E4)": { ctype: "conditional_cooperator", nsel: 0, info: "global", kb: 1, noise: 0.1, bcast: 0 },
+    "🧬 Evolution — monitoring erodes (E5)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0 },
     "📣 Communication → fairness (E6)": { ctype: "conditional_cooperator", nsel: 2, info: "private", kb: 1, noise: 0, bcast: 1 },
+    "↩️ Retaliation hears it, still fails (E7)": { ctype: "conditional_cooperator", nsel: 4, info: "private", kb: 1, noise: 0, bcast: 1 },
+    "🛡️ Only enforcement saves it (E7)": { ctype: "cooperative", mon: 4, nsel: 4, info: "private", kb: 1, noise: 0, bcast: 1 },
     "💥 Shock — observing recovers (E8)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — blind collapses (E8)": { ctype: "cooperative", nsel: 0, info: "private", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — free-riders break it (E9)": { ctype: "cooperative", nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "💥 Shock — enforcement recovers it (E9)": { ctype: "cooperative", mon: 6, nsel: 2, info: "global", kb: 1, noise: 0, bcast: 0, shock: 0.7, rounds: 60 },
     "🔌 Enforcer fails → collapse (E10)": { ctype: "cooperative", mon: 2, nsel: 6, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
     "🧩 A member fails, commons holds (E10)": { ctype: "cooperative", nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, fail: 2, rounds: 60 },
+    "🧭 Evolution — loner rescue attempt (E11)": { evolution: true, evoMon: 35, evoSel: 15, evoLoner: 15, evoFine: 0 },
+    "🏛️ Evolution — pool punishment (E12)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0.2 },
     "🗳️ Vote fast — matches enforcement (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 2, rounds: 40 },
     "🗳️ Vote slow — too late (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 10, rounds: 40 },
+    "🧩 Partial nested coverage backfires (E14)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
+    "🧩 Full nested coverage recovers (E14)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
+    "🚪 Open access beats full coverage (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "selfish" },
+    "🚪 Harmless outsiders — boundary doesn't matter (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "cooperative" },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -804,10 +968,11 @@
     regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
     shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
-    run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), tcount: $("tcount"),
+    groups: $("groups"), boundary: $("boundary"), otype: $("otype"),
+    run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), gscrub: $("gscrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
-    m_harvest: $("m_harvest"), m_stock: $("m_stock"), m_round: $("m_round"),
+    m_harvest: $("m_harvest"), m_stock: $("m_stock"), m_round: $("m_round"), m_welfare: $("m_welfare"),
   };
   for (const name of Object.keys(REGIMES)) {
     const opt = document.createElement("option");
@@ -844,6 +1009,12 @@
       mechanism: "At round <code>round(rounds × 0.5)</code>, this many agents stop acting entirely — no harvest, and if one was a monitor, no more enforcement. Monitors are placed first in the agent order, so they fail first as this number increases. Losing the sole enforcer collapses a commons that depended on it; losing a member of a self-correcting cooperative group does not (experiment E10)." },
     cvote: { summary: "The round at which the group holds a one-time vote on whether to adopt enforcement.",
       mechanism: "At this round (0 = no vote), the group checks whether it has been over-using the commons in more than half of all rounds so far (<code>overuse-rounds / t &gt; 0.5</code>); if so, everyone adopts the same quota a monitor would enforce (<code>MSY / n</code>), funded by a shared fee of <b>0.2</b>/round on every non-monitor, from then on. Voting late lets damage accumulate that a flat quota can't undo (experiment E13). If any monitor is already present, the vote can still fire but has no additional effect, since the quota is already being enforced." },
+    groups: { summary: "Splits the 8 governed agents into this many separately-monitored groups, instead of one flat population.",
+      mechanism: "A monitor's quota now only caps <b>its own group's</b> members, computed as that group's fair share of the whole population's sustainable yield (<code>MSY / 8</code>, not divided by the group's own size — so full coverage always reaches the same result no matter how many groups there are). A group with no monitor of its own is left completely uncapped by enforcement, even if another group has one — unlike the flat model, one monitor no longer protects everyone. At 1 group this is identical to the original flat rule (ADR-0012)." },
+    boundary: { summary: "Whether the community can exclude outsiders from the shared pool entirely.",
+      mechanism: `<b>closed</b>: only the 8 governed agents exist. <b>open</b>: adds ${OUTSIDERS} more agents (of "Outsider type", below) in their own, permanently unmonitored group — present every round, drawing from the same pool, but never reachable by any group's enforcement no matter how many groups you configure above. This reuses the Groups mechanism rather than adding a new one (ADR-0013): closing the boundary is just not adding that extra batch of agents.` },
+    otype: { summary: "What the open-access outsiders actually do (only takes effect when Boundary = open).",
+      mechanism: "Boundaries only matter against outsiders who would over-harvest if left unexcluded (E15). A <b>selfish</b> outsider group drains the pool unchecked. A <b>cooperative</b>, <b>conditional</b>, or <b>compensating</b> outsider group restrains itself on its own — same as any governed agent of that type would — so being unmonitored costs nothing: try switching this away from selfish with Boundary = open and full internal coverage, and the collapse disappears even though nobody is watching the outsiders." },
     rounds: { summary: "How many rounds to simulate.", mechanism: "A fixed horizon — the run stops here regardless of whether the stock has stabilised." },
     seed: { summary: "Random seed.", mechanism: "Only changes the outcome when decision noise or partial communication is switched on — with both at 0, every seed produces an identical run." },
     evo_mon: { summary: "Share of the starting population (of 40) that are monitors.",
@@ -898,6 +1069,8 @@
     "🙈 Blind & overconfident (E1)": "Blind cooperators (private info) that overestimate the sustainable yield. With no selfish agents at all, they still over-harvest and collapse the pool (experiment E1).",
     "🏜️ Blind + depleted start (E1)": "Blind cooperators (private info) with ACCURATE knowledge — but the pool starts below the healthy level (30 of 100). They can't see they must ease off, keep taking the steady-state amount, and drain it. Switch info to 'global' and it recovers: seeing the stock is what saves it, not good intent.",
     "📣 Communication → fairness (E6)": "Blind conditional cooperators that hear a broadcast of total harvest, so they detect free-riders and stop being exploited (fairer) — though the resource still collapses (experiment E6).",
+    "↩️ Retaliation hears it, still fails (E7)": "4 blind conditional cooperators + 4 selfish, hearing a broadcast of the group's total harvest. They correctly detect the free-riding and retaliate — but retaliation only grabs a selfish share back, it doesn't cap anyone's extraction, so the resource collapses anyway. Compare to 'Only enforcement saves it' below: same population, same information, only the response differs (experiment E7).",
+    "🛡️ Only enforcement saves it (E7)": "Identical population and information to 'Retaliation hears it, still fails' above (4 enforcers, 4 selfish, blind, broadcast on) — but the response is a hard quota, not a reaction. The pool holds. Communication informs; only enforcement actually coordinates a limit (experiment E7).",
     "💥 Shock — observing recovers (E8)": "A settled cooperative pool is hit by a 70% shock mid-run. Because the agents can SEE the depleted stock, they stop harvesting and let it regrow — full recovery in a few rounds.",
     "💥 Shock — blind collapses (E8)": "The same shock, same cooperators — but BLIND (private info). They keep taking the steady-state amount from a shrunken pool and drive it to collapse. Same intent, opposite fate: information decides resilience.",
     "💥 Shock — free-riders break it (E9)": "Observing cooperators plus 2 free-riders, then a shock. Observation lets them climb back — but only to the level the free-riders already dragged it to, which is collapse. Watch it fail to return to healthy.",
@@ -906,6 +1079,10 @@
     "🧩 A member fails, commons holds (E10)": "A self-correcting cooperative commons loses 2 of its 8 members mid-run. The rest still observe and self-correct, so the pool is unharmed — distributed protection has no single point of failure.",
     "🗳️ Vote fast — matches enforcement (E13)": "No agent is a born monitor — just 4 cooperators + 4 selfish. At round 2 the group tallies whether it's been over-using the commons and votes to adopt a quota funded by everyone. It passes almost immediately, before much damage is done, and holds the pool at the healthy level — matching individually pre-committed enforcement exactly, with nobody hard-coded as a monitor (experiment E13).",
     "🗳️ Vote slow — too late (E13)": "Same population, same eventual vote — but this time the group waits until round 10 to decide. By then the free-riders have already driven the stock too low: the flat quota (sized for a healthy pool) can't out-grow that much depletion, and the vote can't rescue it. Compare to the fast-vote regime above — timing, not just whether the vote passes, decides the outcome (experiment E13).",
+    "🧩 Partial nested coverage backfires (E14)": "8 agents split into 4 groups of 2: half the groups (4 monitors) enforce, the other half (4 selfish) don't. Nested enforcement means the monitors only protect their own groups — the unmonitored half still crashes the shared pool, so the monitors paid their cost for nothing. Worse than having no monitors at all. Try raising 'Monitors' toward 8 and watch it snap back once every group is covered (experiment E14).",
+    "🧩 Full nested coverage recovers (E14)": "Same 4 groups of 2, but now every group has its own monitor. Welfare recovers fully — identical to a single flat group of 8, because the quota is always sized against the whole population, not each group. Compare to 'Partial nested coverage backfires' above: it's a cliff, not a slope — try 'Monitors' = 6 to see the tipping point itself (experiment E14).",
+    "🚪 Open access beats full coverage (E15)": "Every one of the 4 groups is fully monitored — internally, this is the healthiest possible setup. But switch Boundary to 'open' and 4 unmonitored selfish outsiders join: no amount of internal monitoring can reach them, since a group's quota only ever covers its own members. The pool collapses anyway. Try setting Boundary back to 'closed' to see the difference boundaries alone make (experiment E15).",
+    "🚪 Harmless outsiders — boundary doesn't matter (E15)": "Identical setup to 'Open access beats full coverage', except the outsiders are 'cooperative' instead of 'selfish' (see Outsider type). They restrain themselves on their own, so being unmonitored costs nothing — the pool stays healthy despite the open boundary. Boundaries only matter against an outsider that would actually over-harvest if left unexcluded (experiment E15).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -919,7 +1096,15 @@
     if (ncoop > 0) parts.push(`<b>${ncoop}</b> ${cshort}`);
     if (nmon > 0) parts.push(`<b>${nmon}</b> monitors`);
     if (nsel > 0) parts.push(`<b>${nsel}</b> selfish`);
-    $("composition").innerHTML = "= " + (parts.join(" + ") || "—") + " (of 8)";
+    let comp = "= " + (parts.join(" + ") || "—") + " (of 8)";
+    const m = +els.groups.value;
+    if (m > 1) comp += ` split into <b>${m}</b> groups of ${8 / m}`;
+    if (els.boundary.value === "open") {
+      const oshort = { selfish: "selfish", cooperative: "cooperative",
+        conditional_cooperator: "conditional", compensating_cooperator: "compensating" }[els.otype.value];
+      comp += ` + <b>${OUTSIDERS}</b> open-access ${oshort} outsiders (unmonitored)`;
+    }
+    $("composition").innerHTML = comp;
     $("kb_v").textContent = (+els.kb.value).toFixed(1) + "×";
     $("init_v").textContent = els.init.value;
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
@@ -945,6 +1130,9 @@
     els.fail.value = r.fail ?? 0;
     els.cvote.value = r.cvote ?? 0;
     els.rounds.value = r.rounds ?? 40;
+    els.groups.value = r.groups ?? 1;
+    els.boundary.value = r.boundary ?? "closed";
+    els.otype.value = r.otype ?? "selfish";
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -977,12 +1165,35 @@
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
+  ["groups", "boundary", "otype"].forEach((k) =>
+    els[k].addEventListener("change", () => { toCustom(); scheduleRun(); }));
 
   // ── run + animation state ───────────────────────────────────────────────
   let sim = null, frame = 0, playing = false, raf = null, lastT = 0;
+  // Harvest "+N" pop-fade animation: which frame it last popped for, and when.
+  let harvestPopFrame = -1, harvestPopAt = 0;
+  // One round's whole story, slow enough to actually watch even while paused
+  // and stepping manually: the pool visibly regrows, THEN visibly shrinks as
+  // harvest happens (not an instant cut), and the harvest/cost numbers pop in
+  // synced to that shrink phase rather than all at once from round-start.
+  const POOL_ANIM_MS = 2400;  // grow (0-50%) then shrink (50-100%)
+  const HARVEST_POP_MS = POOL_ANIM_MS * 1.3;  // harvest/cost numbers' own fade window
+  // Opacity for the harvest/cost "+N"/"-N" pops: invisible during the pool's
+  // growth phase, fades in exactly as the shrink (harvest) phase starts, holds,
+  // then fades out after the round has fully settled.
+  function harvestEventOpacity(age) {
+    const fadeInStart = POOL_ANIM_MS * 0.5, fadeInEnd = fadeInStart + 220;
+    const fadeOutStart = POOL_ANIM_MS, fadeOutEnd = HARVEST_POP_MS;
+    if (age < fadeInStart) return 0;
+    if (age < fadeInEnd) return (age - fadeInStart) / (fadeInEnd - fadeInStart);
+    if (age < fadeOutStart) return 1;
+    if (age < fadeOutEnd) return 1 - (age - fadeOutStart) / (fadeOutEnd - fadeOutStart);
+    return 0;
+  }
   let mode = "single";      // "single" | "evolution"
   let evo = null;           // { history, sims, gen, G } when in evolution mode
-  const FPS = 5;
+  const FPS = 0.4; // ~2.5s/round during continuous playback -- slow enough for the
+                    // regrow-then-harvest sequence (POOL_ANIM_MS) to actually play out
   const EVO_N = 40;         // agents per generation (matches the Python E5 study)
   const EVO_FPS = 12;          // rounds/sec while playing evolution
   const EVO_ROUND_WINDOW = 12; // rounds animated per generation before advancing (scrub sees all 60)
@@ -991,12 +1202,23 @@
     const nsel = +els.nsel.value, nmon = +els.mon.value;
     const ncoop = Math.max(0, 8 - nsel - nmon);
     const kind = els.ctype.value, kb = +els.kb.value;
-    const specs = [];
     // Monitors first, so an agent_failure disturbance (which fails the first agents)
     // removes the enforcers — the E10 "enforcer fails" case.
-    if (nmon > 0) specs.push({ kind: "sanctioning", count: nmon });
-    if (ncoop > 0) specs.push({ kind, count: ncoop, kb });
-    if (nsel > 0) specs.push({ kind: "selfish", count: nsel });
+    const roster = [];
+    for (let i = 0; i < nmon; i++) roster.push({ kind: "sanctioning" });
+    for (let i = 0; i < ncoop; i++) roster.push({ kind, kb });
+    for (let i = 0; i < nsel; i++) roster.push({ kind: "selfish" });
+    // Nested enforcement (ADR-0012): partition the 8 governed agents, in the same
+    // order, into `m` equal groups. m=1 (default) reproduces the flat rule exactly.
+    const m = +(els.groups ? els.groups.value : 1) || 1;
+    const gsize = 8 / m;
+    const specs = roster.map((r, i) => ({ ...r, count: 1, group: Math.floor(i / gsize) }));
+    // Boundaries (ADR-0013): open access adds an extra, permanently ungoverned
+    // outsider group — no monitor is ever placed there, regardless of `m`.
+    if (els.boundary && els.boundary.value === "open") {
+      const ok = els.otype ? els.otype.value : "selfish";
+      specs.push({ kind: ok, count: OUTSIDERS, kb: 1, group: m });
+    }
     return specs;
   }
   // Run one simulation and attach the display fields (cumulative net payoff per
@@ -1011,6 +1233,7 @@
     }
     s.maxCum = Math.max(1, ...s.cum[s.cum.length - 1]);
     s.frames.unshift({ harv: new Array(s.n).fill(0), stock: opts.init ?? INIT,
+                       afterRegen: opts.init ?? INIT,
                        collapsed: false, active: new Array(s.n).fill(true) });
     s.cum.unshift(new Array(s.n).fill(0));
     return s;
@@ -1033,8 +1256,9 @@
     els.m_sustain.textContent = m.sustain.toFixed(2);
     els.m_status.className = "pill " + (m.collapsed ? "bad" : "good");
     els.m_status.textContent = m.collapsed ? "COLLAPSED" : "SUSTAINED";
-    els.m_gini.textContent = m.gini.toFixed(2);
+    setGini(m.gini);
     els.m_harvest.textContent = Math.round(m.harvest);
+    els.m_welfare.textContent = welfareEfficiency(sim).toFixed(2);
     els.scrub.max = sim.frames.length - 1;
     buildLegend();
     drawTraj();
@@ -1051,7 +1275,7 @@
     els.legend.innerHTML = "";
     for (const k of STRATS) if (present.includes(k)) {
       const s = document.createElement("span");
-      s.innerHTML = `<i style="background:${stratColor(k)}"></i>${nice[k]}`;
+      s.innerHTML = `<span style="color:${stratColor(k)};display:inline-flex">${STRAT_ICON_SVG[k] || ""}</span> ${nice[k]}`;
       els.legend.appendChild(s);
     }
   }
@@ -1073,20 +1297,157 @@
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2, cy = size / 2;
     const f = sim.frames[frame], n = sim.n;
+    if (frame !== harvestPopFrame) { harvestPopFrame = frame; harvestPopAt = performance.now(); }
     const ringR = size * 0.34;
-    const ratio = f.stock / K;
+    // Pool grows (regeneration) then shrinks (harvest) within each round's
+    // display window, instead of jumping straight to the post-harvest level --
+    // reuses the same per-frame age timer as the harvest pop.
+    const poolAge = performance.now() - harvestPopAt;
+    const easeInOut = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
+    let displayStock = f.stock, poolPhase = null;
+    // round 0 is the synthetic "before anything happened" frame -- nothing
+    // regrew or got harvested yet, so it should just sit still, not play the
+    // regrow/harvest animation against itself.
+    if (frame > 0 && f.afterRegen !== undefined) {
+      const prevStock = sim.frames[frame - 1].stock;
+      const tp = Math.min(1, poolAge / POOL_ANIM_MS);
+      if (tp < 1) poolPhase = tp < 0.5 ? "regrow" : "harvest";
+      displayStock = tp < 0.5
+        ? prevStock + (f.afterRegen - prevStock) * easeInOut(tp / 0.5)
+        : f.afterRegen + (f.stock - f.afterRegen) * easeInOut((tp - 0.5) / 0.5);
+    }
+    const ratio = displayStock / K;
     const poolR = size * (0.07 + 0.20 * Math.sqrt(Math.max(0, ratio)));
 
-    // agent positions
+    // agent positions -- one ring, but laid out in actual visual clusters
+    // (a real angular gap between groups), not just adjacency with a tick
+    // mark -- proximity itself is what reads as "these belong together,"
+    // no extra line needed. Outsiders (ADR-0013) get a bigger gap before
+    // them than groups get between each other, since being outside the
+    // community is a different kind of separation from being in another
+    // monitored group (ADR-0012).
+    const nOutsiders = mode !== "evolution" && els.boundary && els.boundary.value === "open" ? n - N_GOVERNED : 0;
+    const nGoverned = n - nOutsiders;
     const pos = [], angs = [];
-    for (let i = 0; i < n; i++) {
-      const ang = -Math.PI / 2 + (i / n) * 2 * Math.PI;
-      angs.push(ang);
-      pos.push([cx + ringR * Math.cos(ang), cy + ringR * Math.sin(ang)]);
+    let clusterArcs = null, groupTickAngles = null;
+    if (mode !== "evolution" && sim.groups && new Set(sim.groups).size > 1) {
+      const clusters = [];
+      for (let i = 0; i < n; i++) {
+        const g = sim.groups[i];
+        const last = clusters[clusters.length - 1];
+        if (last && last.g === g) last.idx.push(i); else clusters.push({ g, idx: [i] });
+      }
+      const GAP = 0.16, BOUNDARY_GAP = 0.5;
+      // gaps sit *between* consecutive clusters, including the seam where the
+      // last cluster wraps back around to the first -- without that last one,
+      // the swept angle totals exactly 2*PI and the final agent lands on the
+      // exact same angle as the first, silently overlapping it.
+      let gapSum = 0;
+      for (let k = 1; k < clusters.length; k++) {
+        gapSum += (nOutsiders > 0 && clusters[k].idx[0] === nGoverned) ? BOUNDARY_GAP : GAP;
+      }
+      // outsiders (when present) are always the last cluster (appended last in
+      // currentSpecs), so the wrap seam sits right next to them either way.
+      gapSum += clusters.length > 1 ? (nOutsiders > 0 ? BOUNDARY_GAP : GAP) : 0;
+      const avail = 2 * Math.PI - gapSum;
+      // every agent gets the same fixed angular slot, regardless of which
+      // cluster it's in -- spreading a cluster's own members across its
+      // *entire* proportional span (the old approach) pushed a 2-agent
+      // cluster's members to the two extremes of that span, ~5x farther
+      // apart than the gap to the *next* cluster's nearest member. That
+      // made adjacent-but-different-group agents read as "the pair" and the
+      // real pair read as unrelated -- backwards from the intent.
+      const slot = avail / n;
+      let a = -Math.PI / 2;
+      // one arc for the whole governed community, one for the outsider block
+      // (if any) -- not one per nested group. A separate arc per group broke
+      // the boundary into visibly interrupted segments, which read as noise
+      // rather than structure; which *group* an agent belongs to is already
+      // conveyed by proximity (the tight per-agent slot vs. the wider GAP
+      // between groups), so the arc only needs to carry the one distinction
+      // that isn't otherwise visible: governed vs. outsider (ADR-0013).
+      let governedStart = null, governedEnd = null, outsiderSpan = null;
+      const groupTicks = []; // short dividers between nested groups (ADR-0012) --
+      // distinct from the outer governed/outsider arc (ADR-0013) so the two
+      // different boundaries don't read as the same broken-up shape.
+      clusters.forEach((c, k) => {
+        const isOutsider = nOutsiders > 0 && c.idx[0] === nGoverned;
+        if (k > 0) {
+          const gap = isOutsider ? BOUNDARY_GAP : GAP;
+          if (!isOutsider) groupTicks.push(a + gap / 2);
+          a += gap;
+        }
+        const span = slot * c.idx.length;
+        c.idx.forEach((agentIdx, j) => {
+          const ang = a + slot * (j + 0.5);
+          angs[agentIdx] = ang;
+          pos[agentIdx] = [cx + ringR * Math.cos(ang), cy + ringR * Math.sin(ang)];
+        });
+        if (isOutsider) {
+          outsiderSpan = { start: a, end: a + span };
+        } else {
+          if (governedStart === null) governedStart = a;
+          governedEnd = a + span;
+        }
+        a += span;
+      });
+      clusterArcs = [{ start: governedStart, end: governedEnd, isOutsider: false }];
+      if (outsiderSpan) clusterArcs.push({ ...outsiderSpan, isOutsider: true });
+      groupTickAngles = groupTicks;
+    } else {
+      for (let i = 0; i < n; i++) {
+        const ang = -Math.PI / 2 + (i / n) * 2 * Math.PI;
+        angs.push(ang);
+        pos.push([cx + ringR * Math.cos(ang), cy + ringR * Math.sin(ang)]);
+      }
     }
     // faint ring guide
     ctx.strokeStyle = css("--pool-ring"); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, 2 * Math.PI); ctx.stroke();
+
+    // governed-vs-outsider boundary: one continuous arc for the governed
+    // community, one dashed arc for the outsider block (ADR-0013) -- no
+    // connector line back to the pool. Every agent, governed or not, already
+    // draws its own line to the pool via the harvest lines below, exactly
+    // like every other experiment; a second, always-on connector from the
+    // boundary itself was a redundant, confusing signal on top of that.
+    if (clusterArcs) {
+      // must clear the agent dot *and* its icon+payoff label (drawn later, out
+      // at ringR + size*0.075, with the icon offset a further size*0.036 out)
+      // -- otherwise the boundary cuts across the numbers instead of enclosing them.
+      const arcR = ringR + size * 0.125;
+      const pad = 0.05;
+      for (const c of clusterArcs) {
+        const color = c.isOutsider ? css("--bad") : css("--accent");
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = c.isOutsider ? 0.55 : 0.45;
+        ctx.lineWidth = Math.max(1.2, size * 0.0035);
+        if (c.isOutsider) ctx.setLineDash([size * 0.006, size * 0.006]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, arcR, c.start - pad, c.end + pad);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+    // nested-group dividers (ADR-0012): a short straight tick at each seam
+    // between two governed groups -- separate from the governed/outsider arc
+    // above so "which group" and "governed vs. outsider" read as two
+    // different kinds of line, not one confusing broken shape.
+    if (groupTickAngles && groupTickAngles.length) {
+      ctx.save();
+      ctx.strokeStyle = css("--accent");
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = Math.max(1.2, size * 0.004);
+      for (const ang of groupTickAngles) {
+        const r1 = ringR - size * 0.02, r2 = ringR + size * 0.02;
+        ctx.beginPath();
+        ctx.moveTo(cx + r1 * Math.cos(ang), cy + r1 * Math.sin(ang));
+        ctx.lineTo(cx + r2 * Math.cos(ang), cy + r2 * Math.sin(ang));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // harvest lines (single-run detail only; too busy for 40 evolving agents)
     if (mode !== "evolution") {
@@ -1108,51 +1469,126 @@
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.arc(cx, cy, poolR, 0, 2 * Math.PI); ctx.fill();
     ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = `600 ${Math.round(size*0.045)}px ${css("--mono")}`;
+    ctx.font = `600 ${Math.round(size*0.037)}px ${css("--mono")}`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(Math.round(f.stock), cx, cy);
+    ctx.fillText(displayStock.toFixed(2), cx, cy);
 
-    if (mode === "evolution") {
-      // composition view: uniform coloured dots per agent...
-      const r = Math.max(3.5, size * 0.011);
-      for (let i = 0; i < n; i++) {
-        ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
-        ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
-        ctx.lineWidth = 1.5; ctx.strokeStyle = css("--panel"); ctx.stroke();
+    // explicit phase label -- regrowth happens first, then harvest; make the
+    // sequence readable, not just inferable from the animation's motion.
+    if (mode !== "evolution" && poolPhase) {
+      ctx.font = `700 ${Math.round(size * 0.02)}px ${css("--mono")}`;
+      ctx.fillStyle = poolPhase === "regrow" ? css("--good") : css("--bad");
+      ctx.fillText(poolPhase === "regrow" ? "↑ regrowing" : "↓ harvesting", cx, cy + size * 0.075);
+    }
+
+    // resource shock: a lightning bolt across the pool, pop-fading the same
+    // way as harvest/cost, on the exact round it fires (f.shock).
+    if (mode !== "evolution" && f.shock) {
+      const age = performance.now() - harvestPopAt;
+      const t = Math.min(1, age / HARVEST_POP_MS);
+      if (t < 1) {
+        ctx.save();
+        ctx.globalAlpha = 1 - t;
+        ctx.strokeStyle = css("--bad"); ctx.lineWidth = Math.max(2, size * 0.012);
+        ctx.lineJoin = "round"; ctx.lineCap = "round";
+        const bs = poolR * 1.3;
+        ctx.beginPath();
+        ctx.moveTo(cx + bs * 0.12, cy - bs);
+        ctx.lineTo(cx - bs * 0.22, cy - bs * 0.08);
+        ctx.lineTo(cx + bs * 0.05, cy - bs * 0.08);
+        ctx.lineTo(cx - bs * 0.12, cy + bs);
+        ctx.lineTo(cx + bs * 0.22, cy + bs * 0.1);
+        ctx.lineTo(cx - bs * 0.05, cy + bs * 0.1);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
       }
-      // ...plus one label per strategy group: how many, and their average net payoff
-      const cum = sim.cum[frame], groups = [];
-      for (let i = 0; i < n; i++) {
-        const last = groups[groups.length - 1];
-        if (last && last.k === sim.kinds[i]) last.idx.push(i);
-        else groups.push({ k: sim.kinds[i], idx: [i] });
+    }
+
+    // collective-choice vote (E13): a banner across the ring on the exact
+    // round it's tallied -- lingers longer than the other pop-fades since
+    // it's a single, rare, consequential event, not a repeating one.
+    if (mode !== "evolution" && f.vote) {
+      const VOTE_BANNER_MS = 2600;
+      const age = performance.now() - harvestPopAt;
+      const t = Math.min(1, age / VOTE_BANNER_MS);
+      if (t < 1) {
+        const passed = f.voteActive;
+        ctx.save();
+        ctx.globalAlpha = t < 0.85 ? 1 : 1 - (t - 0.85) / 0.15;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        ctx.font = `700 ${Math.round(size * 0.028)}px ${css("--mono")}`;
+        const label = passed ? "VOTE PASSED — quota adopted" : "VOTE FAILED — no quota";
+        ctx.lineWidth = 4; ctx.strokeStyle = css("--panel");
+        ctx.strokeText(label, cx, cy - ringR - size * 0.05);
+        ctx.fillStyle = passed ? css("--good") : css("--bad");
+        ctx.fillText(label, cx, cy - ringR - size * 0.05);
+        ctx.restore();
       }
-      const labelR = ringR + size * 0.085;
-      const short = { sanctioning: "monitor", cooperative: "coop", selfish: "selfish" };
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      for (const g of groups) {
-        const ang = angs[g.idx[Math.floor(g.idx.length / 2)]];
-        const lx = cx + labelR * Math.cos(ang), ly = cy + labelR * Math.sin(ang);
-        const avg = g.idx.reduce((a, i) => a + cum[i], 0) / g.idx.length;
-        ctx.font = `700 ${Math.round(size * 0.03)}px ${css("--mono")}`;
-        ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
-        const top = short[g.k] || g.k;
-        ctx.strokeText(top, lx, ly - size * 0.016);
-        ctx.fillStyle = stratColor(g.k); ctx.fillText(top, lx, ly - size * 0.016);
-        ctx.font = `600 ${Math.round(size * 0.023)}px ${css("--mono")}`;
-        ctx.lineWidth = 3; ctx.strokeStyle = css("--panel");
-        ctx.strokeText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
-        ctx.fillStyle = css("--muted"); ctx.fillText(`net ${Math.round(avg)}`, lx, ly + size * 0.013);
+    }
+
+    // information regime: one shared eye icon (global vs private info is a
+    // population-wide setting here, not per-agent) -- whether agents can see
+    // this same number the pool text just showed, or are working blind.
+    if (mode !== "evolution") {
+      const global = els.info.value === "global";
+      drawEye(ctx, size * 0.05, size * 0.045, size * 0.024, global, css("--text"));
+      ctx.textAlign = "left"; ctx.textBaseline = "middle";
+      ctx.font = `500 ${Math.round(size * 0.02)}px ${css("--mono")}`;
+      ctx.fillStyle = css("--muted");
+      ctx.fillText(global ? "sees the stock" : "blind", size * 0.09, size * 0.045);
+
+      // decision noise: a shared badge, since it's also a population-wide
+      // setting -- a little dice mark plus the actual +/-X% wobble in effect.
+      const noise = +els.noise.value;
+      if (noise > 0) {
+        const nx = size * 0.05, ny = size * 0.085;
+        ctx.save(); ctx.translate(nx, ny);
+        ctx.strokeStyle = css("--muted"); ctx.lineWidth = Math.max(1, size * 0.003);
+        ctx.strokeRect(-size * 0.018, -size * 0.018, size * 0.036, size * 0.036);
+        ctx.fillStyle = css("--muted");
+        for (const [dx, dy] of [[-0.008, -0.008], [0.008, 0.008], [0, 0]]) {
+          ctx.beginPath(); ctx.arc(size * dx, size * dy, size * 0.0035, 0, 2 * Math.PI); ctx.fill();
+        }
+        ctx.restore();
+        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.font = `500 ${Math.round(size * 0.02)}px ${css("--mono")}`;
+        ctx.fillStyle = css("--muted");
+        ctx.fillText(`±${Math.round(noise * 100)}% noise on requests`, size * 0.09, size * 0.085);
       }
-    } else {
-      // agents: dot size ∝ payoff-so-far (normalised), with the payoff number alongside
+    }
+
+    {
+      // agents: dot size ∝ payoff-so-far (normalised), with the payoff number
+      // alongside -- the same rendering regardless of mode (evolution mode
+      // used to get a simplified, aggregated-only view; it now gets the full
+      // per-agent picture too, just auto-scaled down for the larger
+      // generation population so 40 agents' labels don't pile on top of
+      // each other the way 8-12 do fine at full size).
       const cum = sim.cum[frame];
       const labelR = ringR + size * 0.075;
+      const labelScale = Math.min(1, 12 / n);
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       for (let i = 0; i < n; i++) {
         const dead = f.active && !f.active[i];  // a failed agent (agent_failure)
         ctx.globalAlpha = dead ? 0.28 : 1;
-        const r = size * (0.014 + 0.032 * (cum[i] / sim.maxCum));
+        const r = size * (0.008 + 0.032 * (cum[i] / sim.maxCum)) * Math.max(0.55, labelScale);
+        // broadcast received this round (per-agent, independent roll each
+        // round -- ADR-0007): an expanding, fading ring pulse outward from
+        // the dot, like a signal arriving.
+        if (f.heard && f.heard[i]) {
+          const age = performance.now() - harvestPopAt;
+          const pt = Math.min(1, age / HARVEST_POP_MS);
+          if (pt < 1) {
+            ctx.save();
+            ctx.globalAlpha = (1 - pt) * 0.8;
+            ctx.strokeStyle = css("--good"); ctx.lineWidth = Math.max(1, size * 0.004);
+            ctx.beginPath();
+            ctx.arc(pos[i][0], pos[i][1], r + size * 0.006 + size * 0.02 * pt, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
         ctx.beginPath(); ctx.arc(pos[i][0], pos[i][1], r, 0, 2 * Math.PI);
         ctx.fillStyle = stratColor(sim.kinds[i]); ctx.fill();
         ctx.lineWidth = 2; ctx.strokeStyle = css("--panel"); ctx.stroke();
@@ -1164,20 +1600,58 @@
           ctx.moveTo(pos[i][0] - d, pos[i][1] + d); ctx.lineTo(pos[i][0] + d, pos[i][1] - d);
           ctx.stroke();
         }
-        // payoff ("resource collected") number, just outside the ring
+        // payoff ("resource collected") number, just outside the ring, with
+        // the strategy icon sitting right above it -- not on the dot itself,
+        // so it never competes with the dot's own size-encodes-payoff meaning.
         const lx = cx + labelR * Math.cos(angs[i]), ly = cy + labelR * Math.sin(angs[i]);
-        const txt = Math.round(cum[i]);
+        if (!dead) drawStrategyIcon(ctx, sim.kinds[i], lx, ly - size * 0.036, size * 0.013, stratColor(sim.kinds[i]));
+        const txt = cum[i].toFixed(2);
         ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
         ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
         ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
         ctx.globalAlpha = 1;
+        // "+N this round" -- stays invisible during the regrow phase, pops in
+        // exactly as the harvest (shrink) phase starts, so it's clearly tied
+        // to "this is what got taken," not a generic per-round flicker.
+        const h = f.harv[i];
+        if (!dead && h > 0.15) {
+          const age = performance.now() - harvestPopAt;
+          const op = harvestEventOpacity(age);
+          if (op > 0) {
+            const mx = pos[i][0] + (cx - pos[i][0]) * 0.32, my = pos[i][1] + (cy - pos[i][1]) * 0.32;
+            ctx.font = `700 ${Math.round(size * 0.024)}px ${css("--mono")}`;
+            ctx.fillStyle = stratColor(sim.kinds[i]);
+            ctx.globalAlpha = op * (0.55 + 0.45 * Math.min(1, h / 10));
+            ctx.fillText(`+${h.toFixed(2)}`, mx, my);
+            ctx.globalAlpha = 1;
+          }
+        }
+        // "-N" monitoring/collective cost paid this round -- offset
+        // *tangentially* from the dot (perpendicular to the radial line the
+        // payoff number and harvest "+N" both sit on), so it never overlaps
+        // either; same harvest-phase-synced pop-fade as the "+N" above.
+        const pen = f.pen ? f.pen[i] : 0;
+        if (!dead && pen > 0.005) {
+          const age = performance.now() - harvestPopAt;
+          const op = harvestEventOpacity(age);
+          if (op > 0) {
+            const perpAng = angs[i] + Math.PI / 2;
+            const px = pos[i][0] + Math.cos(perpAng) * size * 0.045;
+            const py = pos[i][1] + Math.sin(perpAng) * size * 0.045;
+            ctx.font = `700 ${Math.round(size * 0.02)}px ${css("--mono")}`;
+            ctx.fillStyle = css("--bad");
+            ctx.globalAlpha = op * 0.9;
+            ctx.fillText(`-${pen.toFixed(2)}`, px, py);
+            ctx.globalAlpha = 1;
+          }
+        }
       }
     }
 
     els.scrub.value = frame;
     els.tcount.textContent = `round ${frame} / ${sim.frames.length - 1}`;
     els.m_round.textContent = "round " + frame;
-    els.m_stock.textContent = Math.round(f.stock);
+    els.m_stock.textContent = f.stock.toFixed(2);
     els.m_stock.style.color = f.collapsed ? css("--bad") : "";
     drawTrajMarker();
   }
@@ -1243,7 +1717,11 @@
   function loop(ts) {
     if (!lastT) lastT = ts;
     const fps = mode === "evolution" ? EVO_FPS : FPS;
-    if (playing && sim && ts - lastT > 1000 / fps) {
+    // round 0 is the static "before anything happened" frame -- nothing
+    // regrows or gets harvested there, so continuous playback shouldn't
+    // dwell on it as long as a real, animated round.
+    const dwellMs = frame === 0 && mode !== "evolution" ? 500 : 1000 / fps;
+    if (playing && sim && ts - lastT > dwellMs) {
       lastT = ts;
       frame++;
       const cap = mode === "evolution"
@@ -1459,7 +1937,7 @@
     $("evo_count_card").style.display = evoOn ? "flex" : "none";
     $("gcount").style.display = evoOn ? "" : "none";
     $("evo_run").style.display = evoOn ? "" : "none";
-    ["gback", "gfwd"].forEach((id) => ($(id).style.display = evoOn ? "" : "none"));
+    ["gback", "gfwd", "gscrub"].forEach((id) => ($(id).style.display = evoOn ? "" : "none"));
     updatePanelSummary();
     if (!evoOn) { evo = null; playing = false; setBtn(); }
   }
@@ -1482,6 +1960,7 @@
   function setEvoGeneration(g) {
     if (!evo) return;
     evo.gen = g;
+    els.gscrub.value = g;
     sim = evo.sims[g];
     els.scrub.max = sim.frames.length - 1;
     frame = 0;                       // start the new generation at round 0 (pool = 50)
@@ -1494,9 +1973,10 @@
     els.m_sustain.textContent = m.sustainability.toFixed(2);
     els.m_status.className = "pill " + (collapsed ? "bad" : "good");
     els.m_status.textContent = collapsed ? "COLLAPSED" : "SUSTAINED";
-    els.m_gini.textContent = gini(sim.payoff).toFixed(2);
+    setGini(gini(sim.payoff));
     els.m_harvest.textContent =
       Math.round(sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0));
+    els.m_welfare.textContent = welfareEfficiency(sim).toFixed(2);
   }
 
   function runEvo() {
@@ -1557,6 +2037,7 @@
     }
     $("evo_readout").innerHTML = msg;
     buildEvoLegend();
+    els.gscrub.max = evo.G - 1;
     frame = 0; playing = false; setEvoGeneration(0); setBtn(); draw();
   }
   let evoTimer = null;

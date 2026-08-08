@@ -14,6 +14,16 @@ def test_gini_extremes():
     assert gini([0.0, 0.0, 0.0, 4.0]) > 0.6
 
 
+def test_gini_undefined_for_negative_payoffs():
+    # A sanctioner paying its monitoring cost while the pool is collapsed can
+    # end up with negative net payoff; the mean-absolute-difference formula
+    # breaks down for negative/near-zero totals (see the docstring) rather
+    # than silently returning a number outside [0, 1).
+    assert gini([-0.5, -0.5, -0.5]) is None  # negative, equal total -> still undefined
+    assert gini([-1.0, 2.0, -1.0]) is None  # any negative value -> undefined
+    assert gini([0.01, 0.01, -0.5]) is None  # small positive total, one negative
+
+
 def _experiment_dict():
     return {
         "name": "unit_experiment",

@@ -26,9 +26,18 @@ class Agent:
         active: Whether the agent is still participating. An ``agent_failure``
             disturbance sets this ``False``; a failed agent requests and harvests
             nothing and (if a sanctioner) stops enforcing.
+        group: Nested-enterprise membership (see
+            :attr:`~emergent_cooperation.core.config.AgentSpec.group`, ADR-0012).
+            Enforcement is scoped to agents sharing the same group.
     """
 
-    def __init__(self, agent_id: int, strategy: Strategy, decision_noise: float = 0.0) -> None:
+    def __init__(
+        self,
+        agent_id: int,
+        strategy: Strategy,
+        decision_noise: float = 0.0,
+        group: int = 0,
+    ) -> None:
         """Create an agent bound to ``strategy``.
 
         Args:
@@ -36,10 +45,12 @@ class Agent:
             strategy: The decision rule this agent follows.
             decision_noise: Fractional noise on the request (see
                 :class:`~emergent_cooperation.core.config.SimulationConfig`).
+            group: Nested-enterprise membership (ADR-0012).
         """
         self.agent_id = agent_id
         self.strategy = strategy
         self.decision_noise = decision_noise
+        self.group = group
         self.total_payoff: float = 0.0
         self.last_harvest: float = 0.0
         self.active: bool = True

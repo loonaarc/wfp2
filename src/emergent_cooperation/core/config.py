@@ -124,15 +124,26 @@ class AgentSpec:
         strategy: Registered strategy name (see :mod:`strategies.registry`).
         count: Number of agents instantiated with this strategy.
         params: Strategy-specific keyword arguments.
+        group: Nested-enterprise membership (Ostrom design principle 8; see
+            ADR-0012). Agents with the same ``group`` id are monitored and
+            enforced together, separately from other groups. ``0`` for every
+            spec (the default) reproduces the original flat, population-wide
+            enforcement exactly — this field is purely additive. Also reused,
+            without any new mechanism, to express a "boundaries" experiment
+            (Ostrom principle 1; see ADR-0013): an ungoverned outsider group
+            with no sanctioner of its own models open access.
     """
 
     strategy: str
     count: int = 1
     params: dict[str, Any] = field(default_factory=dict)
+    group: int = 0
 
     def __post_init__(self) -> None:
         if self.count < 0:
             raise ValueError("count must be non-negative")
+        if self.group < 0:
+            raise ValueError("group must be non-negative")
 
 
 @dataclass(frozen=True)

@@ -75,6 +75,9 @@ class RunResult:
         seed: Master seed used for this run.
         information_model: Information model in effect.
         agent_strategies: Strategy name per agent id (parallel to payoffs).
+        agent_groups: Nested-enterprise group id per agent id (ADR-0012),
+            parallel to ``agent_strategies``. ``0`` for every agent unless
+            groups were configured (see ``AgentSpec.group``).
         rounds: Per-round records in chronological order.
     """
 
@@ -82,6 +85,7 @@ class RunResult:
     seed: int
     information_model: str
     agent_strategies: tuple[str, ...]
+    agent_groups: tuple[int, ...] = ()
     rounds: list[RoundRecord] = field(default_factory=list)
 
     @property

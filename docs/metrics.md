@@ -42,14 +42,26 @@ carrying capacity, `g` = regeneration rate.
 - **Limitation:** threshold `θ` is a modelling choice; report it alongside.
 
 ### Fairness — `payoff_gini`
-- **Definition:** inequality of accumulated payoffs across agents.
+- **Definition:** inequality of accumulated *net* payoffs across agents.
 - **Formula (mean-absolute-difference):**
   `G = (Σ_i Σ_j |P_i − P_j|) / (2 N Σ_i P_i)`, with `G = 0` for all-zero payoffs.
 - **Range:** `0` (perfect equality) to `→ (N−1)/N` (one agent takes everything).
-- **Good for:** detecting free-riding (selfish agents out-earning cooperators).
-- **Limitations:** Gini ignores *who* is unequal (which strategy benefits) and is
-  undefined-then-defined-as-0 for zero total; pair it with per-strategy payoff
-  breakdowns for interpretation.
+- **Good for:** detecting free-riding (selfish agents out-earning cooperators);
+  catching the case a raw welfare/harvest number can hide — a high total achieved
+  by one agent taking nearly everything is not the same as a good outcome.
+- **`None` (undefined) whenever any agent's net payoff is negative** — e.g. a
+  sanctioner paying its monitoring cost while the pool is collapsed and harvest
+  is near zero. The mean-absolute-difference formula assumes a positive total;
+  dividing by a near-zero or negative total produces numbers far outside
+  `[0, 1)` (values like `13` or a negative Gini have been observed), not a real
+  coefficient — `gini()` detects this and returns `None` rather than a
+  misleading number (fixed 2026-08-07; see `tests/test_experiment.py::
+  test_gini_undefined_for_negative_payoffs`). **Pair with a per-strategy mean
+  payoff breakdown** when reporting fairness in these cells — it stays
+  meaningful regardless of sign, unlike the single Gini scalar.
+- **Limitations:** Gini ignores *who* is unequal (which strategy benefits);
+  pair it with per-strategy payoff breakdowns for interpretation even when
+  defined.
 
 ### Survival time — `survival_time`
 - **Definition:** rounds sustained before the first collapse (all rounds if it never
@@ -66,6 +78,25 @@ carrying capacity, `g` = regeneration rate.
   rule is non-logistic.
 - **Good for:** distinguishing "sustained but wastefully under-using" from "optimally
   sustainable" — e.g. an under-confident cooperator scores <1 (see E1).
+
+### Welfare efficiency — `welfare_efficiency`
+- **Definition:** net welfare (summed payoffs, harvest minus monitoring/sanction
+  costs) relative to the optimal sustainable harvest — the net-welfare analogue
+  of `efficiency`, which uses gross harvest instead.
+- **Formula:** `(Σ_i P_i) / (MSY · T)`, same normalisation as `efficiency` with
+  the numerator swapped from `total_harvest` to summed net payoffs. `1.0` means
+  net welfare matched the sustainable benchmark exactly; enforcement mechanisms
+  that pay a monitoring cost score below `1.0` even when gross harvest is at the
+  benchmark (see the E3 numbers: plain cooperation scores `1.0`, sanctioning with
+  zero free-riders scores `0.84` from the `0.2`/round monitoring cost alone).
+- **Good for:** the near-optimal-set objective in the equifinality direction
+  (see `docs/thesis-direction-equifinality.md`) —
+  distinguishes "sustained the resource" from "sustained it without paying an
+  avoidable enforcement cost."
+- **Limitations:** same normalisation caveats as `efficiency` (requires known
+  `g`/`K`, logistic rule only); a behavioural/non-behavioural tolerance-band
+  threshold on this metric is not yet fixed (see the note above) — report the
+  raw ratio, not a pass/fail label, until one is agreed.
 
 ### Over-usage rate — `over_usage_rate`
 - **Definition:** fraction of *active* rounds (regrown stock above the collapse

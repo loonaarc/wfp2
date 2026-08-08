@@ -22,3 +22,5 @@ proposed decision and its trade-offs.
 | [0009](0009-loner-and-defector-scaled-monitoring-cost.md) | A loner (opt-out) strategy and defector-scaled monitoring cost | Accepted |
 | [0010](0010-pool-punishment-symmetric-fine.md) | Pool punishment with a symmetric fine on all non-monitors | Accepted |
 | [0011](0011-collective-choice-enforcement.md) | A collective-choice (voted, jointly-funded) enforcement mechanism | Accepted |
+| [0012](0012-nested-enterprise-groups.md) | Group-scoped ("nested enterprise") enforcement | Accepted |
+| [0013](0013-boundaries-via-groups-reuse.md) | Boundaries (open access vs. closed community) via groups reuse — no new mechanism | Accepted |
