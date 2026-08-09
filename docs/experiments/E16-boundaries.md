@@ -9,7 +9,7 @@ outsider-*type* sub-study is still reused directly — see Method) ·
 
 ## Question
 
-[E15](E15-groups-and-boundaries.md) found that nested (group-scoped)
+[E15](E15-groups.md) found that nested (group-scoped)
 enforcement, even at full coverage, leaves the shared pool exposed to any
 group that goes unmonitored. Ostrom's principle 1 (clearly defined
 **boundaries**) suggests a different lever entirely: instead of monitoring
@@ -168,7 +168,7 @@ Interpretation for the mechanism.
   vs. participate unmonitored) to test the stronger reading of principle 1.
 - Re-run the Monte Carlo sample with a second seed to confirm the CI
   behaves as expected, now that it's load-bearing for a headline number.
-- See also [E15](E15-groups-and-boundaries.md)'s follow-ups for the groups
+- See also [E15](E15-groups.md)'s follow-ups for the groups
   axis this one builds on, and [E14](E14-population-diversity.md)'s
   revised-diversity-axis follow-up, which both `m` and `boundary` now
   inherit compositional richness from.

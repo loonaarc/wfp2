@@ -106,7 +106,7 @@ result — see the same doc section's "Demo-only sampling" note.
 | # | Axis | Built in | Levels tested |
 | - | --- | --- | --- |
 | 1 | Population-type diversity | [E14](experiments/E14-population-diversity.md) | 495 compositions across 5 strategies, `N=8` |
-| 2 | Groups (nested enforcement) | [ADR-0012](decisions/0012-nested-enterprise-groups.md), [E15](experiments/E15-groups-and-boundaries.md) | `m ∈ {1, 2, 4}` |
+| 2 | Groups (nested enforcement) | [ADR-0012](decisions/0012-nested-enterprise-groups.md), [E15](experiments/E15-groups.md) | `m ∈ {1, 2, 4}` |
 | 3 | Boundary (closed/open access) | [ADR-0013](decisions/0013-boundaries-via-groups-reuse.md), [E16](experiments/E16-boundaries.md) | `closed`, `open` |
 
 Not yet built (see the ranking in

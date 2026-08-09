@@ -511,7 +511,7 @@ this ranking:**
    going forward is two named booleans, not a scalar count (see E14's own
    follow-ups).
 2. **Groups / nested enterprises** (built, ADR-0012, now
-   [E15](experiments/E15-groups-and-boundaries.md)) — grounded in Ostrom,
+   [E15](experiments/E15-groups.md)) — grounded in Ostrom,
    and now also in Nowak (2006)'s exact group-selection formula
    `b/c > 1 + n/m`. Sweeping `n` (max group size) and `m` (number of groups)
    against that precise prediction is a properly parameterized test, not an

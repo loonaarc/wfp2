@@ -54,7 +54,8 @@ class Simulation:
         self._n_governed = sum(1 for a in self.agents if a.governed) or len(self.agents)
         # One independent, reproducible RNG stream per agent.
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
-        # The group's total harvest last round (for the broadcast signal).
+        # The whole population's total harvest last round (for the broadcast
+        # signal) -- not scoped to any AgentSpec.group.
         self._last_total_harvest: float = 0.0
         # Scheduled environmental disturbances (empty unless configured).
         self._disturbances = build_disturbances(config.disturbances)
@@ -91,8 +92,11 @@ class Simulation:
     def _observe(self, agent: Agent, round_index: int, rng: np.random.Generator) -> Observation:
         """Construct an agent's observation for the given round.
 
-        Includes the communicated ``signal`` (the group's total harvest last round)
-        when broadcasting is on and this agent receives the message this round.
+        Includes the communicated ``signal`` (the *whole population's* total
+        harvest last round -- not scoped to the agent's own ``AgentSpec.group``;
+        the broadcast predates ADR-0012's nested-enforcement groups and was never
+        rescoped to them) when broadcasting is on and this agent receives the
+        message this round.
         """
         share_level = self.config.information_model == "global"
         signal = None

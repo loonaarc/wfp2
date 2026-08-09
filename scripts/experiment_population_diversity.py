@@ -71,7 +71,7 @@ TYPES = (
 )
 
 # Same provisional threshold as E15/E16, for direct comparability across axes
-# (see docs/experiments/E15-groups-and-boundaries.md for why 0.80, not 0.95).
+# (see docs/experiments/E15-groups.md for why 0.80, not 0.95).
 THRESHOLD = 0.80
 
 
