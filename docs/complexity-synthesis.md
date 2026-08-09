@@ -62,7 +62,7 @@ browser panel samples it too (56,020 configurations synchronously froze the
 tab). That's a demo-only rendering tradeoff, not a change to E15's reported
 result — see the same doc section's "Demo-only sampling" note.
 
-## Four methodological lessons, learned the hard way — apply all four to every axis added below
+## Seven methodological lessons, learned the hard way — apply all seven to every axis added below
 
 1. **Report count and fraction separately, never just one.** Adding a new
    axis whose new branch contributes zero passing configurations mechanically
@@ -100,6 +100,54 @@ result — see the same doc section's "Demo-only sampling" note.
    fraction — which normalises for each condition's own space size — is
    the fair comparison, and by fraction, closed consistently beats open by
    roughly 2× at every `m` tested.
+5. **Reusing the same combinatorial generator across "axes" doesn't make
+   them redundant, but axis-count alone isn't evidence of anything —
+   check the mechanism, not just the label.** Diversity, groups, and
+   boundary all draw from the identical "composition of 5 types"
+   primitive; boundary doesn't even add new engine code, it's the same
+   grouping mechanism plus one flag (ADR-0013: "no new engine mechanism").
+   What still makes each a legitimate, separate axis is the *causal*
+   mechanism it activates — enforcement-reach narrowing for groups,
+   permanent exclusion from quota accounting for boundary — evidenced by
+   each producing its own new, mechanistically-explained failure mode (the
+   unprotected-group rule; the permanently-unprotected-outsider rule)
+   rather than just a bigger, same-shaped distribution. Before counting a
+   future axis as genuinely new, check whether it reuses this generator
+   (population-composition-flavoured) or introduces a structurally
+   different kind of parameter (network topology, multiple resources, a
+   continuous knob) — only the second kind is independent evidence for the
+   conjecture by construction; the first kind needs the mechanism-level
+   check above.
+6. **A cumulative/union count across levels or axes is not a test of the
+   conjecture — it's guaranteed to grow regardless of whether complexity
+   actually helps, so don't reach for it as a "fix" for lesson 1.**
+   Summing near-optimal counts across groups' `m=1,2,4` gives
+   `21,940/56,020 ≈ 0.391` — a weighted average dominated by whichever
+   level has the biggest space (`m=4`'s 50,625 configs are ~90% of the
+   total), not new information beyond the per-level table. Pooling across
+   groups and boundary is worse: `644,064/3,977,420 ≈ 0.162`, with
+   boundary-open-`m=4`'s space (3,543,750 — a Monte Carlo *estimate*, not
+   even a literal simulation count) making up 89% of the denominator alone
+   — the number mostly reports back our own space-size and sampling-budget
+   choices, not a property of the model. Because a cumulative total can
+   only ever add non-negative numbers, it rises by construction the more
+   you test; it can't falsify the conjecture, so it isn't a substitute for
+   the per-level/per-axis comparison.
+7. **Testing more levels within one already-active axis is a different
+   question from combining a new axis in the first place — only the
+   second directly tests the conjecture, and the label "axis" should make
+   clear which one a given comparison is.** `m=1` already *is* "groups
+   off": nested enforcement collapses to flat enforcement at `m=1` by
+   construction, and numerically `m=1`'s 383/495 *is* E14's own result. So
+   the real axis-combination test is E14/`m=1` against `m=2` or `m=4`, not
+   a three-way comparison across `m` as if all three levels were equally
+   "how rich is this." `m=2` vs. `m=4` is then a secondary, within-axis
+   intensity question — same species as E4's old `g`/`N` sensitivity
+   sweeps, informative but not itself evidence of axis-combination growth.
+   The same logic applies to boundary (`closed`=off, `open`=on), checked
+   at each `m` to see whether axes interact — here they mostly don't,
+   since opening's ~2× fraction cost stays roughly constant across `m`,
+   i.e. close to additive rather than compounding.
 
 ## Axes tested so far
 
