@@ -1,0 +1,6 @@
+diversity,configs_tested,near_optimal_count,near_optimal_fraction
+1,5,4,0.8
+2,70,51,0.7285714285714285
+3,210,153,0.7285714285714285
+4,175,140,0.8
+5,35,35,1.0

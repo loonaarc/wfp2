@@ -153,7 +153,9 @@ def test_two_groups_each_with_their_own_sanctioner_matches_flat_quota():
 def test_boundaries_as_ungoverned_outsider_group_no_new_mechanism_needed():
     # ADR-0013: "closed community" vs "open access" (Ostrom principle 1) is
     # expressed by comparing a config without vs. with an extra, ungoverned
-    # outsider batch -- reusing groups, no new engine code.
+    # outsider batch -- reusing groups, no new engine code. governed=False
+    # marks the outsider batch as excluded from the quota allocation, not
+    # just left unmonitored (see the allocation-correction tests below).
     closed = run_simulation(
         _sim([AgentSpec("sanctioning", 8, {"regeneration_rate": 0.4, "capacity": 100.0})]),
         seed=1,
@@ -164,11 +166,98 @@ def test_boundaries_as_ungoverned_outsider_group_no_new_mechanism_needed():
                 AgentSpec(
                     "sanctioning", 8, {"regeneration_rate": 0.4, "capacity": 100.0}, group=0
                 ),
-                # Outsiders: their own group, no sanctioner in it -> unmonitored.
-                AgentSpec("selfish", 4, {"greed": 1.0}, group=1),
+                # Outsiders: their own group, no sanctioner in it -> unmonitored,
+                # and governed=False -> excluded from every group's quota denominator.
+                AgentSpec("selfish", 4, {"greed": 1.0}, group=1, governed=False),
             ]
         ),
         seed=1,
     )
     assert not closed.rounds[-1].collapsed
     assert open_access.final_resource_level < closed.final_resource_level
+
+
+def test_agent_spec_governed_defaults_true():
+    assert AgentSpec("cooperative").governed is True
+    assert AgentSpec("selfish", governed=False).governed is False
+
+
+def test_outsiders_do_not_dilute_the_governed_quota():
+    # ADR-0012's allocation correction: a governed group's per-capita quota is
+    # `min(sanctioner quota_total) / N_governed`. If outsiders were (wrongly)
+    # counted in that denominator, adding 4 of them would shrink 8 governed
+    # sanctioners' quota from MSY/8=1.25 to MSY/12=0.833/round -- a strictly
+    # *nominal* effect, distinct from the real, expected effect that outsiders
+    # also drain the shared pool over many rounds (which does legitimately
+    # lower governed agents' *realised* harvest later on, via feasibility
+    # scaling -- that part isn't being tested here). Isolate the nominal quota
+    # by checking round 1 only, before any pool depletion has had a chance to
+    # bind: both scenarios start from the same initial stock, and the total
+    # requested (governed quota + outsiders' first request) stays well under
+    # it, so round-1 harvest reflects the quota alone, not scarcity.
+    closed = run_simulation(
+        _sim(
+            [
+                AgentSpec(
+                    "sanctioning",
+                    8,
+                    {"regeneration_rate": 0.4, "capacity": 100.0, "monitoring_cost": 0.2},
+                )
+            ],
+            rounds=1,
+        ),
+        seed=1,
+    )
+    open_access = run_simulation(
+        _sim(
+            [
+                AgentSpec(
+                    "sanctioning",
+                    8,
+                    {"regeneration_rate": 0.4, "capacity": 100.0, "monitoring_cost": 0.2},
+                    group=0,
+                ),
+                AgentSpec("selfish", 4, {"greed": 1.0}, group=1, governed=False),
+            ],
+            rounds=1,
+        ),
+        seed=1,
+    )
+    governed_harvest = open_access.rounds[0].harvested[:8]
+    assert governed_harvest == pytest.approx(closed.rounds[0].harvested, abs=1e-6)
+    assert governed_harvest[0] == pytest.approx(1.25, abs=1e-6)  # MSY/8, not MSY/12
+
+
+def test_a_mistakenly_governed_outsider_dilutes_the_quota():
+    # The regression case the fix above prevents: an outsider spec left at the
+    # governed=True default *does* shrink the governed group's own quota, even
+    # though the outsider is still unmonitored -- demonstrating why governed
+    # must be set explicitly, not inferred from "has no sanctioner."
+    closed = run_simulation(
+        _sim(
+            [
+                AgentSpec(
+                    "sanctioning",
+                    8,
+                    {"regeneration_rate": 0.4, "capacity": 100.0, "monitoring_cost": 0.2},
+                )
+            ]
+        ),
+        seed=1,
+    )
+    mistakenly_governed = run_simulation(
+        _sim(
+            [
+                AgentSpec(
+                    "sanctioning",
+                    8,
+                    {"regeneration_rate": 0.4, "capacity": 100.0, "monitoring_cost": 0.2},
+                    group=0,
+                ),
+                AgentSpec("selfish", 4, {"greed": 1.0}, group=1),  # governed=True (default)
+            ]
+        ),
+        seed=1,
+    )
+    governed_payoffs = mistakenly_governed.total_payoffs()[:8]
+    assert sum(governed_payoffs) / 8 < sum(closed.total_payoffs()) / 8

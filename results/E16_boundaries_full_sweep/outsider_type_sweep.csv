@@ -1,0 +1,16 @@
+m,outsider_strategy,welfare_efficiency,collapsed
+1,(closed -- no outsiders),0.8399999999999985,False
+1,selfish,-2.536705979557041e-05,True
+1,cooperative,0.840015405255014,False
+1,conditional_cooperator,0.011861750574103781,True
+1,compensating_cooperator,0.8377777777777767,False
+2,(closed -- no outsiders),0.8399999999999985,False
+2,selfish,-2.536705979557041e-05,True
+2,cooperative,0.840015405255014,False
+2,conditional_cooperator,0.011861750574103781,True
+2,compensating_cooperator,0.8377777777777767,False
+4,(closed -- no outsiders),0.8399999999999985,False
+4,selfish,-2.536705979557041e-05,True
+4,cooperative,0.840015405255014,False
+4,conditional_cooperator,0.011861750574103781,True
+4,compensating_cooperator,0.8377777777777767,False

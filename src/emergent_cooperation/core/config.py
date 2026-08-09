@@ -132,12 +132,20 @@ class AgentSpec:
             without any new mechanism, to express a "boundaries" experiment
             (Ostrom principle 1; see ADR-0013): an ungoverned outsider group
             with no sanctioner of its own models open access.
+        governed: Whether this spec's agents are part of the community whose
+            sustainable yield is being fairly allocated (ADR-0012's
+            allocation correction). ``True`` for every governed group
+            (default); set ``False`` for an outsider spec (ADR-0013) so its
+            members are structurally excluded from every group's per-capita
+            quota calculation, not silently included in the denominator and
+            then left unconstrained anyway.
     """
 
     strategy: str
     count: int = 1
     params: dict[str, Any] = field(default_factory=dict)
     group: int = 0
+    governed: bool = True
 
     def __post_init__(self) -> None:
         if self.count < 0:

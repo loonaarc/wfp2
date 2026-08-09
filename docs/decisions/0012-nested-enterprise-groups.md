@@ -121,10 +121,49 @@ computing individual-sanctioner quotas:
   1) rather than deployed alone — directly addressed by ADR-0013, which
   reuses this same mechanism for a boundaries experiment rather than
   building a second one.
-- **Follow-ups:** the E14 experiment sweeping `n`/`m` (via group composition)
+- **Follow-ups:** the experiment sweeping `n`/`m` (via group composition)
   against Nowak's `b/c > 1+n/m` prediction, jointly with the boundaries axis
   (ADR-0013), against the near-optimal-set-size question from the
   equifinality note.
+
+## Correction (2026-08-08): the quota denominator must exclude ungoverned outsiders
+
+When ADR-0013 (boundaries) reused this mechanism — adding an ungoverned
+outsider `AgentSpec` in its own group, with no sanctioner — this ADR's "total
+population `N`" formula (see Decision, above) silently absorbed the outsider
+count into `N` too, since `N` was just `len(self.agents)`: literally every
+instantiated agent. That defeats the formula's own stated purpose ("this
+group's fair share of the *whole pool's* sustainable yield"): outsiders were
+never part of that fair-share accounting to begin with — they're excluded
+from monitoring entirely, by design — so counting them in the denominator
+only shrinks the governed population's own allocation for a reason unrelated
+to the mechanism's intent. A group that earns `MSY/8` per capita in a closed
+community was earning `MSY/12` the moment 4 outsiders existed, purely because
+more agents happened to be instantiated, not because the governed
+population's own sustainable share actually changed.
+
+A second, independent instance of the same bug, one level deeper:
+`SanctioningStrategy.decide()` — and every other strategy computing "my fair
+share" as `X / observation.num_agents` (`cooperative`,
+`conditional_cooperator`, `compensating_cooperator`, `selfish`) — reads
+`Observation.num_agents`, which was *also* just `len(self.agents)`. Fixing
+only `_enforce()`'s quota formula wasn't sufficient by itself: an agent's
+realised harvest is capped at whichever is *lower* of its own request or the
+enforced quota, so a self-request already diluted by the same root cause
+never triggered the (now-correctly-sized) cap at all — the bug re-entered
+through a second, independent path sharing the same wrong count.
+
+**Fix:** `AgentSpec` gained a `governed: bool = True` field (`False` for an
+outsider spec — ADR-0013's outsider `AgentSpec` now sets it explicitly).
+`Simulation` precomputes `self._n_governed` (count of governed agents) once
+per run and uses it, not `len(self.agents)`, in both places: `_enforce()`'s
+quota-per-capita formula, and `Observation.num_agents` for every *governed*
+agent (an outsider's own observation still sees the literal total — it has
+no governed community to reason about in the first place, so there's nothing
+to exclude itself from). See `tests/test_groups.py`'s
+`test_outsiders_do_not_dilute_the_governed_quota` and
+`test_a_mistakenly_governed_outsider_dilutes_the_quota` (the regression case
+this fix prevents, kept as a named test rather than only a memory).
 
 ## Status Notes
 
@@ -135,3 +174,15 @@ demonstration for ADR-0013). Full existing suite (102 tests total) re-run and
 green, `group=0` on every prior config confirmed to reproduce prior results
 exactly. No experiment script, demo update, or docs (`architecture.md`,
 `metrics.md`) update yet — this ADR covers the engine mechanism only.
+
+**2026-08-08:** allocation correction above implemented (`config.py`,
+`agent.py`, `simulation.py`); `tests/test_groups.py` gained 4 more tests (12
+total). The experiment script's outsider `AgentSpec`s marked `governed=False`;
+downstream results and docs regenerated with corrected numbers.
+
+**2026-08-09:** the experiments built on this mechanism (originally numbered
+E14/E15) were renumbered to E15/E16 — population-type diversity was
+identified as a more foundational axis that should be tested alone first (see
+`docs/thesis-direction-equifinality.md`), so groups/boundaries move down to
+make room for it as the new E14. The mechanism and this ADR are unaffected;
+only the experiment numbering shifted.

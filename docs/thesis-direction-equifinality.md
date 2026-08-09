@@ -495,42 +495,61 @@ three are meant to stack **on top of it**, not sit as separate alternatives.
 Ranked by grounding + directness (not cost), across the original four named
 axes and every candidate surfaced later (see "Additional candidate axes"
 above). **Updated after a full pass through already-read literature (Nowak
-2006, Nowak & Sigmund 1998, GovSim 2024) upgraded several entries — this is
-the second revision of this ranking, not the first:**
+2006, Nowak & Sigmund 1998, GovSim 2024) upgraded several entries, and again
+after building E14 surfaced a sequencing gap — this is the third revision of
+this ranking:**
 
-1. **Groups / nested enterprises** (built, ADR-0012) — grounded in Ostrom,
+1. **Population-type diversity** (built, [E14](experiments/E14-population-diversity.md))
+   — promoted to 1st on this revision: E15's own `k`-sweep and E16's
+   outsider-type sweep both vary population composition without ever
+   isolating "how many distinct types coexist" as its own question first,
+   the way a clean axis sequence requires. Built as a full 495-composition
+   sweep (5 strategies, `N=8`); the finding reframes the axis itself —
+   raw type-count turned out to be a weak, confounded proxy for two
+   already-known effects (enforcer presence, E3; reciprocal-vs-compensating
+   response to a free-rider, E2), so the *recommended* version of this axis
+   going forward is two named booleans, not a scalar count (see E14's own
+   follow-ups).
+2. **Groups / nested enterprises** (built, ADR-0012, now
+   [E15](experiments/E15-groups-and-boundaries.md)) — grounded in Ostrom,
    and now also in Nowak (2006)'s exact group-selection formula
-   `b/c > 1 + n/m`. No longer ranked as potentially "narrow": sweeping `n`
-   (max group size) and `m` (number of groups) against that precise
-   prediction is a properly parameterized test, not an on/off mechanism
-   check. Promoted from 4th to 1st on this revision.
-2. **Boundaries** (Ostrom principle 1) — doubly grounded (Ostrom + Gordon),
-   and directly repairs the shared-pool gap ADR-0012's own "Consequences"
-   section exposed. Natural pairing with groups (both Ostrom-grounded,
-   directly complementary).
-3. **Network reciprocity** (Nowak 2006, rule 4) — newly corrected from "not
+   `b/c > 1 + n/m`. Sweeping `n` (max group size) and `m` (number of groups)
+   against that precise prediction is a properly parameterized test, not an
+   on/off mechanism check.
+3. **Boundaries** (Ostrom principle 1, now
+   [E16](experiments/E16-boundaries.md)) — doubly grounded (Ostrom +
+   Gordon), and directly repairs the shared-pool gap ADR-0012's own
+   "Consequences" section exposed. Natural pairing with groups (both
+   Ostrom-grounded, directly complementary).
+4. **Network reciprocity** (Nowak 2006, rule 4) — newly corrected from "not
    grounded" (was mis-filed as "communication topology"). Exact condition
    `b/c > k`; a real, citable mechanism, not a vague structural idea.
-4. **Multiple resources** — upgraded from "an early hunch" to
+5. **Multiple resources** — upgraded from "an early hunch" to
    citation-grounded: GovSim (2024) names "multiple resource types" and
    "varying regeneration rates" directly as its own future work. Likely the
    richest strategy space (diversify, specialise, switch) of any axis here.
-5. **Reputation / indirect reciprocity** (Nowak & Sigmund 1998) — grounded,
+6. **Reputation / indirect reciprocity** (Nowak & Sigmund 1998) — grounded,
    exact condition `q > c/b`, and its own paper note already has a
    near-complete implementation sketch (extend `Observation` with
    `peer_scores`, add a `ReputationCooperatorStrategy`). Really an extension
    of the information axis (E1), not a fully independent one.
-6. **Specialization** — upgraded from "no grounding" to a named GovSim gap
+7. **Specialization** — upgraded from "no grounding" to a named GovSim gap
    ("different stakeholder interests"), though still without a worked
    formula the way the Nowak-sourced axes above have.
-7. **Information regime** (built, E1) — the original first example, but only
+8. **Information regime** (built, E1) — the original first example, but only
    two levels exist in the code (`global`/`private`) — cheap to report, too
    narrow on its own to show a trend by itself.
-8. **Iterative collective choice, conflict resolution, uncertain time
+9. **Iterative collective choice, conflict resolution, uncertain time
    horizon** — grounded (Ostrom principles 3/6; folk theorem) but thinner or
    narrower in scope than the axes above; logged as follow-ups, not core.
-9. **Agent entry/exit (turnover)** — still not grounded in anything read;
-   would need a literature check before being as defensible as the others.
+10. **Agent entry/exit (turnover)** — still not grounded in anything read;
+    would need a literature check before being as defensible as the others.
+
+**Numbering note, resolved 2026-08-09:** `docs/literature-review.md` and two
+Beven & Binley paper notes independently referenced a *different*,
+still-unbuilt "E14" (a GLUE-methodology experiment varying the starting
+resource level `R₀`), planned before population-diversity claimed the E14
+slot. Renumbered to **E17**.
 
 ## Sweep design: staircase vs. full factorial
 

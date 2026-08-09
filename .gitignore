@@ -51,6 +51,12 @@ results/**
 !results/E9_resilience_freeriders/**
 !results/E10_agent_failure/
 !results/E10_agent_failure/**
+!results/E14_population_diversity/
+!results/E14_population_diversity/**
+!results/E15_groups_full_sweep/
+!results/E15_groups_full_sweep/**
+!results/E16_boundaries_full_sweep/
+!results/E16_boundaries_full_sweep/**
 
 # OS / editor
 .DS_Store

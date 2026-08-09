@@ -118,3 +118,66 @@ Additional requirements:
 - Reporting a single seed as if representative.
 - Reading tendencies into differences smaller than the between-seed spread.
 - Silent parameter drift between "baseline" and "treatment" configs — diff them.
+
+## Sampling a large configuration space (Monte Carlo / GLUE)
+
+The recipe above assumes the configuration space of interest is small enough to
+enumerate (a handful of strategy mixes, a grid of parameter values). The
+complexity axes (population-type diversity, groups, boundaries — see
+[complexity-synthesis.md](complexity-synthesis.md)) instead sweep every
+*composition* of a population, which grows combinatorially: 495 compositions
+for one population of 8 across 5 types, tens of thousands once groups multiply
+that, millions once a second population (outsiders) crosses it. First needed
+in [E16](experiments/E16-boundaries.md), reused since — this is the general
+procedure so every future axis doesn't re-derive or re-justify it from
+scratch.
+
+**When to switch from exhaustive to sampled:** once enumerating every joint
+configuration stops being tractable (this project's practical ceiling: low
+hundreds of thousands of simulations — beyond that, both the Python export and
+the live JS demo stop being usable). E16's governed × outsider cross would
+have been ~3.9M simulations (~2+ hours); sampling was the only option.
+
+**Procedure:**
+
+1. Enumerate each axis's own choice set once (e.g. all compositions of a
+   group's agents across the 5 strategies).
+2. Draw `N_SAMPLES` independent joint configurations, choosing uniformly at
+   random *with replacement* from each axis's choice set. Uniform over the
+   **distinct composition space**, not weighted by how many agent-labelings
+   realize a composition — this has to match how the near-optimal-set-size is
+   *counted* everywhere else in this project (each composition is one
+   "approach," full stop).
+3. Run the real simulation and the real `welfare_efficiency` threshold check
+   on every sampled configuration — sampling covers *which configurations get
+   tried*, never the model itself.
+4. Report the near-optimal **fraction** (passes / `N_SAMPLES`) with a binomial
+   95% CI. If the total space size is known, also report an *estimated*
+   count = fraction × space size — always labelled as an estimate (`~`), never
+   presented like an exhaustive count.
+5. **Validate before trusting an estimate you can't otherwise check**: run the
+   identical procedure against a case whose true answer is already known
+   exactly, and confirm the estimate's CI actually contains it. E16's own
+   validation: a 5,000-sample estimate of E15's exact `m=4` answer
+   (18,737/50,625 = 0.3701) landed at 0.3628 ± 0.0133 — contains the true
+   value.
+6. Use a seeded RNG so the estimate is reproducible: `random.Random(SEED)` in
+   Python, `mulberry32(seed)` in the JS demo port (same idea, different
+   runtime — they will *not* produce identical draws, only equally
+   reproducible ones each on their own side).
+7. Size `N_SAMPLES` for the CI width the comparison needs, not just "big
+   enough": 5,000/axis-level in the canonical Python scripts (~±1.3% CI),
+   3,000/axis-level in the live JS demo (~±1.8% CI, traded down for
+   in-browser responsiveness).
+
+**Demo-only sampling is not a new experimental result.** The live browser
+demo (`web/commons-demo.html`'s Complexity panel) goes one step further than
+the Python scripts: it Monte Carlo-samples axes that the canonical experiment
+computes *exactly*. E15's own closed-side sweep is exhaustive and exact in
+`scripts/experiment_groups_full_sweep.py` (383/495, 2,820/4,900,
+18,737/50,625), but the demo samples it too, purely because enumerating all
+56,020 configurations synchronously froze the browser tab for several
+seconds. That's a rendering-performance tradeoff, not a change to any
+reported finding — the exact numbers always live in the experiment's own
+doc/script; the demo's live numbers are representative, not canonical (same
+caveat the demo already states for decision-noise/communication runs).

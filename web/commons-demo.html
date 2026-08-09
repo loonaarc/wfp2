@@ -251,6 +251,48 @@
   .takeaway p { margin: 0; font-size: 14px; }
   .takeaway b { color: var(--text); }
 
+  /* complexity: does the near-optimal set grow? */
+  section.complexity { margin-top: 30px; }
+  section.complexity > h2 {
+    font-family: var(--serif); font-weight: 600; font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em;
+  }
+  .cx-panel { padding: 18px 20px; }
+  /* staircase: population diversity is always the base rung; groups/boundary
+     are toggles that stack on top of it, one axis at a time, so the control
+     itself shows what's being combined instead of four disconnected studies */
+  .cx-stairs { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .cx-stair {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+    font-family: var(--sans); background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 9px 16px; text-align: left;
+  }
+  button.cx-stair { cursor: pointer; }
+  button.cx-stair:hover:not(:disabled) { border-color: var(--accent); }
+  button.cx-stair:disabled { opacity: .45; cursor: not-allowed; }
+  .cx-stair.active { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, var(--panel-2)); }
+  .cx-stair-label { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+  .cx-stair.active .cx-stair-label { color: var(--accent); }
+  .cx-stair-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex: none; }
+  .cx-stair.active .cx-stair-dot { background: var(--accent); }
+  .cx-stair-sub { font-size: 11px; color: var(--muted); }
+  .cx-stair-arrow { color: var(--muted); font-size: 15px; }
+  .cx-stair-hint { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+  .cx-outsider-link { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+  .cx-outsider-link button {
+    font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
+    cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+  }
+  .cx-outsider-link button:disabled { opacity: .5; cursor: not-allowed; }
+  .cx-status { color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+  .cx-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+  @media (max-width: 760px) { .cx-charts { grid-template-columns: 1fr; } }
+  .cx-chart-col canvas { width: 100%; height: auto; margin-top: 8px; }
+  .cx-table-wrap { margin-top: 16px; overflow-x: auto; }
+  .cx-table { border-collapse: collapse; font-size: 13px; width: 100%; }
+  .cx-table th, .cx-table td { padding: 6px 12px; text-align: right; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+  .cx-table th:first-child, .cx-table td:first-child { text-align: left; }
+  .cx-table th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; }
+
   .repo-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
   .repo-col { padding: 14px 16px; }
   .repo-col h3 { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; margin: 0 0 10px; }
@@ -584,6 +626,55 @@
       Python repository is the canonical source of the results.
     </p>
 
+    <!-- ── complexity: does the near-optimal set grow? ─────── -->
+    <section class="complexity">
+      <h2>Complexity: does the near-optimal set grow?</h2>
+      <p class="section-lede">The equifinality question this project's thesis direction is
+        actually about: make the world structurally richer (combine axes, not just turn up one
+        existing dial) — does the <b>count</b> of different approaches that still reach a
+        near-optimal outcome grow? Pick a comparison below; it re-runs the real engine live,
+        across every configuration in that comparison, right here in the browser.</p>
+      <div class="card cx-panel">
+        <div class="cx-stairs" id="cx_stairs">
+          <div class="cx-stair active" id="cx_stair_diversity">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>Population diversity</span>
+            <span class="cx-stair-sub">495 compositions × 5 types (E14) — always on</span>
+          </div>
+          <span class="cx-stair-arrow">→</span>
+          <button type="button" class="cx-stair" id="cx_stair_groups" aria-pressed="false">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>+ Groups</span>
+            <span class="cx-stair-sub">m: 1 → 2 → 4, sampled (E15)</span>
+          </button>
+          <span class="cx-stair-arrow">→</span>
+          <button type="button" class="cx-stair" id="cx_stair_boundary" aria-pressed="false">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>+ Boundary</span>
+            <span class="cx-stair-sub">closed → open, sampled (E16)</span>
+          </button>
+        </div>
+        <p class="cx-stair-hint">Toggle an axis on to stack it onto the comparison — each click
+          re-runs the real engine live. Boundary builds on Groups, so switching it on turns Groups
+          on too (there's no boundary-alone sweep).</p>
+        <p class="cx-outsider-link">Related, not part of the ladder:
+          <button type="button" id="cx_outsider_btn">boundary × outsider-type, full coverage (E16)</button>
+        </p>
+        <p class="cx-status" id="cx_status">Loading…</p>
+        <div class="cx-charts" id="cx_charts" style="display:none">
+          <div class="cx-chart-col">
+            <span class="foot-label">Absolute count — does the set of viable approaches grow?</span>
+            <canvas id="cx_count" width="480" height="320" aria-label="near-optimal count by complexity"></canvas>
+          </div>
+          <div class="cx-chart-col">
+            <span class="foot-label">Fraction of the tried space — does it get harder to stumble into one?</span>
+            <canvas id="cx_fraction" width="480" height="320" aria-label="near-optimal fraction by complexity"></canvas>
+          </div>
+        </div>
+        <div class="cx-table-wrap" id="cx_table_wrap" style="display:none">
+          <table class="cx-table" id="cx_table"></table>
+        </div>
+        <p class="caption" id="cx_caption" style="display:none"></p>
+      </div>
+    </section>
+
     <!-- ── what the project found ─────────────────────────── -->
     <section class="explain">
       <h2>What this project is about</h2>
@@ -692,9 +783,9 @@
   // ── model (validated against the Python engine) ─────────────────────────
   const K = 100, G = 0.4, INIT = 50, THRESH = 1.0, MSY = (G * K) / 4, SENS = 1e-9;
   // Nested enforcement (ADR-0012) and boundaries (ADR-0013): fixed outsider batch
-  // size, matching the Python E14 experiment.
+  // size, matching the Python E15 experiment.
   const OUTSIDERS = 4;
-  const N_GOVERNED = 8; // the governed population size (fixed; matches the Python E14/E15 sweep)
+  const N_GOVERNED = 8; // the governed population size (fixed; matches the Python E15/E16 sweep)
   // Collective choice (E13 / ADR-0011): fixed to match the Python script's
   // defaults rather than exposed as extra sliders, to keep the panel legible.
   const COLLECTIVE_OVERUSE_THRESHOLD = 0.5, COLLECTIVE_COST_SHARE = 0.2;
@@ -830,9 +921,16 @@
       kind: s.kind,
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
-      group: s.group ?? 0,
+      group: s.group ?? 0, governed: s.governed ?? true,
     });
     const n = agents.length, rng = mulberry32(o.seed);
+    // ADR-0012 allocation correction: a governed agent's own "fair share" and
+    // the enforcement quota are both scoped to the *governed* population, not
+    // literally everyone -- an outsider (governed:false, ADR-0013) was never
+    // part of that accounting, so it shouldn't dilute it just by existing.
+    // An outsider's own observation still sees the literal total (n) -- it
+    // has no governed community to reason about in the first place.
+    const nGoverned = agents.filter((a) => a.governed).length || n;
     let level = o.init ?? INIT, lastTotal = 0;
     // Collective-choice vote state (E13): rounds observed as over-using so far,
     // whether the vote has fired, and whether it passed.
@@ -855,7 +953,7 @@
         if (!a.active) return 0;  // a failed agent requests nothing
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) { signal = lastTotal; heard[i] = true; }
-        const obs = { level: o.info === "global" ? level : null, signal, n, cap: K };
+        const obs = { level: o.info === "global" ? level : null, signal, n: a.governed ? nGoverned : n, cap: K };
         let r = decide(a.kind, a.p, obs, a.st);
         if (o.noise > 0) r *= 1 + (rng() * 2 - 1) * o.noise;
         return Math.max(0, r);
@@ -875,7 +973,9 @@
       // (AgentSpec.group), not the whole population — a group with no monitor of
       // its own (including any open-access outsider group, ADR-0013) is left
       // uncapped even if another group has one. Every agent defaults to group 0,
-      // so with `m=1` this reduces exactly to the original flat rule.
+      // so with `m=1` this reduces exactly to the original flat rule. The quota
+      // itself is scoped to nGoverned (allocation correction, 2026-08-08) --
+      // outsiders don't shrink it just by being instantiated.
       const byGroup = new Map();
       agents.forEach((a, i) => {
         const g = a.group ?? 0;
@@ -885,7 +985,7 @@
       for (const idxs of byGroup.values()) {
         const groupHasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active);  // a failed sanctioner stops enforcing
         if (!groupHasSanctioner && !collectiveActive) continue;
-        const q = MSY / n;  // fair share of the *whole* population's yield, not the group's own size
+        const q = MSY / nGoverned;  // the *governed* population's yield, not the group's own size or literally everyone
         for (const i of idxs) {
           h[i] = Math.min(h[i], q);
           if (agents[i].isS && agents[i].active) pen[i] = agents[i].p.mc;
@@ -956,10 +1056,13 @@
     "🏛️ Evolution — pool punishment (E12)": { evolution: true, evoMon: 40, evoSel: 20, evoLoner: 0, evoFine: 0.2 },
     "🗳️ Vote fast — matches enforcement (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 2, rounds: 40 },
     "🗳️ Vote slow — too late (E13)": { ctype: "cooperative", nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, cvote: 10, rounds: 40 },
-    "🧩 Partial nested coverage backfires (E14)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
-    "🧩 Full nested coverage recovers (E14)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
-    "🚪 Open access beats full coverage (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "selfish" },
-    "🚪 Harmless outsiders — boundary doesn't matter (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "cooperative" },
+    "🧬 Compensating tolerates a free-rider (E14)": { ctype: "compensating_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60 },
+    "🧬 Reciprocity spirals against one (E14)": { ctype: "conditional_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60 },
+    "🧬 One monitor, seven selfish, still fine (E14)": { ctype: "cooperative", mon: 1, nsel: 7, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60 },
+    "🧩 Partial nested coverage backfires (E15)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
+    "🧩 Full nested coverage recovers (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
+    "🚪 Open access beats full coverage (E16)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "selfish" },
+    "🚪 Harmless outsiders — boundary doesn't matter (E16)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "cooperative" },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1010,11 +1113,11 @@
     cvote: { summary: "The round at which the group holds a one-time vote on whether to adopt enforcement.",
       mechanism: "At this round (0 = no vote), the group checks whether it has been over-using the commons in more than half of all rounds so far (<code>overuse-rounds / t &gt; 0.5</code>); if so, everyone adopts the same quota a monitor would enforce (<code>MSY / n</code>), funded by a shared fee of <b>0.2</b>/round on every non-monitor, from then on. Voting late lets damage accumulate that a flat quota can't undo (experiment E13). If any monitor is already present, the vote can still fire but has no additional effect, since the quota is already being enforced." },
     groups: { summary: "Splits the 8 governed agents into this many separately-monitored groups, instead of one flat population.",
-      mechanism: "A monitor's quota now only caps <b>its own group's</b> members, computed as that group's fair share of the whole population's sustainable yield (<code>MSY / 8</code>, not divided by the group's own size — so full coverage always reaches the same result no matter how many groups there are). A group with no monitor of its own is left completely uncapped by enforcement, even if another group has one — unlike the flat model, one monitor no longer protects everyone. At 1 group this is identical to the original flat rule (ADR-0012)." },
+      mechanism: "A monitor's quota now only caps <b>its own group's</b> members, computed as that group's fair share of the <i>governed</i> population's sustainable yield (<code>MSY / 8</code>, not divided by the group's own size, and not diluted by any open-access outsiders either — so full coverage always reaches the same result no matter how many groups there are or whether the boundary is open). A group with no monitor of its own is left completely uncapped by enforcement, even if another group has one — unlike the flat model, one monitor no longer protects everyone. At 1 group this is identical to the original flat rule (ADR-0012)." },
     boundary: { summary: "Whether the community can exclude outsiders from the shared pool entirely.",
-      mechanism: `<b>closed</b>: only the 8 governed agents exist. <b>open</b>: adds ${OUTSIDERS} more agents (of "Outsider type", below) in their own, permanently unmonitored group — present every round, drawing from the same pool, but never reachable by any group's enforcement no matter how many groups you configure above. This reuses the Groups mechanism rather than adding a new one (ADR-0013): closing the boundary is just not adding that extra batch of agents.` },
+      mechanism: `<b>closed</b>: only the 8 governed agents exist. <b>open</b>: adds ${OUTSIDERS} more agents (of "Outsider type", below) in their own, permanently unmonitored group — present every round, drawing from the same pool, but never reachable by any group's enforcement no matter how many groups you configure above, and structurally excluded from the governed population's own quota calculation too (they dilute nothing just by existing). This reuses the Groups mechanism rather than adding a new one (ADR-0013): closing the boundary is just not adding that extra batch of agents.` },
     otype: { summary: "What the open-access outsiders actually do (only takes effect when Boundary = open).",
-      mechanism: "Boundaries only matter against outsiders who would over-harvest if left unexcluded (E15). A <b>selfish</b> outsider group drains the pool unchecked. A <b>cooperative</b>, <b>conditional</b>, or <b>compensating</b> outsider group restrains itself on its own — same as any governed agent of that type would — so being unmonitored costs nothing: try switching this away from selfish with Boundary = open and full internal coverage, and the collapse disappears even though nobody is watching the outsiders." },
+      mechanism: "Boundaries only matter against outsiders who would over-harvest if left unexcluded (E16). A <b>selfish</b> outsider group drains the pool unchecked. A <b>cooperative</b>, <b>conditional</b>, or <b>compensating</b> outsider group restrains itself on its own — same as any governed agent of that type would — so being unmonitored costs nothing: try switching this away from selfish with Boundary = open and full internal coverage, and the collapse disappears even though nobody is watching the outsiders." },
     rounds: { summary: "How many rounds to simulate.", mechanism: "A fixed horizon — the run stops here regardless of whether the stock has stabilised." },
     seed: { summary: "Random seed.", mechanism: "Only changes the outcome when decision noise or partial communication is switched on — with both at 0, every seed produces an identical run." },
     evo_mon: { summary: "Share of the starting population (of 40) that are monitors.",
@@ -1079,10 +1182,13 @@
     "🧩 A member fails, commons holds (E10)": "A self-correcting cooperative commons loses 2 of its 8 members mid-run. The rest still observe and self-correct, so the pool is unharmed — distributed protection has no single point of failure.",
     "🗳️ Vote fast — matches enforcement (E13)": "No agent is a born monitor — just 4 cooperators + 4 selfish. At round 2 the group tallies whether it's been over-using the commons and votes to adopt a quota funded by everyone. It passes almost immediately, before much damage is done, and holds the pool at the healthy level — matching individually pre-committed enforcement exactly, with nobody hard-coded as a monitor (experiment E13).",
     "🗳️ Vote slow — too late (E13)": "Same population, same eventual vote — but this time the group waits until round 10 to decide. By then the free-riders have already driven the stock too low: the flat quota (sized for a healthy pool) can't out-grow that much depletion, and the vote can't rescue it. Compare to the fast-vote regime above — timing, not just whether the vote passes, decides the outcome (experiment E13).",
-    "🧩 Partial nested coverage backfires (E14)": "8 agents split into 4 groups of 2: half the groups (4 monitors) enforce, the other half (4 selfish) don't. Nested enforcement means the monitors only protect their own groups — the unmonitored half still crashes the shared pool, so the monitors paid their cost for nothing. Worse than having no monitors at all. Try raising 'Monitors' toward 8 and watch it snap back once every group is covered (experiment E14).",
-    "🧩 Full nested coverage recovers (E14)": "Same 4 groups of 2, but now every group has its own monitor. Welfare recovers fully — identical to a single flat group of 8, because the quota is always sized against the whole population, not each group. Compare to 'Partial nested coverage backfires' above: it's a cliff, not a slope — try 'Monitors' = 6 to see the tipping point itself (experiment E14).",
-    "🚪 Open access beats full coverage (E15)": "Every one of the 4 groups is fully monitored — internally, this is the healthiest possible setup. But switch Boundary to 'open' and 4 unmonitored selfish outsiders join: no amount of internal monitoring can reach them, since a group's quota only ever covers its own members. The pool collapses anyway. Try setting Boundary back to 'closed' to see the difference boundaries alone make (experiment E15).",
-    "🚪 Harmless outsiders — boundary doesn't matter (E15)": "Identical setup to 'Open access beats full coverage', except the outsiders are 'cooperative' instead of 'selfish' (see Outsider type). They restrain themselves on their own, so being unmonitored costs nothing — the pool stays healthy despite the open boundary. Boundaries only matter against an outsider that would actually over-harvest if left unexcluded (experiment E15).",
+    "🧬 Compensating tolerates a free-rider (E14)": "7 compensating cooperators + 1 selfish, no monitor. Compensating agents withhold (harvest 0) the round after they see the stock decline, instead of retaliating — so one free-rider's damage never compounds. Sustained, welfare_efficiency ≈ 0.99 in the full 100-round E14 sweep (this demo caps at 60 rounds; the live tile above will read close to that, not identical). One of 495 population compositions swept in experiment E14.",
+    "🧬 Reciprocity spirals against one (E14)": "Identical population, only the cooperators' type changed to conditional (reciprocal). A conditional cooperator reacts to a decline by grabbing a share itself, not by holding back — so the one free-rider's first bit of damage triggers everyone else to defect too: the pool is fully drained by round 2 and never recovers. Same 8 agents, same 1 free-rider, opposite outcome from the regime above — the *response type* is what decides it (experiment E14, rediscovering E2). The live welfare_efficiency tile will read higher than the full experiment's 0.07 — this demo's round count caps at 60, not 100, and a one-time early collapse gets diluted less over fewer rounds; the collapse itself is identical either way.",
+    "🧬 One monitor, seven selfish, still fine (E14)": "1 sanctioning agent + 7 selfish, no cooperators at all. In a flat population a single monitor enforces the quota on everyone, free-riders included — sustained, welfare_efficiency ≈ 0.98. Across all 495 compositions in E14, every single one with at least one monitor passes (330/330); without one, at most 1 free-rider is survivable, and only paired with a compensating (not reciprocal) response (experiment E14, rediscovering E3).",
+    "🧩 Partial nested coverage backfires (E15)": "8 agents split into 4 groups of 2: half the groups (4 monitors) enforce, the other half (4 selfish) don't. Nested enforcement means the monitors only protect their own groups — the unmonitored half still crashes the shared pool, so the monitors paid their cost for nothing. Worse than having no monitors at all. Try raising 'Monitors' toward 8 and watch it snap back once every group is covered (experiment E15).",
+    "🧩 Full nested coverage recovers (E15)": "Same 4 groups of 2, but now every group has its own monitor. Welfare recovers fully — identical to a single flat group of 8, because the quota is always sized against the whole population, not each group. Compare to 'Partial nested coverage backfires' above: it's a cliff, not a slope — try 'Monitors' = 6 to see the tipping point itself (experiment E15).",
+    "🚪 Open access beats full coverage (E16)": "Every one of the 4 groups is fully monitored — internally, this is the healthiest possible setup. But switch Boundary to 'open' and 4 unmonitored selfish outsiders join: no amount of internal monitoring can reach them, since a group's quota only ever covers its own members. The pool collapses anyway. Try setting Boundary back to 'closed' to see the difference boundaries alone make (experiment E16).",
+    "🚪 Harmless outsiders — boundary doesn't matter (E16)": "Identical setup to 'Open access beats full coverage', except the outsiders are 'cooperative' instead of 'selfish' (see Outsider type). They restrain themselves on their own, so being unmonitored costs nothing — the pool stays healthy despite the open boundary. Boundaries only matter against an outsider that would actually over-harvest if left unexcluded (experiment E16).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1090,6 +1196,20 @@
     $("nsel_v").textContent = els.nsel.value;
     $("mon_v").textContent = els.mon.value;
     const nsel = +els.nsel.value, nmon = +els.mon.value, ncoop = Math.max(0, 8 - nsel - nmon);
+    // Each slider's own range is capped by what the other two have already
+    // claimed, not just reactively un-done after the fact -- dragging mon to
+    // 8 leaves nsel physically unable to move past 0, instead of silently
+    // stealing back from mon the moment nsel changes.
+    els.mon.max = 8 - nsel;
+    els.nsel.max = 8 - nmon;
+    // Cooperator type only has any effect while ncoop > 0 -- disable it
+    // rather than leave it interactive-but-inert, which reads as a bug
+    // ("I changed it, nothing happened") rather than as "there are no
+    // cooperative agents in this population right now."
+    els.ctype.disabled = ncoop === 0;
+    els.ctype.title = ncoop === 0
+      ? "No effect: 0 cooperative agents in this population (monitors + selfish = 8)."
+      : "";
     const cshort = { cooperative: "cooperative", conditional_cooperator: "conditional",
                      compensating_cooperator: "compensating" }[els.ctype.value];
     const parts = [];
@@ -1159,8 +1279,8 @@
       els[other].value = 8 - +els[changed].value;
     }
   };
-  els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); scheduleRun(); });
-  els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); scheduleRun(); });
+  els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
+  els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
   ["kb", "init", "noise", "bcast", "shock", "fail", "cvote"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
@@ -1217,7 +1337,10 @@
     // outsider group — no monitor is ever placed there, regardless of `m`.
     if (els.boundary && els.boundary.value === "open") {
       const ok = els.otype ? els.otype.value : "selfish";
-      specs.push({ kind: ok, count: OUTSIDERS, kb: 1, group: m });
+      // governed:false -- ADR-0012's allocation correction (2026-08-08):
+      // outsiders are excluded from the governed population's own quota
+      // denominator, not counted in it and then left unconstrained anyway.
+      specs.push({ kind: ok, count: OUTSIDERS, kb: 1, group: m, governed: false });
     }
     return specs;
   }
@@ -2072,6 +2195,347 @@
     $(k).addEventListener("input", () => { evoLabels(); scheduleEvo(); }));
   $("evo_run").addEventListener("click", runEvo);
   window.addEventListener("resize", () => { if (evo) drawEvo(evo.history, evo.gen); });
+
+  // ── complexity: does the near-optimal set grow? ──────────────────────────
+  // Live re-derivation of docs/complexity-synthesis.md's chart, using the
+  // exact same engine as everything else on this page (currentSpecs/runSim),
+  // not a static image -- so this panel can't silently drift from the docs
+  // the way the "adversarial vs. typical outsider" framing almost did there.
+  const CX_THRESHOLD = 0.80;
+  const CX_ROUNDS = 100;              // matches scripts/experiment_groups_boundaries.py
+  const CX_OPTS = { info: "global", noise: 0, broadcast: 0, rounds: CX_ROUNDS, seed: 1,
+                     init: K / 2, shock: 0, shockRound: -1, failCount: 0, failRound: -1, cvoteRound: 0 };
+  const CX_M = [1, 2, 4];
+  // All five registered non-loner strategies -- matches
+  // scripts/experiment_population_diversity.py exactly (see E14).
+  const CX_DIVERSITY_TYPES = [
+    "cooperative", "conditional_cooperator", "compensating_cooperator", "selfish", "sanctioning",
+  ];
+  const CX_DIVERSITY_LEVELS = [1, 2, 3, 4, 5];
+
+  function cxSpecs(m, k, boundary, outsiderType) {
+    const n = N_GOVERNED / m;
+    const specs = [];
+    for (let g = 0; g < m; g++) specs.push({ kind: g < k ? "sanctioning" : "selfish", count: n, group: g });
+    if (boundary === "open") {
+      specs.push({ kind: outsiderType || "selfish", count: OUTSIDERS, kb: 1, group: m, governed: false });
+    }
+    return specs;
+  }
+  function cxWelfareEfficiency(specs) {
+    const sim = runSim(specs, CX_OPTS);
+    return sim.payoff.reduce((a, b) => a + b, 0) / (MSY * CX_ROUNDS);
+  }
+  function cxPasses(we) { return we >= CX_THRESHOLD; }
+
+  // Every composition of CX_DIVERSITY_TYPES's counts (each >= 0) summing to
+  // N_GOVERNED -- stars-and-bars, 495 compositions for 5 types over 8 agents
+  // (same enumeration as _compositions() in the Python script).
+  function cxCompositionsOfSize(size) {
+    const k = CX_DIVERSITY_TYPES.length;
+    const out = [];
+    const rec = (idx, remaining, acc) => {
+      if (idx === k - 1) { out.push([...acc, remaining]); return; }
+      for (let c = 0; c <= remaining; c++) rec(idx + 1, remaining - c, [...acc, c]);
+    };
+    rec(0, size, []);
+    return out;
+  }
+  function cxCompositions() { return cxCompositionsOfSize(N_GOVERNED); }
+  function cxSpecsFromComposition(composition, group, governed) {
+    return CX_DIVERSITY_TYPES
+      .map((kind, i) => ({ kind, count: composition[i], group, governed }))
+      .filter((s) => s.count > 0);
+  }
+
+  const CX_N_SAMPLES = 3000; // per m, per series -- Monte Carlo sampled rather than the
+                              // Python script's exhaustive 56,020-config enumeration, which
+                              // blocked the tab for several seconds; ~+/-1.8% 95% CI
+
+  // Each preset returns { series: [{label,color,points:[{x,count,tested}]}], table: {headers, rows} }.
+  function cxRunSweep(kind) {
+    if (kind === "groups" || kind === "groups_boundary") {
+      // Monte Carlo sampled, not the exhaustive 56,020-config sweep --
+      // enumerating every joint composition blocked the main thread for
+      // several seconds and froze the tab. The exact figures (383/495,
+      // 2,820/4,900, 18,737/50,625) live in E15's own doc/Python script;
+      // this panel trades exactness for responsiveness, same tradeoff E16's
+      // outsider side already made.
+      const closedColor = css("--accent");
+      const closedSeries = { label: "closed, sampled (E15)", color: closedColor, points: [] };
+      const closedByM = new Map();
+      const rngClosed = mulberry32(7);
+      for (const m of CX_M) {
+        const subComps = cxCompositionsOfSize(N_GOVERNED / m);
+        let passing = 0;
+        for (let i = 0; i < CX_N_SAMPLES; i++) {
+          const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rngClosed() * subComps.length)]);
+          const specs = [];
+          groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
+          if (cxPasses(cxWelfareEfficiency(specs))) passing++;
+        }
+        const frac = passing / CX_N_SAMPLES;
+        const totalSpace = Math.pow(subComps.length, m);
+        const estCount = Math.round(frac * totalSpace);
+        closedByM.set(m, { count: estCount, tested: totalSpace, frac });
+        closedSeries.points.push({ x: m, count: estCount, tested: totalSpace });
+      }
+      if (kind === "groups") {
+        const rows = CX_M.map((m) => {
+          const { count, tested, frac } = closedByM.get(m);
+          return [String(m), `~${count}/${tested} (${(frac * 100).toFixed(1)}%, n=${CX_N_SAMPLES} sample)`];
+        });
+        return { series: [closedSeries], table: { headers: ["m", "closed count (estimated)"], rows }, xValues: CX_M, xLabel: "m -- number of groups" };
+      }
+      // groups_boundary: add a Monte Carlo-sampled open (governed x outsider) series
+      const openSeries = { label: "open, sampled (E16)", color: css("--bad"), points: [] };
+      const rngOpen = mulberry32(42);
+      const outsiderComps = cxCompositionsOfSize(OUTSIDERS);
+      const rows = [];
+      for (const m of CX_M) {
+        const subComps = cxCompositionsOfSize(N_GOVERNED / m);
+        let passing = 0;
+        for (let i = 0; i < CX_N_SAMPLES; i++) {
+          const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rngOpen() * subComps.length)]);
+          const outsiderComp = outsiderComps[Math.floor(rngOpen() * outsiderComps.length)];
+          const specs = [];
+          groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
+          specs.push(...cxSpecsFromComposition(outsiderComp, m, false));
+          if (cxPasses(cxWelfareEfficiency(specs))) passing++;
+        }
+        const frac = passing / CX_N_SAMPLES;
+        const totalSpace = Math.pow(subComps.length, m) * outsiderComps.length;
+        const estCount = Math.round(frac * totalSpace);
+        openSeries.points.push({ x: m, count: estCount, tested: totalSpace });
+        const closedInfo = closedByM.get(m);
+        rows.push([
+          String(m),
+          `~${closedInfo.count}/${closedInfo.tested} (${(closedInfo.frac * 100).toFixed(1)}%, n=${CX_N_SAMPLES} sample)`,
+          `~${estCount}/${totalSpace} (${(frac * 100).toFixed(1)}%, n=${CX_N_SAMPLES} sample)`,
+        ]);
+      }
+      return {
+        series: [closedSeries, openSeries],
+        table: { headers: ["m", "closed count (estimated)", "open count (estimated)"], rows },
+        xValues: CX_M, xLabel: "m -- number of groups",
+      };
+    }
+    if (kind === "outsider_type") {
+      const types = ["selfish", "cooperative", "conditional_cooperator", "compensating_cooperator"];
+      const series = [{ label: "closed + outsider-type sweep (E16)", color: css("--accent"), points: [] }];
+      const rows = [];
+      for (const m of CX_M) {
+        let count = 0;
+        const cellResults = [];
+        const closedPass = cxPasses(cxWelfareEfficiency(cxSpecs(m, m, "closed")));
+        if (closedPass) count++;
+        cellResults.push(`closed:${closedPass ? "PASS" : "fail"}`);
+        for (const t of types) {
+          const pass = cxPasses(cxWelfareEfficiency(cxSpecs(m, m, "open", t)));
+          if (pass) count++;
+          cellResults.push(`${t}:${pass ? "PASS" : "fail"}`);
+        }
+        const tested = types.length + 1;
+        series[0].points.push({ x: m, count, tested });
+        rows.push([String(m), `${count}/${tested}`, cellResults.join(", ")]);
+      }
+      return { series, table: { headers: ["m", "count", "detail (full coverage, k=m)"], rows }, xValues: CX_M, xLabel: "m -- number of groups" };
+    }
+    if (kind === "diversity") {
+      const series = [{ label: "population-type diversity (E14)", color: css("--accent"), points: [] }];
+      const byLevel = new Map(CX_DIVERSITY_LEVELS.map((d) => [d, { count: 0, tested: 0 }]));
+      for (const composition of cxCompositions()) {
+        const specs = CX_DIVERSITY_TYPES
+          .map((kind2, i) => ({ kind: kind2, count: composition[i] }))
+          .filter((s) => s.count > 0);
+        const diversity = composition.filter((c) => c > 0).length;
+        const bucket = byLevel.get(diversity);
+        bucket.tested++;
+        if (cxPasses(cxWelfareEfficiency(specs))) bucket.count++;
+      }
+      const rows = [];
+      for (const d of CX_DIVERSITY_LEVELS) {
+        const { count, tested } = byLevel.get(d);
+        series[0].points.push({ x: d, count, tested });
+        rows.push([String(d), `${count}/${tested}`]);
+      }
+      return { series, table: { headers: ["diversity", "count"], rows }, xValues: CX_DIVERSITY_LEVELS, xLabel: "diversity -- number of distinct types present" };
+    }
+    return { series: [], table: { headers: [], rows: [] }, xValues: CX_M, xLabel: "m -- number of groups" };
+  }
+
+  function cxSetup(canvas) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = canvas.clientWidth || 480, h = 300;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    const ctx = canvas.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    return { ctx, w, h };
+  }
+  // Shared line+marker chart, x = a categorical axis (group count, or
+  // diversity level -- whatever `xValues`/`xLabel` say), y = either count or
+  // fraction depending on `getY`/`yMax` -- deliberately two separate calls
+  // (never one dual-axis plot) matching the Python chart's own two panels.
+  function cxDrawChart(canvas, series, { yMax, yLabel, getY, annotate, xValues, xLabel }) {
+    const { ctx, w, h } = cxSetup(canvas);
+    const pad = { l: 60, r: 14, t: 10, b: 34 };
+    const X = (x) => pad.l + (xValues.indexOf(x) / Math.max(1, xValues.length - 1)) * (w - pad.l - pad.r);
+    const Y = (v) => (h - pad.b) - (v / yMax) * (h - pad.t - pad.b);
+    ctx.font = `11px ${css("--mono")}`; ctx.fillStyle = css("--muted");
+    ctx.strokeStyle = css("--border"); ctx.lineWidth = 1;
+    const steps = 5;
+    for (let i = 0; i <= steps; i++) {
+      const v = (yMax / steps) * i;
+      ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      ctx.fillText(v.toFixed(yMax <= 1 ? 2 : 0), pad.l - 6, Y(v));
+    }
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (const x of xValues) ctx.fillText(String(x), X(x), h - pad.b + 8);
+    ctx.save(); ctx.translate(12, (h - pad.b + pad.t) / 2); ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center"; ctx.fillText(yLabel, 0, 0); ctx.restore();
+    ctx.textAlign = "center"; ctx.fillText(xLabel, (pad.l + w - pad.r) / 2, h - pad.b + 20);
+
+    for (const s of series) {
+      ctx.strokeStyle = s.color; ctx.fillStyle = s.color; ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      s.points.forEach((p, i) => {
+        const x = X(p.x), y = Y(getY(p));
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      for (const p of s.points) {
+        const x = X(p.x), y = Y(getY(p));
+        ctx.beginPath(); ctx.arc(x, y, 4, 0, 2 * Math.PI); ctx.fill();
+        if (annotate) {
+          // clamp the anchor near the canvas edges so the label can't run
+          // off the side -- most visible at the last x value, which sits
+          // flush against the right padding -- and flip below the point
+          // near the top edge (a fraction of 1.0 sits right at pad.t, which
+          // pushed the label above the canvas and clipped it)
+          ctx.font = `700 10px ${css("--mono")}`;
+          if (x > w - pad.r - 24) ctx.textAlign = "right";
+          else if (x < pad.l + 24) ctx.textAlign = "left";
+          else ctx.textAlign = "center";
+          if (y < pad.t + 14) { ctx.textBaseline = "top"; ctx.fillText(`${p.count}/${p.tested}`, x, y + 7); }
+          else { ctx.textBaseline = "bottom"; ctx.fillText(`${p.count}/${p.tested}`, x, y - 7); }
+        }
+      }
+    }
+    // legend -- a single series names itself via the caption/table below, so
+    // skip the box rather than truncate a long label against the canvas edge
+    if (series.length > 1) {
+      ctx.font = `11px ${css("--sans")}`; ctx.textBaseline = "middle";
+      const legendWidth = Math.max(...series.map((s) => ctx.measureText(s.label).width)) + 30;
+      let ly = pad.t + 4;
+      for (const s of series) {
+        ctx.textAlign = "left"; ctx.fillStyle = s.color;
+        ctx.fillRect(w - pad.r - legendWidth, ly - 4, 10, 10);
+        ctx.fillStyle = css("--text"); ctx.fillText(s.label, w - pad.r - legendWidth + 14, ly + 1);
+        ly += 16;
+      }
+    }
+  }
+
+  function cxRenderTable(table) {
+    const el = $("cx_table");
+    const thead = `<thead><tr>${table.headers.map((h) => `<th>${h}</th>`).join("")}</tr></thead>`;
+    const tbody = `<tbody>${table.rows.map((r) => `<tr>${r.map((c) => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>`;
+    el.innerHTML = thead + tbody;
+  }
+
+  const CX_CAPTIONS = {
+    groups: "Every joint per-group composition, boundary fixed closed -- E15's own axis, Monte Carlo " +
+      "sampled here (n=3000/m) rather than enumerated (the full 56,020-config sweep froze the tab for " +
+      "several seconds; the exact figures -- 383/495, 2,820/4,900, 18,737/50,625 -- live in E15's own " +
+      "doc/Python script). By count, the near-optimal set genuinely grows with m -- the first " +
+      "unconfounded count growth in this project -- driven almost entirely by whether any single group " +
+      "is left \"unprotected\" (a free-rider with no monitor).",
+    groups_boundary: "m x boundary, both governed (closed) and outsider composition Monte Carlo sampled " +
+      "(n=3000/m each, not fixed at one adversarial type) -- the full governed x outsider space. Both " +
+      "counts are estimates with a margin of error (see table); exact closed figures are in E15's own " +
+      "doc. By count they aren't directly comparable (open's space is 70x bigger) -- compare the " +
+      "fraction instead: closed beats open by a consistent ~2x at every m, not the near-total wipeout " +
+      "the old single-adversarial-outsider reading suggested.",
+    outsider_type: "Boundary always open, full coverage (k=m) only, the outsider's own strategy swept " +
+      "instead of fixed -- the complementary, non-adversarial reading (see E16).",
+    diversity: "All 495 compositions of 8 agents across cooperative/conditional/compensating/selfish/" +
+      "sanctioning, closed and flat -- E14. Don't read the shape at face value: it's mostly explained by " +
+      "whether a sanctioning agent is present (330/330 pass) and, absent one, by selfish count and " +
+      "response type (compensating tolerates one free-rider, conditional doesn't) -- see the table below.",
+  };
+  let cxBusy = false;
+  function cxSetControlsDisabled(disabled) {
+    $("cx_stair_groups").disabled = disabled || false;
+    $("cx_stair_boundary").disabled = disabled || false;
+    $("cx_outsider_btn").disabled = disabled;
+  }
+  function cxRun(kind) {
+    if (cxBusy) return;
+    cxBusy = true;
+    cxSetControlsDisabled(true);
+    $("cx_status").textContent = "Running the real engine across every configuration in this comparison...";
+    // yield a frame so the "running" state paints before the (synchronous, but
+    // non-trivial) sweep blocks the main thread
+    requestAnimationFrame(() => {
+      const { series, table, xValues, xLabel } = cxRunSweep(kind);
+      const maxCount = Math.max(1, ...series.flatMap((s) => s.points.map((p) => p.count)));
+      // round up to a multiple of 5 so the 5 gridlines land on whole numbers
+      const countYMax = Math.ceil((maxCount * 1.15) / 5) * 5;
+      cxDrawChart($("cx_count"), series, {
+        yMax: countYMax, yLabel: "near-optimal count", getY: (p) => p.count,
+        annotate: false, xValues, xLabel,
+      });
+      const maxFraction = Math.max(0.2, ...series.flatMap((s) => s.points.map((p) => p.count / p.tested)));
+      cxDrawChart($("cx_fraction"), series, {
+        yMax: Math.min(1, Math.ceil(maxFraction * 1.15 * 20) / 20), yLabel: "near-optimal fraction",
+        getY: (p) => p.count / p.tested, annotate: true, xValues, xLabel,
+      });
+      cxRenderTable(table);
+      $("cx_charts").style.display = "grid";
+      $("cx_table_wrap").style.display = "block";
+      $("cx_caption").style.display = "block";
+      $("cx_caption").textContent = CX_CAPTIONS[kind] || "";
+      $("cx_status").textContent = `Done -- threshold welfare_efficiency ≥ ${CX_THRESHOLD.toFixed(2)} (provisional).`;
+      cxBusy = false;
+      cxSetControlsDisabled(false);
+    });
+  }
+
+  // the staircase: population diversity is always the base rung (E14, and
+  // literally the same 495-composition sweep as groups' own m=1 point);
+  // groups/boundary stack on top of it one axis at a time, so clicking a
+  // rung shows exactly which axis just got added, matching how
+  // complexity-synthesis.md itself reads the results.
+  const cxState = { groups: false, boundary: false };
+  function cxKindFromState() {
+    if (cxState.boundary) return "groups_boundary";
+    if (cxState.groups) return "groups";
+    return "diversity";
+  }
+  function cxSyncStairUI() {
+    $("cx_stair_groups").classList.toggle("active", cxState.groups);
+    $("cx_stair_groups").setAttribute("aria-pressed", String(cxState.groups));
+    $("cx_stair_boundary").classList.toggle("active", cxState.boundary);
+    $("cx_stair_boundary").setAttribute("aria-pressed", String(cxState.boundary));
+  }
+  $("cx_stair_groups").addEventListener("click", () => {
+    cxState.groups = !cxState.groups;
+    if (!cxState.groups) cxState.boundary = false;  // boundary can't outlive its prerequisite
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
+  $("cx_stair_boundary").addEventListener("click", () => {
+    // boundary builds on groups rather than requiring it to already be on --
+    // clicking it turns groups on too instead of being a dead click
+    cxState.groups = true;
+    cxState.boundary = !cxState.boundary;
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
+  $("cx_outsider_btn").addEventListener("click", () => cxRun("outsider_type"));
+  cxSyncStairUI();
+  cxRun(cxKindFromState());  // population diversity runs immediately -- it's always on
 
   // collapse/expand the config panel, freeing vertical space once it's set up
   $("collapse_toggle").addEventListener("click", () => {

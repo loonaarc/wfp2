@@ -176,7 +176,7 @@ this project's own equifinality question. Two refinements matter directly:
    explicit rather than borrowing the hydrology framing wholesale.
 2. **The limits-of-acceptability refinement is a better fit than raw
    BB92-style informal-likelihood GLUE for this project's still-unbuilt
-   E14 experiment.** Defining a fixed, independently justified acceptance
+   E17 experiment.** Defining a fixed, independently justified acceptance
    criterion *before* running the sweep (e.g. "final resource must stay
    ≥ 50% of `K`", "no permanent collapse within `T` rounds") and then
    classifying strategy/starting-condition combinations as behavioural or
@@ -184,13 +184,13 @@ this project's own equifinality question. Two refinements matter directly:
    post hoc and picking a threshold afterward — and it mirrors exactly the
    kind of pushback that led away from QCA's post-hoc crisp thresholds in
    this project's own methodological discussion. It also legitimizes
-   reporting a **negative** E14 result (e.g. "no strategy mix recovers from
+   reporting a **negative** E17 result (e.g. "no strategy mix recovers from
    a sufficiently catastrophic start") as a genuine, positive finding
    rather than something to explain away, directly following this paper's
    own framing of model rejection as informative.
 
 ## Possible Follow-Up Contribution
-Implement E14 using the limits-of-acceptability refinement specifically:
+Implement E17 using the limits-of-acceptability refinement specifically:
 fix acceptance thresholds for "recovery" independently and in advance
 (e.g. final resource ≥ some fraction of `K` within a fixed round budget,
 combined with a no-permanent-collapse condition), then run a full-
@@ -232,10 +232,10 @@ simulation here is cheap enough to run the full sweep many times over.
 ## Questions
 - Should Beven's (2006) "A manifesto for the equifinality thesis" — the
   primary source for the limits-of-acceptability refinement repeatedly
-  cited here — be read directly before implementing E14, rather than
+  cited here — be read directly before implementing E17, rather than
   relying on this paper's secondary description of it?
 - Given this project's simulation is cheap to run at scale (unlike 1980s/
-  2010s hydrological models), should E14 use a full-factorial sweep rather
+  2010s hydrological models), should E17 use a full-factorial sweep rather
   than Monte Carlo sampling, sidestepping the sample-size-adequacy problem
   this paper found in the original 500-realization BB92 study?
 - How should the project set its own "limits of acceptability" thresholds

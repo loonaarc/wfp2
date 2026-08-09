@@ -24,3 +24,5 @@ proposed decision and its trade-offs.
 | [0011](0011-collective-choice-enforcement.md) | A collective-choice (voted, jointly-funded) enforcement mechanism | Accepted |
 | [0012](0012-nested-enterprise-groups.md) | Group-scoped ("nested enterprise") enforcement | Accepted |
 | [0013](0013-boundaries-via-groups-reuse.md) | Boundaries (open access vs. closed community) via groups reuse — no new mechanism | Accepted |
+| [0012](0012-nested-enterprise-groups.md) | Group-scoped ("nested enterprise") enforcement | Accepted |
+| [0013](0013-boundaries-via-groups-reuse.md) | Boundaries (open access vs. closed community) via groups reuse — no new mechanism | Accepted |

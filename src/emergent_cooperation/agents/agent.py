@@ -29,6 +29,11 @@ class Agent:
         group: Nested-enterprise membership (see
             :attr:`~emergent_cooperation.core.config.AgentSpec.group`, ADR-0012).
             Enforcement is scoped to agents sharing the same group.
+        governed: Whether this agent is part of the community whose
+            sustainable yield is being fairly allocated (see
+            :attr:`~emergent_cooperation.core.config.AgentSpec.governed`).
+            ``False`` for an outsider (ADR-0013) — excluded from every
+            group's per-capita quota denominator, not just left unmonitored.
     """
 
     def __init__(
@@ -37,6 +42,7 @@ class Agent:
         strategy: Strategy,
         decision_noise: float = 0.0,
         group: int = 0,
+        governed: bool = True,
     ) -> None:
         """Create an agent bound to ``strategy``.
 
@@ -46,11 +52,14 @@ class Agent:
             decision_noise: Fractional noise on the request (see
                 :class:`~emergent_cooperation.core.config.SimulationConfig`).
             group: Nested-enterprise membership (ADR-0012).
+            governed: Whether this agent counts toward the governed
+                population's fair-share allocation (ADR-0012 correction).
         """
         self.agent_id = agent_id
         self.strategy = strategy
         self.decision_noise = decision_noise
         self.group = group
+        self.governed = governed
         self.total_payoff: float = 0.0
         self.last_harvest: float = 0.0
         self.active: bool = True

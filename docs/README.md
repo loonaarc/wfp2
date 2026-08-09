@@ -35,6 +35,7 @@ see [getting-started.md](getting-started.md) for setup.
 | Doc | What it's for |
 | --- | ------------- |
 | [findings-summary.md](findings-summary.md) | The whole E1–E13 story + overview figure (the writeup spine). |
+| [complexity-synthesis.md](complexity-synthesis.md) | Living cross-experiment synthesis of the equifinality/complexity question — grows every time a new axis is tested. |
 | [experiments/](experiments/) | One detailed report per experiment (E1–E13); see its index for the one-line summaries. |
 
 ## Reference (how it works)
@@ -50,6 +51,7 @@ see [getting-started.md](getting-started.md) for setup.
 
 | Doc | What it's for |
 | --- | ------------- |
+| [thesis-direction-equifinality.md](thesis-direction-equifinality.md) | Brainstorming note for the BA thesis direction — the equifinality reframe, candidate complexity axes, open methodology questions. |
 | [research-questions.md](research-questions.md) | Broad questions → testable subquestions → hypotheses (with status). |
 | [contribution-opportunities.md](contribution-opportunities.md) | Candidate contributions, assessed for feasibility/risk. |
 | [literature-review.md](literature-review.md) | Structured field overview + implications for the model. |

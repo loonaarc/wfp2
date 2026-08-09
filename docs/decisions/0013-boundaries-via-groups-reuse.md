@@ -47,9 +47,11 @@ identical conditions:
   ...)`, group defaulted to `0`.
 - **Open:** the same governed roster, `group=0`, **plus** an additional
   `AgentSpec` for outsiders (typically `selfish`) in their own group (e.g.
-  `group=1`) with no sanctioner assigned to that group — so ADR-0012's
-  `_enforce` never computes a quota for them, while `_allocate`'s feasibility
-  scaling still applies to everyone sharing the pool.
+  `group=1`) with no sanctioner assigned to that group **and `governed=False`**
+  (see ADR-0012's correction below) — so ADR-0012's `_enforce` never computes
+  a quota for them, they're excluded from the governed population's own
+  quota *denominator* too, and `_allocate`'s feasibility scaling still
+  applies to everyone sharing the pool.
 
 No changes to `config.py`, `agent.py`, `simulation.py`, or `state.py` beyond
 what ADR-0012 already added. `tests/test_groups.py::test_boundaries_as_
@@ -60,13 +62,16 @@ caveat from ADR-0012 made concrete as a deliberate experimental comparison.
 
 ## Rationale
 
-- No new mechanism means no new correctness surface to get wrong (unlike
-  ADR-0012's `N_total`-vs-group-size subtlety) — this is as close to a "free"
-  axis as any in the ranking, without weakening what it tests: the qualitative
-  contrast (bounded exclusion vs. unbounded access) is real and literature-
-  grounded (Ostrom principle 1 directly, Gordon's open-access framing by
-  extension), even though it is expressed by *config composition* rather than
-  a dedicated field.
+- No new *engine* mechanism means less new engine code to get wrong — but
+  **this turned out not to mean zero new correctness surface**, and the
+  original version of this bullet overclaimed that it did. Reuse still
+  crossed a boundary ADR-0012's original formula was never checked against:
+  dividing by "total population" implicitly assumed every agent counted in
+  that total was part of the same fair-share accounting, which stopped being
+  true the moment an *ungoverned* outsider batch could exist. See ADR-0012's
+  "Correction" section — the fix is `governed=False` on the outsider spec,
+  not a new mechanism, so the reuse strategy itself still holds, just not the
+  claim that it was correctness-surface-free by construction.
 - Keeps the engine's surface area small — every additional structural axis
   that turns out to be expressible this way is one fewer place for a bug like
   ADR-0012's near-miss (dividing by group size instead of total population)
@@ -89,7 +94,7 @@ caveat from ADR-0012 made concrete as a deliberate experimental comparison.
   within an "open" config, to express partial/permitted access short of full
   participation. A harder-exclusion variant (config-time analogue of
   `agent.active = False`) is a real follow-up if this simplification proves
-  too coarse once E14 results are in.
+  too coarse.
 - **Naming caveat for the write-up:** because this reuses `AgentSpec.group`,
   "boundaries" does not appear anywhere in the codebase as a named concept —
   only in this ADR and the experiment design that uses the pattern. Future
@@ -100,6 +105,12 @@ caveat from ADR-0012 made concrete as a deliberate experimental comparison.
 
 Implemented 2026-08-07, alongside the ADR-0012 rebuild. Demonstrated by
 `tests/test_groups.py::test_boundaries_as_ungoverned_outsider_group_no_new_
-mechanism_needed`. Experiment: [E15](../experiments/E15-boundaries.md).
-Demo: `web/commons-demo.html`'s "Boundary" dial. No `architecture.md`/
-`metrics.md` update yet.
+mechanism_needed`. Demo: `web/commons-demo.html`'s "Boundary" dial. No
+`architecture.md`/`metrics.md` update yet.
+
+**2026-08-09:** the experiment built on this mechanism was renumbered from
+E15 to E16 — population-type diversity was identified as a more foundational
+axis that belongs before groups/boundaries in the complexity sequencing (see
+`docs/thesis-direction-equifinality.md`), pushing both down to make room for
+it as the new E14. The mechanism and this ADR are unaffected; only the
+experiment numbering shifted.

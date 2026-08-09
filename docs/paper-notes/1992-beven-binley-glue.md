@@ -149,12 +149,12 @@ behavioural vs. non-behavioural, and describe the *behavioural set*
 directly rather than reducing it to a forced binary table — maps cleanly
 onto this project's own open question: "how many/which strategy-mix and
 starting-condition configurations reach a good outcome?" This is directly
-usable for the still-unbuilt **E14** experiment (varying the starting
+usable for the still-unbuilt **E17** experiment (varying the starting
 resource level, including catastrophic starts, across strategy mixes).
 
 ## Possible Follow-Up Contribution
 Implement a lightweight, GLUE-style analysis layer on top of the existing
-simulation engine for E14: Monte-Carlo or full-factorial sample over
+simulation engine for E17: Monte-Carlo or full-factorial sample over
 strategy mixes and starting resource levels (cheap here — no 30–60-hour
 runs, unlike BB92), define an explicit likelihood/performance measure
 (candidates: final resource level normalized by `K`, time-averaged Gini,
@@ -189,7 +189,7 @@ constrained BB92 to 500 runs does not exist here.
   or some composite? Should this be decided independently of any
   particular sweep, the way BB92 argues the choice should be explicit and
   auditable?
-- Should likelihoods across different regimes/starting conditions in E14
+- Should likelihoods across different regimes/starting conditions in E17
   be combined multiplicatively (Bayes-style — one bad regime disqualifies
   a strategy) or via weighted addition/fuzzy union (softer)? BB92 offers
   both options without resolving which is preferable; the

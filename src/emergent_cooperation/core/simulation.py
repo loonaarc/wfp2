@@ -43,6 +43,15 @@ class Simulation:
         self.seed = config.seed if seed is None else seed
         self.pool = ResourcePool(config.resource)
         self.agents = self._build_agents(config)
+        # Size of the governed community for fair-share reasoning (ADR-0012's
+        # allocation correction): excludes any AgentSpec(governed=False)
+        # outsider batch (ADR-0013) from both the enforcement quota's
+        # denominator *and* every governed agent's own "fair share" request --
+        # fixing only the former left the latter silently diluted by the same
+        # root cause, since a self-request already below the (correctly-sized)
+        # quota never triggers the cap at all. Fixed once per run: group
+        # membership never changes mid-run.
+        self._n_governed = sum(1 for a in self.agents if a.governed) or len(self.agents)
         # One independent, reproducible RNG stream per agent.
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
         # The group's total harvest last round (for the broadcast signal).
@@ -74,6 +83,7 @@ class Simulation:
                         strategy=strategy,
                         decision_noise=config.decision_noise,
                         group=spec.group,
+                        governed=spec.governed,
                     )
                 )
         return agents
@@ -89,9 +99,14 @@ class Simulation:
         p = self.config.broadcast_reliability
         if p > 0.0 and round_index > 0 and rng.random() < p:
             signal = self._last_total_harvest
+        # A governed agent's "fair share" reasoning is scoped to the governed
+        # community (ADR-0012's allocation correction); an outsider (ADR-0013)
+        # isn't part of that accounting, so it sees the literal total instead
+        # -- it has no community to exclude itself from.
+        num_agents = self._n_governed if agent.governed else len(self.agents)
         return Observation(
             round_index=round_index,
-            num_agents=len(self.agents),
+            num_agents=num_agents,
             capacity=self.config.resource.capacity,
             resource_level=self.pool.level if share_level else None,
             own_last_harvest=agent.last_harvest,
@@ -125,18 +140,22 @@ class Simulation:
         Individual sanctioning is scoped to **groups** (``AgentSpec.group``,
         ADR-0012 — nested enforcement, Ostrom design principle 8): within each
         group, if any member exposes a :class:`SanctionPolicy`, a per-capita quota
-        (``min(quota_total among that group's sanctioners) / N``, ``N`` the *total*
-        population so the shared pool's overall sustainable draw is unaffected) is
-        enforced on that group's members only — harvest above the quota is
-        confiscated (left in the pool, not withdrawn), and each sanctioner forfeits
-        its monitoring cost. A group with no sanctioner of its own is left
+        (``min(quota_total among that group's sanctioners) / N_governed``,
+        ``N_governed`` the *governed* population -- see the "Allocation
+        correction" in ADR-0012 -- so the shared pool's overall sustainable
+        draw is unaffected when every governed group is monitored) is enforced
+        on that group's members only — harvest above the quota is confiscated
+        (left in the pool, not withdrawn), and each sanctioner forfeits its
+        monitoring cost. A group with no sanctioner of its own is left
         unprotected by individual enforcement even if another group has one — unlike
         the population-wide "any one sanctioner protects everyone" of a flat model.
         Every ``AgentSpec`` defaults to ``group=0``, so with no group configured
         this reduces exactly to the original flat, population-wide behaviour (see
-        ADR-0005). The same partition, with an ungoverned outsider group and no new
-        code, is also how "boundaries"/open-access experiments are expressed
-        (ADR-0013).
+        ADR-0005). The same partition, with an ``AgentSpec(governed=False)``
+        outsider group and no new enforcement mechanism, is also how
+        "boundaries"/open-access experiments are expressed (ADR-0013) --
+        outsiders are structurally excluded from ``N_governed``, not counted
+        and then left unconstrained anyway.
 
         If the group has voted to adopt **collective-choice enforcement** (ADR-0011),
         the same per-capita quota is enforced population-wide regardless of
@@ -156,6 +175,12 @@ class Simulation:
         n_total = len(self.agents)
         penalties = [0.0] * n_total
         collective = self._collective_enforcement_active
+        # The per-capita quota rations the *governed* community's own
+        # sustainable share -- an outsider (AgentSpec.governed=False, ADR-0013)
+        # was never part of that accounting, so including it in the
+        # denominator would silently shrink everyone else's allocation to
+        # make room for a draw it does nothing to actually constrain.
+        n_governed = self._n_governed
 
         # A failed (inactive) sanctioner no longer enforces.
         own_policies = [
@@ -174,9 +199,9 @@ class Simulation:
                 continue
             any_enforced = True
             quota_per_capita = (
-                min(p.quota_total for p in active) / n_total
+                min(p.quota_total for p in active) / n_governed
                 if active
-                else self._sustainable_yield() / n_total
+                else self._sustainable_yield() / n_governed
             )
             for i in member_indices:
                 capped[i] = min(capped[i], quota_per_capita)

@@ -1,4 +1,4 @@
-"""Experiment E14: nested enforcement and boundaries — how many groups need a
+"""Experiment E15: nested enforcement and boundaries — how many groups need a
 monitor, and does closing the community off matter?
 
 ADR-0012 added group-scoped ("nested enterprise") enforcement: a `sanctioning`
@@ -27,7 +27,7 @@ undecided number, not yet independently settled. Deterministic strategies
 (cooperative, sanctioning) draw no randomness, so a single seed is exact,
 not a noisy mean (same reasoning as E1).
 
-Outputs go to ``results/E14_groups_boundaries/``. Run with::
+Outputs go to ``results/E15_groups_boundaries/``. Run with::
 
     python scripts/experiment_groups_boundaries.py
 """
@@ -50,7 +50,7 @@ from emergent_cooperation.core.config import (  # noqa: E402
 )
 from emergent_cooperation.experiments.runner import run_experiment  # noqa: E402
 
-OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "E14_groups_boundaries"
+OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "E15_groups_boundaries"
 SEEDS = (1,)  # deterministic strategies only -> exact, not a noisy mean (see E1)
 ROUNDS = 100
 CAPACITY = 100.0
@@ -60,7 +60,7 @@ OUTSIDERS = 4  # size of the ungoverned "open access" outsider group
 GROUP_COUNTS = (1, 2, 4)  # m: how many groups the governed population is split into
 
 # Provisional tolerance-band threshold (docs/thesis-direction-equifinality.md --
-# still not independently settled). Picked from the actual E14 numbers below,
+# still not independently settled). Picked from the actual E15 numbers below,
 # not guessed blind: full sanctioning coverage
 # tops out at welfare_efficiency=0.84 (monitoring cost mechanically prevents 1.0),
 # so a 0.95-style bar (the earlier placeholder) would disqualify enforcement by
@@ -103,10 +103,13 @@ def _experiment(m: int, k: int, *, outsiders: bool) -> ExperimentConfig:
         for g in range(m)
     ]
     if outsiders:
-        # Own, ungoverned group -> never covered by any group's sanctioning quota.
-        agents.append(AgentSpec("selfish", OUTSIDERS, {"greed": 1.0}, group=m))
+        # Own, ungoverned group -> never covered by any group's sanctioning quota,
+        # and governed=False so it's also excluded from the quota *denominator*
+        # (ADR-0012's allocation correction) -- not counted and then left
+        # unconstrained anyway.
+        agents.append(AgentSpec("selfish", OUTSIDERS, {"greed": 1.0}, group=m, governed=False))
     sim = SimulationConfig(
-        name=f"E14_m{m}_k{k}_{'open' if outsiders else 'closed'}",
+        name=f"E15_m{m}_k{k}_{'open' if outsiders else 'closed'}",
         rounds=ROUNDS,
         information_model="global",
         resource=ResourceConfig(
@@ -193,9 +196,11 @@ def _outsider_experiment(m: int, outsider_strategy: str) -> ExperimentConfig:
     fixed `selfish` used in the main sweep above."""
     n = N // m
     agents = [AgentSpec("sanctioning", n, _params("sanctioning"), group=g) for g in range(m)]
-    agents.append(AgentSpec(outsider_strategy, OUTSIDERS, _params(outsider_strategy), group=m))
+    agents.append(
+        AgentSpec(outsider_strategy, OUTSIDERS, _params(outsider_strategy), group=m, governed=False)
+    )
     sim = SimulationConfig(
-        name=f"E14_outsider_m{m}_{outsider_strategy}",
+        name=f"E15_outsider_m{m}_{outsider_strategy}",
         rounds=ROUNDS,
         information_model="global",
         resource=ResourceConfig(
@@ -278,7 +283,7 @@ def make_figure(summary: pd.DataFrame, path: Path) -> None:
     ax2.legend(fontsize=7, loc="lower right")
 
     fig.suptitle(
-        "E14: nested enforcement (m groups, k sanctioning) x boundaries (closed vs open)"
+        "E15: nested enforcement (m groups, k sanctioning) x boundaries (closed vs open)"
     )
     fig.tight_layout()
     fig.savefig(path, dpi=130)
@@ -291,7 +296,7 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
     factorial (m x boundary): every one of the 3x2 = 6 cells is tested (see
     complexity_curve.csv), unlike the single-axis m-only sweep this project
     previously (and correctly) declined to call "the complexity curve."
-    Shared by E14 (closed line only, in isolation) and E15 (both lines --
+    Shared by E15 (closed line only, in isolation) and E16 (both lines --
     the actual 2-axis reading).
 
     Two panels, not one line, because "count" and "fraction" answer two
@@ -305,7 +310,14 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
     made things better" -- which is what actually survived scrutiny. Never
     combined onto one dual-axis plot (the fraction panel would need a second,
     differently-scaled y-axis on the same figure, which the count line is not
-    on the same footing to share)."""
+    on the same footing to share).
+
+    "open" here specifically means open *with a selfish outsider* -- the
+    adversarial case, not "outsiders in general" (the outsider's own strategy
+    is swept separately, see near_optimal_set.csv / E16's "by outsider type"
+    section: at full coverage, count is 3/5 there, not 0/5, once the outsider
+    isn't selfish). Labelled explicitly in the legend below so this chart
+    doesn't get read as the general answer for "boundary" on its own."""
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.8))
     style = {"closed": dict(color="#1f77b4", marker="o"), "open": dict(color="#d55e00", marker="s")}
 
@@ -314,7 +326,8 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
         sub = curve[curve["boundary"] == boundary].sort_values("m")
         ax.plot(
             sub["m"], sub["near_optimal_count"], lw=2.2,
-            label=f"{boundary} ({'E14' if boundary == 'closed' else 'E15'})", **style[boundary],
+            label=f"{boundary}" + (" (E15)" if boundary == "closed" else ", selfish outsider (E16)"),
+            **style[boundary],
         )
     ax.set_xticks(GROUP_COUNTS)
     ax.set_xlabel("m -- number of groups")
@@ -329,7 +342,8 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
         sub = curve[curve["boundary"] == boundary].sort_values("m")
         ax.plot(
             sub["m"], sub["near_optimal_fraction"], lw=2.2,
-            label=f"{boundary} ({'E14' if boundary == 'closed' else 'E15'})", **style[boundary],
+            label=f"{boundary}" + (" (E15)" if boundary == "closed" else ", selfish outsider (E16)"),
+            **style[boundary],
         )
         for row in sub.itertuples():
             ax.annotate(
@@ -346,9 +360,10 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
     ax.legend(fontsize=9)
 
     fig.suptitle(
-        "Near-optimal-set-size vs. complexity: groups (m) x boundary "
-        "(2-axis factorial, all 6 cells tested; threshold = welfare_efficiency >= 0.80, provisional)",
-        fontsize=10.5,
+        "Near-optimal-set-size vs. complexity: groups (m) x boundary\n"
+        "(\"open\" = selfish outsider, the adversarial case -- see E16 for the non-adversarial reading; "
+        "threshold = welfare_efficiency >= 0.80, provisional)",
+        fontsize=10,
     )
     fig.tight_layout(rect=(0, 0, 1, 0.93))
     fig.savefig(path, dpi=130)
@@ -362,7 +377,7 @@ def main() -> None:
     summary.to_csv(OUT_DIR / "summary.csv", index=False)
     make_figure(summary, OUT_DIR / "figure.png")
 
-    print("E14 -- welfare_efficiency (gini) by (m groups, k sanctioning, boundary):")
+    print("E15 -- welfare_efficiency (gini) by (m groups, k sanctioning, boundary):")
     for m in GROUP_COUNTS:
         for boundary in ("closed", "open"):
             sub = summary[(summary["m"] == m) & (summary["boundary"] == boundary)].sort_values("k")
@@ -378,7 +393,7 @@ def main() -> None:
     curve = complexity_curve(summary)
     curve.to_csv(OUT_DIR / "complexity_curve.csv", index=False)
     make_complexity_figure(curve, OUT_DIR / "complexity_curve.png")
-    print(f"\nE14 -- near-optimal-set-size vs. complexity (m), threshold={THRESHOLD}:")
+    print(f"\nE15 -- near-optimal-set-size vs. complexity (m), threshold={THRESHOLD}:")
     for boundary in ("closed", "open"):
         sub = curve[curve["boundary"] == boundary].sort_values("m")
         cells = "  ".join(f"m={int(r.m)}: {r.near_optimal_count}/{r.configs_tested}" for r in sub.itertuples())
@@ -386,7 +401,7 @@ def main() -> None:
 
     noset = near_optimal_set(summary)
     noset.to_csv(OUT_DIR / "near_optimal_set.csv", index=False)
-    print(f"\nE14 -- near-optimal set (threshold={THRESHOLD}), full coverage, by m:")
+    print(f"\nE15 -- near-optimal set (threshold={THRESHOLD}), full coverage, by m:")
     for m in GROUP_COUNTS:
         sub = noset[noset["m"] == m]
         count = int(sub["behavioural"].sum())

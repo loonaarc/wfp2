@@ -332,7 +332,7 @@ replacing QCA):**
   performance measure, classify behavioural vs. non-behavioural, and
   describe the behavioural *set* directly rather than forcing a crisp
   binary table — a much better fit for this project's own simulator than
-  QCA. Directly usable for the still-unbuilt **E14** (starting-resource
+  QCA. Directly usable for the still-unbuilt **E17** (starting-resource
   sweep) experiment. See [note](paper-notes/1992-beven-binley-glue.md).
 - 🟢 **Beven & Binley (2014), "GLUE: 20 Years On", *Hydrological Processes*
   28(24), 5897–5918.** doi:10.1002/hyp.10082 (received/published online
@@ -344,7 +344,7 @@ replacing QCA):**
   as a more defensible alternative to post-hoc likelihood thresholding.
   Revisits the original 1992 case study at 500,000 (vs. 500) realizations
   and shows the model is rejected outright under the stricter criterion —
-  framed as a positive, informative result. Refines this project's E14
+  framed as a positive, informative result. Refines this project's E17
   plan: use fixed, pre-declared acceptance thresholds (e.g. "final
   resource ≥ 50% of `K`, no permanent collapse") rather than a fitted
   post-hoc likelihood. See
