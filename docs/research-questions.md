@@ -34,6 +34,11 @@ current front-runner for the project's specific focus — not yet locked.
   normal conditions but fragile under disruption?
 - **RQ-D.** How can cooperation, self-organization, fairness, resilience, and
   emergence be measured quantitatively, reproducibly, and comparably?
+- **RQ-E** *(added once Phase 4 started; see
+  [thesis-direction-equifinality.md](thesis-direction-equifinality.md)).* As the
+  population and its governance structure get richer, does the **set of distinct
+  configurations that reach a near-optimal outcome** grow, and what actually drives
+  that — not "does cooperation work" but "in how many different ways"?
 
 ## Testable subquestions
 
@@ -84,6 +89,21 @@ current front-runner for the project's specific focus — not yet locked.
   helps. Enforcement is a single point of failure.*
 - **SQ-10** 🟡 How does resilience scale with group size and with regeneration rate?
   *(A sweep of the E8 shock over `N` and `g` — small addition.)*
+
+### Equifinality / complexity (RQ-E)
+- **SQ-13** 🟢 Does raw population-type diversity (how many distinct strategies
+  coexist) predict near-optimal success, or is a specific composition feature doing
+  the real work? **→ Answered (E14): the latter** — diversity count is a weak,
+  confounded proxy; whether any `sanctioning` agent is present explains almost all
+  of it.
+- **SQ-14** 🟢 Does splitting the population into independently-enforced groups
+  (nested enforcement, Ostrom principle 8) change the near-optimal-set size vs. flat
+  enforcement? **→ Answered (E15): yes** — count grows genuinely with `m` (383 →
+  2,820 → 18,737), fraction still falls (0.774 → 0.576 → 0.370).
+- **SQ-15** 🟢 Does excluding vs. including a fixed batch of unmonitored outsiders
+  (boundaries, Ostrom principle 1) change the near-optimal-set size? **→ Answered
+  (E16): yes, consistently but not catastrophically** — opening costs a ~2× fraction
+  at every group count tested.
 
 ### Reproducibility & sensitivity (RQ-D)
 - **SQ-11** 🟢 How much do outcome metrics vary across random seeds for a fixed
@@ -139,3 +159,6 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-9 | resource shock + recovery metrics | ✅ `disturbances.ResourceShock` + E8/E9 |
 | SQ-9b | agent failure | ✅ `disturbances.AgentFailure` + E10 |
 | SQ-10 | resilience vs. `N` and `g` | ➕ sweep the E8 shock over `N`, `g` |
+| SQ-13 | full compositional sweep | ✅ `AgentSpec` composition sweep + E14 |
+| SQ-14 | group-scoped enforcement | ✅ `AgentSpec.group`, ADR-0012 + E15 |
+| SQ-15 | ungoverned outsider batch | ✅ `AgentSpec.governed=False`, ADR-0013 + E16 |

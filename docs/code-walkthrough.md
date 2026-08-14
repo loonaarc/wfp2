@@ -566,8 +566,10 @@ collapse.** That's the phenomenon this whole codebase exists to study.
 - **`communication/`** — the full `CommunicationModel` protocol (per-agent messages,
   topology, budget, delay) is still a stub, but a **first broadcast model is
   implemented** (ADR-0007): `SimulationConfig.broadcast_reliability` makes the engine
-  deliver an aggregate `signal` (the group's total harvest last round) into each
-  agent's `Observation` with a per-round probability. Studied in experiments E6–E7.
+  deliver an aggregate `signal` (the *whole population's* total harvest last round —
+  not scoped to any `AgentSpec.group`; the broadcast predates ADR-0012's groups and
+  was never rescoped to them) into each agent's `Observation` with a per-round
+  probability. Studied in experiments E6–E7.
 - **`disturbances/`** — the `Disturbance` protocol plus two config-scheduled kinds
   (ADR-0008): `ResourceShock` (cuts the stock at a set round) and `AgentFailure`
   (deactivates a fraction of the agents). The engine applies them in the `disturb`
@@ -582,6 +584,18 @@ collapse.** That's the phenomenon this whole codebase exists to study.
   vote at round `k` must affect every round after it), unlike E11/E12's
   replicator-dynamics tricks which stay entirely at the experiment-script level
   (ADR-0006). See §5 above and [E13](experiments/E13-binding-agreement.md).
+- **`AgentSpec.group` / `AgentSpec.governed`** *(not a stub — fully implemented,
+  ADR-0012/0013)* — also no separate package, for the same reason as
+  `collective_choice`: `_enforce()` needs to know group membership every round.
+  `group` scopes individual sanctioning to that group only (a sanctioner never caps
+  a different group's harvest); `governed=False` marks a batch as an ungoverned
+  outsider — excluded from the quota's fair-share denominator, present in the round
+  and rationed by the same feasibility scaling as everyone else, but never capped to
+  the sustainable yield. Boundaries (open vs. closed access) are expressed entirely
+  through this one flag — no separate engine mechanism. Studied in
+  [E14](experiments/E14-population-diversity.md) (population composition, flat),
+  [E15](experiments/E15-groups.md) (groups), and
+  [E16](experiments/E16-boundaries.md) (boundaries).
 
 ---
 

@@ -230,6 +230,38 @@ every other time this project has looked. Growth in the achievable set and
 growth in how hard that set is to find by chance are not the same claim,
 and both are true here simultaneously.
 
+## The ceiling, not just the set: does the best achievable outcome move?
+
+Everything above is about the near-optimal *set* (how many configurations
+clear the `≥ 0.80` threshold). A different, complementary question: does the
+single *best* achievable `welfare_efficiency` change as axes get added? Since
+every level was already exhaustively (or Monte Carlo) swept and saved, this
+was free to check — no new simulations, just the argmax of each existing
+results file.
+
+| Level | Best composition | Best `welfare_efficiency` |
+| --- | --- | -: |
+| E14 (diversity alone) | 8× `compensating_cooperator` | **1.000** |
+| E15, `m=2` | 4+4 `compensating_cooperator`, one per group | **1.000** |
+| E15, `m=4` | 2+2+2+2 `compensating_cooperator`, one per group | **1.000** |
+| E16, `m=1/2/4` (boundary open) | governed + outsider mostly cooperative/compensating | 0.9998 / 0.9996 / 0.9967 |
+
+**The ceiling is essentially flat at ~1.0 across every axis tested.** Adding
+groups or opening the boundary doesn't lower what's achievable at best, only
+how much of the space achieves it — a third, complementary angle on top of
+the count/fraction story: the best case is close to complexity-invariant,
+only the *density* around it changes. Also notable: the winner is always a
+population that never needs monitoring at all (`compensating_cooperator`,
+not `sanctioning`) — since `welfare_efficiency` is *net* payoff, a
+composition that avoids paying enforcement cost in the first place beats one
+that pays for it, even flawlessly.
+
+A quick (non-exhaustive) robustness spot-check on this champion — a round-60,
+70%-stock-removal shock, E8/E9's own convention — found it holds up: `0.949`
+shocked `welfare_efficiency`, no collapse, same ranking against 3 alternative
+compositions tested. Consistent with E8's own finding that shock recovery is
+driven by observation/self-correction, not enforcement.
+
 ## What's next
 
 Add a row/column here each time a new axis is built and tested against the
@@ -238,3 +270,26 @@ per E15/E16's own: a matched same-space paired comparison (does a specific
 governed composition that passes closed *also* tend to pass open, rather
 than comparing aggregate fractions), then network reciprocity or multiple
 resources as the next wholly new axis.
+
+**Optional research, deferred until all complexity axes are built**: redo the
+ceiling/argmax check above *under a disturbance* (resource shock, agent
+failure) at every level, across the *full* space rather than a handful of
+hand-picked candidates — does the identical champion composition stay optimal
+once shocked, at every axis and every level, or does robustness itself trade
+off against peak `welfare_efficiency` somewhere in the space? Genuinely new
+compute (unlike the no-shock ceiling, which was free), so worth doing once
+the full axis roster (network reciprocity, multiple resources, reputation,
+specialization) exists rather than repeating it after every single axis.
+
+**Optional research, no fixed timing**: an analytical (not simulated)
+derivation of the simplest observed pass/fail rules — e.g. E14's "any
+composition with ≥1 `sanctioning` agent passes" is really just "does the
+quota cap bind," which is linear arithmetic once the harvest requests are
+written out, so it may have a clean closed-form proof rather than only an
+empirical one. Cheaper alternative to a from-scratch derivation: check this
+project's own simulated results *against* Nowak's already-derived exact
+conditions (`b/c > k` for network reciprocity, `b/c > 1 + n/m` for group
+selection) once those axes are built, rather than deriving new formulas.
+Useful for understanding *why* a rule holds, not required for reporting
+*that* it holds — the empirical count/fraction tables stand on their own
+either way.

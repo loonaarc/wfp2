@@ -19,8 +19,9 @@
 ```
 src/emergent_cooperation/
 ├── core/
-│   ├── config.py       ResourceConfig, AgentSpec, SimulationConfig, ExperimentConfig,
-│   │                     CollectiveChoiceConfig (ADR-0011); YAML loading
+│   ├── config.py       ResourceConfig, AgentSpec (incl. group/governed, ADR-0012/13),
+│   │                     SimulationConfig, ExperimentConfig, CollectiveChoiceConfig
+│   │                     (ADR-0011); YAML loading
 │   ├── rng.py          make_rng, spawn_streams (independent per-agent streams)
 │   ├── state.py        RoundRecord, RunResult (plain data, no behaviour)
 │   └── simulation.py   Simulation engine + run_simulation()
@@ -157,12 +158,18 @@ For round `t` (in `Simulation.step`):
    scheduled round, tally whether the group has over-used the commons (harvest >
    sustainable yield) in more than a threshold share of rounds so far; if so, adopt
    collective enforcement starting this round. No-op otherwise (ADR-0011).
-8. **Enforce (sanctioning):** if any agent exposes a `SanctionPolicy`, *or* the
-   collective-choice vote has passed, cap every agent's harvest at the per-capita
-   quota (excess stays in the pool) and charge monitoring costs — each individual
-   sanctioner its own `monitoring_cost`, and (if collectively enforced) every other
-   active agent the collective `cost_share`. No-op when neither applies (ADR-0005;
-   ADR-0011).
+8. **Enforce (sanctioning):** individual sanctioning is scoped to `AgentSpec.group`
+   (ADR-0012) — within each group, if any member exposes a `SanctionPolicy`, cap
+   *that group's* members at the per-capita quota (excess stays in the pool) and
+   charge each sanctioner its own `monitoring_cost`; a group with no sanctioner of
+   its own is left unprotected even if another group has one. The per-capita quota
+   always divides by the *governed* population (`AgentSpec.governed`, excluding any
+   ungoverned outsider batch — ADR-0013), not the group's own size or the literal
+   total, so a monitored group's entitlement doesn't shrink or grow just because
+   other groups exist. If the collective-choice vote has passed, the same per-capita
+   quota is instead enforced population-wide regardless of grouping, funded by a
+   `cost_share` charged to every other active agent that doesn't already pay
+   individually. No-op when neither applies (ADR-0005; ADR-0011; ADR-0012).
 9. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
    record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
 
@@ -190,6 +197,8 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
 | a parameter sweep / study | use `experiments.sweep.run_grid` |
 | communication | implement `CommunicationModel`; add an exchange step in `step` |
 | a disturbance | add a kind to `DISTURBANCE_KINDS`, a class in `disturbances.shocks`, and a `build_disturbances` branch (ADR-0008) |
+| a nested-enforcement group | set `AgentSpec.group` (ADR-0012) — no new engine code |
+| an ungoverned outsider batch (boundaries) | set `AgentSpec.governed=False` on a group (ADR-0013) — reuses groups, no new engine code |
 
 ## Known simplifications (current)
 
@@ -211,3 +220,14 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
   cannot combine with an individually-`sanctioning` agent: any such agent already
   caps harvest at the sustainable yield, so over-use (the vote's only trigger) is
   never observed and the vote deterministically fails.
+- Boundaries (ADR-0013) model "present but unmonitored," not literal hard exclusion:
+  an ungoverned outsider's harvest is still rationed by the same feasibility-scaling
+  `_allocate` step as everyone else when the pool is low, it is just never capped to
+  the sustainable yield. There is no way, within an "open" config, to express
+  partial/permitted access short of full participation, or to physically bar an
+  outsider from the pool.
+- Groups (ADR-0012) partition *enforcement reach* only — agents still reason about
+  fair share, retaliation triggers, and the broadcast signal population-wide
+  (`Observation` never carries group membership); only which sanctioner's cap
+  applies to which agent's harvest is group-scoped. There is no spatial/network
+  structure and no per-group information locality.

@@ -64,11 +64,18 @@ information/knowledge conditions, a broadcast communication channel, seeds +
 more experiments probing whether monitoring can be made evolutionarily stable
 (E11, E12) and whether a voted, jointly-funded agreement can substitute for
 individually pre-committed enforcement (E13) — the latter required the project's
-first core-engine change since WFP2 (`CollectiveChoiceConfig`, ADR-0011). The
-bachelor thesis direction itself (which of several possible framings — equifinality,
-further disturbance work, etc. — to commit to) is **not yet decided**; see
+first core-engine change since WFP2 (`CollectiveChoiceConfig`, ADR-0011). Since
+then, two further core-engine changes — group-scoped ("nested enterprise")
+enforcement (ADR-0012) and boundaries/open-access via the same mechanism
+(ADR-0013) — backed three more experiments testing whether the equifinality
+framing itself holds up: population-type diversity (E14), groups (E15), and
+boundaries (E16), with a starting-resource-level experiment reserved as E17. The
+bachelor thesis direction is not yet formally locked in, but in practice this
+equifinality/complexity-axis line is what's actively being developed and has
+had encouraging supervisor feedback; see
 [thesis-direction-equifinality.md](thesis-direction-equifinality.md) for the
-current, still-speculative brainstorming.
+brainstorming and [complexity-synthesis.md](complexity-synthesis.md) for the
+living synthesis of what's been found so far.
 
 **Still open, regardless of thesis framing:** richer communication (per-agent
 messages, deception, delay, topology), further disturbance kinds (communication

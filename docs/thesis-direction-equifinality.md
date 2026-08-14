@@ -196,18 +196,15 @@ Concern: how do we decide which settings/approaches to allow without it being ra
   feeling.
 - The discipline: **vary the 1–2 axes the research question names; fix the rest.**
 
-## The complexity axes named so far (candidate new dimensions)
+## Enlarging the setting space: what counts as a complexity axis
 
-Each is a way to enlarge the setting space and test whether the near-optimal set
-grows:
-
-- **Drop global information** — the first and cheapest step (partly present already
-  as the `private` regime).
-- **Multiple resources** — more than one shared pool; possibly with substitution or
-  coupling.
-- **Group-wise information exchange / cooperation** — subgroups that share or
-  coordinate, rather than one flat population.
-- **Specialization** — agents with distinct roles/capabilities.
+The original four candidates (drop global information; add multiple
+resources; let subgroups coordinate rather than one flat population; add
+specialization) have since been superseded by the fuller, literature-checked
+list in "Ranking the axes" below — see that section for the current,
+maintained roster rather than repeating it here. Two general distinctions
+from the early brainstorming are still load-bearing for any *future* axis,
+though:
 
 ### Telling "complexity" apart from "difficulty"
 
@@ -228,10 +225,14 @@ does it just make a *specific realization* of an unchanged structure go worse?
 
 Also not the same axis of difficulty: whether a candidate is cheap to test.
 `information_model` already has both `"global"` and `"private"` implemented in
-`config.py` — testing it is picking a value. None of the "multiple resources" /
-"groups" / "specialization" ideas have any implemented code path yet (there is no
-`num_resources` field, no group structure, no agent-role concept) — testing any of
-them means writing new mechanism first, not just choosing a value.
+`config.py`, and population-composition, groups, and boundaries are now
+built too (E14/E15/E16, ADR-0012/0013) — testing any of these is picking a
+value or running an existing sweep script. Multiple resources, network
+reciprocity, reputation, and specialization have no implemented code path
+yet (there is no `num_resources` field, no interaction graph, no
+`peer_scores`, no agent-role concept) — testing any of them means writing
+new mechanism first, not just choosing a value. See "Ranking the axes"
+below for which is which.
 
 ### Additional candidate axes (surfaced later, checked against already-read literature)
 
@@ -315,6 +316,27 @@ without a worked formula the way the Nowak citations have:**
 
 **Still not grounded in anything read — would need a literature check first:**
 - Agent entry/exit — population turnover over a run, not just failure (E10).
+- **Wealth-weighted collective choice.** ADR-0011's collective-choice vote is
+  currently one-agent-one-vote. A variant where voting weight scales with
+  accumulated payoff would test whether a small high-payoff minority can
+  vote down enforcement that would otherwise pass, even while the broader
+  population's own production stays healthy — a real-referent test of
+  regulatory capture / plutocratic drift, in the same spirit as grounding
+  "specialization" in different boat types (see "Keeping the configuration
+  space principled" above). Would need its own citation (political economy
+  of capture — Olson-style collective-action literature is the obvious
+  first check) before it's as defensible as the Ostrom/Nowak-sourced axes.
+- **Inequality-adaptive monitoring investment.** The evolutionary-dynamics
+  machinery already built for E5/E11/E12 currently selects strategies on
+  raw fitness/payoff alone. Making that fitness function sensitive to
+  `payoff_gini` (already computed, see `docs/metrics.md`) rather than mean
+  payoff alone would test whether a population under-invests in monitoring
+  as inequality rises, and whether that erosion is self-reinforcing — less
+  monitoring widening the very inequality that suppressed it. Reuses
+  existing evolutionary machinery rather than inventing a new mechanism
+  (cheaper than it sounds), but — same caveat — not yet anchored to a
+  specific paper; would need a literature check (inequality/wealth-
+  concentration dynamics) first.
 
 ## Should the growth model itself be varied?
 
@@ -370,12 +392,14 @@ above.
   question: a useful robustness/setting check, secondary to the core
   complexity-axis work.
 - **Where it earns its place:** fold `R₀` in as one more swept *setting*
-  parameter within whichever complexity-axis experiment gets built first
-  (e.g. sweep `R₀` alongside the information-regime axis), rather than
-  standing it up as its own dedicated experiment number. That reuses the
-  engine and turns "does the near-optimal set / winning approach change
-  with a catastrophic start?" into a side-output of the main sweep, not a
-  separate research thread competing for BA scope.
+  parameter within whichever complexity-axis experiment it gets tested
+  alongside, rather than treating it as a full complexity axis in its own
+  right. That reuses the engine and turns "does the near-optimal set /
+  winning approach change with a catastrophic start?" into a side-output of
+  the main sweep, not a separate research thread competing for BA scope. A
+  number is already reserved for it regardless (**E17**, per the numbering
+  note in "Ranking the axes" below) — this bullet is about scope, not
+  naming.
 - **Methodological fit:** now that GLUE (Beven & Binley, 1992/2014; see
   below) is the adopted method for scoring near-optimal-set membership,
   `R₀` is a natural extra dimension to classify with the same
@@ -464,22 +488,42 @@ research should care — not something to build experiments around directly:
   also mirrors the analytic-vs-simulation split already in this project:
   derive what can be derived in closed form (MSY, thresholds), simulate the
   rest.
+- **A concrete version of this narrative, for the intro rather than the
+  methods**: political-economy debates about unchecked inequality (does a
+  population keep tolerating a widening Gini as long as aggregate output
+  stays healthy; does that tolerance itself let a small high-payoff minority
+  capture the institution meant to constrain it) are a real-world instance
+  of exactly this "many strategies, no single correct one, until you name
+  the objective" framing — motivation for why the wealth-weighted-choice and
+  inequality-adaptive-monitoring candidates in "Additional candidate axes"
+  above are interesting, even before either is literature-grounded enough
+  to build.
 
-## Open questions to pin down before committing
+## Questions this note originally left open — now resolved by the build
 
-- **Define "the optimum" operationally** — which objective(s), and is it a single
-  scalar or a Pareto frontier?
-- **Define "a path" / "reaches the optimum"** — an exact match to the theoretical
-  max, or within a tolerance band (e.g. ≥ 95% of MSY·T)?
-- **Which complexity axis first?** Dropping global information is the cheapest, most
-  literature-anchored starting point and reuses the existing engine.
-- **Define the complexity dial and near-optimal-set metric concretely** — this is
-  the actual novel-contribution question; see "Operationalizing..." above.
-- **Scope for a BA** — not a build-cost cap (see the "Scope correction" in
-  "Sweep design" below): the sweep should include every axis grounded in
-  already-read literature, built as it becomes practical, not an artificially
-  small subset picked to save time. Growth-model variation (Allee effect)
-  remains an optional stretch, not core.
+Kept for context on how the direction firmed up, not as live open questions:
+
+- **"Define the optimum operationally"** → resolved: `welfare_efficiency`
+  (net payoff / (MSY × rounds)), a single scalar, not a Pareto frontier —
+  see `docs/metrics.md`.
+- **"Define 'reaches the optimum'"** → resolved: a tolerance band,
+  `welfare_efficiency ≥ 0.80` (provisional — see each experiment's own
+  threats-to-validity section), not an exact match to the theoretical max.
+- **"Which complexity axis first?"** → resolved differently than the
+  original guess here (dropping information): **population-type diversity**
+  (E14), promoted to first once building groups/boundaries surfaced that
+  they were already varying composition implicitly without ever isolating
+  it — see "Ranking the axes" below for the reasoning and the current order.
+- **"Define the complexity dial and near-optimal-set metric concretely"** →
+  resolved: count *and* fraction of compositions clearing the threshold,
+  reported separately (see `complexity-synthesis.md`'s methodological
+  lessons for why never just one).
+- **Scope for a BA** — still the live judgment call, not resolved by a
+  build: include every axis grounded in already-read literature as it
+  becomes practical, but see the top of this note (and the discussion this
+  file doesn't itself record) for the more recent steer toward picking a
+  small number of axes that connect to a specific realistic scenario,
+  rather than exhausting the full roster for its own sake.
 
 ## Ranking the axes (by fit, not by build cost)
 
@@ -532,7 +576,11 @@ this ranking:**
    exact condition `q > c/b`, and its own paper note already has a
    near-complete implementation sketch (extend `Observation` with
    `peer_scores`, add a `ReputationCooperatorStrategy`). Really an extension
-   of the information axis (E1), not a fully independent one.
+   of the information axis (E1), not a fully independent one. Also the
+   cheapest bridge toward the wealth-weighted-choice/capture candidates
+   below, if that direction gets picked up later — per-partner reputation
+   tracking is close to the machinery a "does the population let itself be
+   fooled" study would need anyway.
 7. **Specialization** — upgraded from "no grounding" to a named GovSim gap
    ("different stakeholder interests"), though still without a worked
    formula the way the Nowak-sourced axes above have.
@@ -544,6 +592,12 @@ this ranking:**
    narrower in scope than the axes above; logged as follow-ups, not core.
 10. **Agent entry/exit (turnover)** — still not grounded in anything read;
     would need a literature check before being as defensible as the others.
+11. **Wealth-weighted collective choice** — reuses existing machinery
+    (ADR-0011's vote), but the capture/plutocracy motivation isn't grounded
+    in a specific already-read paper yet.
+12. **Inequality-adaptive monitoring investment** — reuses existing
+    machinery (E5/E11/E12's evolutionary dynamics, `payoff_gini`), same
+    grounding gap as 11.
 
 **Numbering note, resolved 2026-08-09:** `docs/literature-review.md` and two
 Beven & Binley paper notes independently referenced a *different*,

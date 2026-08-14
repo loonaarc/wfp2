@@ -1,13 +1,16 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E13. E1–E7 study the calm commons; E8–E10
-are the resilience phase (disturbances); E11–E13 are thesis-track follow-ups probing
-whether monitoring can be made evolutionarily stable and whether a voted agreement can
-substitute for pre-committed enforcement. This is the narrative spine for the writeup;
-each claim links to its full experiment report and the code that produced it.*
+*A consolidated synthesis of experiments E1–E16 (E17 reserved). E1–E7 study the calm
+commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
+follow-ups probing whether monitoring can be made evolutionarily stable and whether a
+voted agreement can substitute for pre-committed enforcement; E14–E16 shift to the
+equifinality/complexity-axis question — as the population, its governance structure,
+and its boundary get structurally richer, does the set of near-optimal approaches
+grow? This is the narrative spine for the writeup; each claim links to its full
+experiment report and the code that produced it.*
 
-**Status:** 2026-08-06 · 6 strategies · 13 experiments (E1–E13) · 94 tests · results
-reproducible from `scripts/` and the committed `results/` data.
+**Status:** 2026-08-10 · 6 strategies · 16 experiments (E1–E16, E17 reserved) · 108
+tests · results reproducible from `scripts/` and the committed `results/` data.
 
 ---
 
@@ -101,9 +104,17 @@ flowchart TD
         E8 --> E9 --> E10
     end
 
+    subgraph P4["Phase 4 — equifinality / complexity axes"]
+        E14["E14 — population-type diversity<br/>raw diversity count is a weak, confounded proxy"]
+        E15["E15 — groups (nested enforcement)<br/>near-optimal count grows, fraction still falls"]
+        E16["E16 — boundaries (open access)<br/>opening costs ~2x fraction, not catastrophic"]
+        E14 --> E15 --> E16
+    end
+
     E3 -.the cost E5 explains.-> E5
     E3 -.the mechanism E7 confirms.-> E7
     E3 -.extended into a shock.-> E8
+    E3 -.the flat baseline P4 restructures.-> E14
 ```
 
 Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
@@ -114,6 +125,11 @@ freely (no); **E11** is one attempt — only partly successful — at fixing tha
 **E12** is a second attempt that actually succeeds. **E6/E7** add a new axis (communication) on top of the same mechanisms, and **E13** unifies E5's "chosen vs. imposed enforcement" question with E7's communication axis — a voted, jointly-funded agreement tested against E7's imposed enforcement. **E8–E10**
 take the whole mechanism set and ask what survives a disturbance, building up from a
 single shock (E8) to a shock plus free-riders (E9) to losing agents outright (E10).
+**E14–E16** ask a different kind of question about the same E3 mechanism (sanctioning)
+— not "does it work" but "in how many different population/governance
+configurations does it (or something else) still work near-optimally," building a
+per-group, then per-boundary, sweep on top of the flat population E1–E13 assumed
+throughout.
 
 ---
 
@@ -274,6 +290,43 @@ And that enforcement is itself a **single point of failure**: lose the monitors 
 commons collapses (E10), where distributed self-correction would have degraded
 gracefully.
 
+## Complexity & equifinality: does the near-optimal set grow? (E14–E16 — Phase 4)
+
+*(Full synthesis: [complexity-synthesis.md](complexity-synthesis.md). Reports:
+[E14](experiments/E14-population-diversity.md), [E15](experiments/E15-groups.md),
+[E16](experiments/E16-boundaries.md).)*
+
+E1–E13 ask *which mechanism works*. Phase 4 asks a different question: as the
+*setting* gets structurally richer — not harsher, richer — does the **count** of
+distinct population/governance configurations that reach a near-optimal outcome
+(`welfare_efficiency ≥ 0.80`) grow?
+
+- **E14 — population-type diversity:** sweeping all 495 compositions of 8 agents
+  across the 5 strategies, raw diversity (how many distinct types coexist) turns out
+  to be a weak, confounded proxy — the real driver is whether **any** `sanctioning`
+  agent is present (330/330 pass) and, absent one, how many `selfish` agents there
+  are and whether the cooperator type retaliates or restrains (E2/E3's findings,
+  rediscovered, not a new diversity effect).
+- **E15 — groups (nested enforcement):** splitting the same population into `m`
+  independently-enforced groups (Ostrom principle 8) genuinely **grows the
+  near-optimal count** — 383 → 2,820 → 18,737 as `m` goes 1→2→4 — the first
+  unconfounded count growth in this project. But the *fraction* of the tried space
+  that succeeds still nearly halves at each step: more groups means more ways to
+  succeed, and proportionally more ways to fail, at once.
+- **E16 — boundaries (open access):** adding a fixed batch of unmonitored outsiders
+  (Ostrom principle 1) costs a real, consistent **~2× fraction** at every `m` tested
+  — substantial, but far short of the near-total wipeout a single-adversarial-
+  outsider reading first suggested; most outsiders, drawn from the full composition
+  space, aren't actually threatening.
+
+**So: yes, by count — for the first time in this project, unconfoundedly — but
+proportionally harder to find by chance.** Both are true simultaneously; see
+`complexity-synthesis.md`'s methodological lessons for why reporting only one of
+the two would be misleading. Unlike E1–E13, which compare a handful of hand-picked
+configurations per experiment, E14–E16 exhaustively (or, once the space gets too
+large, Monte Carlo-) sweep the full composition space — a different kind of
+evidence (a measured set-size trend, not a point comparison).
+
 ## Relation to the literature
 
 - **Hardin (1968):** the all-selfish collapse is the tragedy of the commons.
@@ -313,17 +366,23 @@ algorithm. That is an appropriate and defensible bachelor-level contribution
 
 ## Future work
 
-The full roadmap is in [research-direction.md](research-direction.md). The standout
-open threads:
+The full roadmap is in [research-direction.md](research-direction.md); the ranked
+complexity-axis candidates are in
+[thesis-direction-equifinality.md](thesis-direction-equifinality.md#ranking-the-axes-by-fit-not-by-build-cost).
+The standout open threads:
 
-1. **Binding agreement / collective choice** — can communication produce a *consented*
-   quota (and fund the monitoring to uphold it), unifying E5 + E7? This is the sharp
-   version of "communication that coordinates, not just informs".
-2. **Disturbances (Phase 3, in progress):** the resource shock (E8/E9) and agent
-   failure (E10) are in. Next — **communication failure** against the same interface;
+1. **Remaining complexity axes (Phase 4, in progress):** population diversity
+   (E14), groups (E15), and boundaries (E16) are done. Next in the ranking:
+   network reciprocity (Nowak 2006, exact condition `b/c > k`), multiple resources,
+   reputation/indirect reciprocity, and specialization — plus `R₀` (starting
+   resource level, reserved as **E17**) as a smaller side-sweep.
+2. **Disturbances (Phase 3):** the resource shock (E8/E9) and agent failure (E10)
+   are in. Next — **communication failure** against the same interface;
    **monitor-redundancy** sweeps (how much redundancy buys back the single point of
    failure); the blind + free-rider "needs both" cell; a *press* (sustained)
-   disturbance.
+   disturbance; and (Phase 4's own optional follow-up) whether the E14–E16 optima
+   stay optimal *under* a disturbance, across the full space rather than a
+   spot-check.
 3. **A genuinely stochastic strategy** (not just noisy execution), so between-seed
    variance becomes substantial and the robustness question sharper.
 
@@ -345,5 +404,8 @@ python scripts/experiment_agent_failure.py           # E10
 python scripts/experiment_voluntary_monitoring_loner.py  # E11
 python scripts/experiment_pool_punishment.py         # E12
 python scripts/experiment_binding_agreement.py       # E13
-pytest                                               # 94 tests
+python scripts/experiment_population_diversity.py    # E14
+python scripts/experiment_groups_full_sweep.py       # E15
+python scripts/experiment_boundaries_full_sweep.py   # E16
+pytest                                               # 108 tests
 ```

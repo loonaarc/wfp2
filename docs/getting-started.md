@@ -258,8 +258,8 @@ real part of the project's contribution, not bookkeeping
 You've seen the whole system. Good follow-ups, in order:
 
 0. **[findings-summary.md](findings-summary.md)** — the actual results (experiments
-   E1–E13) in one page, with the overview figure. Read this to see what the tool has
-   *found*, not just how it works.
+   E1–E16, E17 reserved) in one page, with the overview figure. Read this to see what
+   the tool has *found*, not just how it works.
 1. **[project-overview.md](project-overview.md)** — the problem in plain language,
    now that you've seen it in action.
 2. **[research-questions.md](research-questions.md)** — the backlog of questions we

@@ -108,7 +108,23 @@ disruption.
   monitor **redundancy** sweeps; a *press* (sustained) disturbance; agents that
   rejoin/are replaced.
 
-### Phase 4 — Consolidation (thesis)
+### Phase 4 — Equifinality / complexity axes (thesis) — 🔄 in progress
+*Why this reframe and the full ranked candidate list:*
+[thesis-direction-equifinality.md](thesis-direction-equifinality.md). *What it's
+found so far:* [complexity-synthesis.md](complexity-synthesis.md). Not yet the
+formally locked-in thesis topic, but the actively developed one, with encouraging
+supervisor feedback.
+- ✅ **Population-type diversity (E14)** — raw diversity count is a weak,
+  confounded proxy; enforcer presence explains almost all of it.
+- ✅ **Groups / nested enforcement (E15, ADR-0012)** — a second core-engine change
+  (after E13's collective choice); near-optimal count genuinely grows with `m`,
+  fraction still falls.
+- ✅ **Boundaries / open access (E16, ADR-0013)** — expressed via the same groups
+  mechanism, no new engine code; opening costs a consistent ~2× fraction.
+- ⏳ Next: see the ranked candidate list linked above (network reciprocity,
+  multiple resources, reputation, specialization; `R₀` reserved as **E17**).
+
+### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and
 possibly one small original strategy or measurement method compared to baselines.
 
