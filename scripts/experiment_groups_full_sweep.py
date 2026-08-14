@@ -1,6 +1,6 @@
 """Experiment E15: nested enforcement, reworked to sweep the *full*
-population-composition matrix per group, not just "k groups sanctioning,
-rest selfish."
+population-composition matrix per group, not just "k groups sanctioning, rest
+selfish".
 
 The original E15 (before this rework) only varied `k`: how many of the `m`
 groups were fully `sanctioning` vs. fully `selfish` -- a 2-type sweep,
@@ -47,7 +47,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from emergent_cooperation.core.config import AgentSpec, ResourceConfig, SimulationConfig  # noqa: E402
+from emergent_cooperation.core.config import (  # noqa: E402
+    AgentSpec,
+    ResourceConfig,
+    SimulationConfig,
+)
 from emergent_cooperation.core.simulation import run_simulation  # noqa: E402
 from emergent_cooperation.metrics.metrics import compute_metrics  # noqa: E402
 
@@ -65,6 +69,11 @@ TYPES = (
     "sanctioning",
 )
 THRESHOLD = 0.80  # same provisional threshold as E14/E16
+# Invariant across the whole sweep -- only `agents` varies per call, so build
+# it once instead of on every one of the (tens of) thousands of simulations.
+RESOURCE = ResourceConfig(
+    initial_level=CAPACITY / 2, capacity=CAPACITY, regeneration_rate=G, collapse_threshold=1.0
+)
 
 
 def _params(strategy: str) -> dict:
@@ -86,17 +95,12 @@ def _sub_compositions(size: int) -> list[tuple[int, ...]]:
     return out
 
 
-def _welfare_efficiency(specs: list[AgentSpec]) -> tuple[float, bool]:
+def _welfare_efficiency(specs: list[AgentSpec], name: str = "E15_full") -> tuple[float, bool]:
     cfg = SimulationConfig(
-        name="E15_full",
+        name=name,
         rounds=ROUNDS,
         information_model="global",
-        resource=ResourceConfig(
-            initial_level=CAPACITY / 2,
-            capacity=CAPACITY,
-            regeneration_rate=G,
-            collapse_threshold=1.0,
-        ),
+        resource=RESOURCE,
         agents=tuple(specs),
     )
     result = run_simulation(cfg, seed=1)
@@ -115,7 +119,8 @@ def _specs_for(group_compositions: tuple[tuple[int, ...], ...]) -> list[AgentSpe
 
 def sweep_m(m: int) -> pd.DataFrame:
     """Every joint combination of `m` groups' own compositions, each summing
-    to `N/m`. Returns one row per joint configuration."""
+    to `N/m`. Returns one row per joint configuration.
+    """
     size = N // m
     sub_comps = _sub_compositions(size)
     rows = []
@@ -133,6 +138,7 @@ def sweep_m(m: int) -> pd.DataFrame:
 
 
 def near_optimal_by_m(summaries: dict[int, pd.DataFrame]) -> pd.DataFrame:
+    """Near-optimal count and fraction at each `m`, from each m's own summary."""
     rows = []
     for m, df in summaries.items():
         passing = int((df["welfare_efficiency"] >= THRESHOLD).sum())
@@ -148,6 +154,7 @@ def near_optimal_by_m(summaries: dict[int, pd.DataFrame]) -> pd.DataFrame:
 
 
 def make_figure(curve: pd.DataFrame, path: Path) -> None:
+    """Two panels: near-optimal count and fraction vs. m."""
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.8))
     color = "#1f77b4"
 
@@ -189,6 +196,7 @@ def make_figure(curve: pd.DataFrame, path: Path) -> None:
 
 
 def main() -> None:
+    """Run the full sweep at every m; export CSVs, the near-optimal curve, and figure."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summaries: dict[int, pd.DataFrame] = {}
     for m in GROUP_COUNTS:

@@ -150,7 +150,8 @@ def summarise() -> pd.DataFrame:
 def near_optimal_by_diversity(summary: pd.DataFrame) -> pd.DataFrame:
     """For each diversity level (1..4), how many of the tested compositions at
     that level clear THRESHOLD -- both as a count and as a fraction (see
-    docs/complexity-synthesis.md's "report both" lesson)."""
+    docs/complexity-synthesis.md's "report both" lesson).
+    """
     rows = []
     for diversity in sorted(summary["diversity"].unique()):
         sub = summary[summary["diversity"] == diversity]
@@ -168,7 +169,8 @@ def near_optimal_by_diversity(summary: pd.DataFrame) -> pd.DataFrame:
 
 def make_figure(curve: pd.DataFrame, path: Path) -> None:
     """Near-optimal-set-size vs. population-type diversity -- two panels
-    (count, fraction), same convention as E15/E16's complexity_curve.png."""
+    (count, fraction), same convention as E15/E16's complexity_curve.png.
+    """
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.8))
     color = "#1f77b4"
 
@@ -211,6 +213,7 @@ def make_figure(curve: pd.DataFrame, path: Path) -> None:
 
 
 def main() -> None:
+    """Run the full compositional sweep; export the summary, curve, and figure."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     summary = summarise()
     summary.to_csv(OUT_DIR / "summary.csv", index=False)

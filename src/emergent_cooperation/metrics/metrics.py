@@ -75,6 +75,7 @@ def compute_metrics(
     """
     # Net payoff per agent (harvest minus sanction penalties); gross resource extracted.
     payoffs = result.total_payoffs()
+    total_payoff = sum(payoffs)
     gross_harvest = sum(r.total_harvested for r in result.rounds)
     total_penalty = sum(r.total_penalty for r in result.rounds)
     if capacity is None:
@@ -95,7 +96,7 @@ def compute_metrics(
         else None
     )
     efficiency = _efficiency(gross_harvest, msy, n_rounds)
-    welfare_efficiency = _efficiency(sum(payoffs), msy, n_rounds)
+    welfare_efficiency = _efficiency(total_payoff, msy, n_rounds)
     over_usage_rate = _over_usage_rate(result, msy, collapse_threshold)
     resilience = _resilience_metrics(result)
 
@@ -107,7 +108,7 @@ def compute_metrics(
         "rounds": n_rounds,
         # System performance: total_harvest is gross resource extracted; payoff is net.
         "total_harvest": gross_harvest,
-        "mean_agent_payoff": (sum(payoffs) / len(payoffs)) if payoffs else 0.0,
+        "mean_agent_payoff": (total_payoff / len(payoffs)) if payoffs else 0.0,
         "total_sanction_penalty": total_penalty,
         "efficiency": efficiency,
         # Net-welfare analogue of `efficiency` (payoffs, not gross harvest) — the

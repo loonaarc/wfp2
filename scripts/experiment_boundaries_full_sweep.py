@@ -46,21 +46,19 @@ import pandas as pd  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from experiment_groups_full_sweep import (  # noqa: E402
-    CAPACITY,
-    G,
     GROUP_COUNTS,
-    N,
-    ROUNDS,
     THRESHOLD,
     TYPES,
+    N,
     _params,
     _specs_for,
     _sub_compositions,
 )
+from experiment_groups_full_sweep import (
+    _welfare_efficiency as _welfare_efficiency_base,
+)
 
-from emergent_cooperation.core.config import AgentSpec, ResourceConfig, SimulationConfig  # noqa: E402
-from emergent_cooperation.core.simulation import run_simulation  # noqa: E402
-from emergent_cooperation.metrics.metrics import compute_metrics  # noqa: E402
+from emergent_cooperation.core.config import AgentSpec  # noqa: E402
 
 OUT_DIR = Path(__file__).resolve().parent.parent / "results" / "E16_boundaries_full_sweep"
 OUTSIDERS = 4
@@ -69,28 +67,15 @@ SEED = 42
 
 
 def _welfare_efficiency(specs: list[AgentSpec]) -> tuple[float, bool]:
-    cfg = SimulationConfig(
-        name="E16_full",
-        rounds=ROUNDS,
-        information_model="global",
-        resource=ResourceConfig(
-            initial_level=CAPACITY / 2,
-            capacity=CAPACITY,
-            regeneration_rate=G,
-            collapse_threshold=1.0,
-        ),
-        agents=tuple(specs),
-    )
-    result = run_simulation(cfg, seed=1)
-    metrics = compute_metrics(result, capacity=CAPACITY, regeneration_rate=G)
-    return metrics["welfare_efficiency"], metrics["collapsed"]
+    return _welfare_efficiency_base(specs, name="E16_full")
 
 
 def sample_m_open(m: int, n_samples: int, rng: random.Random) -> pd.DataFrame:
     """Monte Carlo sample of the full (governed composition x outsider
     composition) space for this m, boundary open. Each factor is sampled
     uniformly and independently from its own enumerated list, so the joint
-    sample is uniform over the full cross product without materializing it."""
+    sample is uniform over the full cross product without materializing it.
+    """
     size = N // m
     governed_choices = _sub_compositions(size)
     outsider_choices = _sub_compositions(OUTSIDERS)
@@ -118,7 +103,8 @@ def sample_m_open(m: int, n_samples: int, rng: random.Random) -> pd.DataFrame:
 def outsider_type_sweep() -> pd.DataFrame:
     """Unchanged from the original E16: full coverage (every group uniformly
     sanctioning), boundary open, outsider's own strategy varied across 4
-    named types -- a separate, small, exact sub-study."""
+    named types -- a separate, small, exact sub-study.
+    """
     types = ("selfish", "cooperative", "conditional_cooperator", "compensating_cooperator")
     rows = []
     for m in GROUP_COUNTS:
@@ -140,7 +126,8 @@ def near_optimal_by_m_boundary(closed: dict[int, pd.DataFrame], open_samples: di
     """Closed side: exact (reused from E15). Open side: Monte Carlo estimate
     with a 95% confidence interval on both the fraction and the count
     (count = fraction x true total space size, which is known exactly even
-    though the space itself isn't enumerated)."""
+    though the space itself isn't enumerated).
+    """
     rows = []
     for m in GROUP_COUNTS:
         closed_df = closed[m]
@@ -172,6 +159,7 @@ def near_optimal_by_m_boundary(closed: dict[int, pd.DataFrame], open_samples: di
 
 
 def make_figure(curve: pd.DataFrame, path: Path) -> None:
+    """Two panels: near-optimal count and fraction vs. m, closed vs. open."""
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.8))
     style = {"closed": dict(color="#1f77b4", marker="o"), "open": dict(color="#d55e00", marker="s")}
 
@@ -218,6 +206,7 @@ def make_figure(curve: pd.DataFrame, path: Path) -> None:
 
 
 def main() -> None:
+    """Sample the open side at every m, reuse E15's closed side, export and plot."""
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     rng = random.Random(SEED)
 

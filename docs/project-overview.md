@@ -10,17 +10,13 @@ good, cooperative, self-sustaining behaviour. Sometimes it produces collapse:
 everyone acts reasonably from their own point of view, yet the shared system is
 ruined. This is the classic *tragedy of the commons*.
 
-Two things strongly shape which outcome occurs:
-
-1. **What each actor knows** — only its own situation, its neighbours', or the
-   whole system's state; and whether that knowledge is current, delayed, or wrong.
-2. **How actors communicate** — not at all, with neighbours, by broadcast; with
-   limited range, budget, or reliability.
-
-And a third thing shapes how *robust* a good outcome is:
-
-3. **Disturbances** — actors fail, resources crash, messages get dropped, or some
-   actors behave selfishly or deceptively.
+Two things strongly shape which outcome occurs — **what each actor knows** (its
+own situation only, or the whole system's state, and how current that knowledge
+is) and **how actors communicate** (not at all, or by some channel with its own
+limits). A third thing shapes how *robust* a good outcome is: **disturbances** —
+actors fail, resources crash, messages get dropped. See
+[research-direction.md](research-direction.md#the-three-organizing-axes) for the
+precise breakdown of all three.
 
 ## What this project does
 

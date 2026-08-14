@@ -425,15 +425,12 @@ simulated so far and checks whether total harvest exceeded the sustainable yield
 switches on starting *this* round. This is what lets a population with **no**
 individually-sanctioning agent still end up enforced — see [E13](experiments/E13-binding-agreement.md).
 
-The **enforcement** step (`_enforce`) runs next. If any agent exposes a
-`SanctionPolicy`, **or** the collective-choice vote has passed, every agent's
-harvest is capped at the per-capita quota (`min(quota_total) / N`, or
-`sustainable_yield / N` when enforcement is purely collective), and the confiscated
-excess stays in the pool (protecting the resource). Each individual sanctioner
-forfeits its own `monitoring_cost`; if enforcement is collectively chosen, every
-*other* active agent additionally forfeits the shared `cost_share` (an individual
-sanctioner is not double-charged). With neither present it is a no-op, so ordinary
-runs are unchanged (ADR-0005; ADR-0011).
+The **enforcement** step (`_enforce`) runs next, now scoped per `AgentSpec.group`
+rather than population-wide (ADR-0012) — see
+[architecture.md](architecture.md#the-round-in-detail)'s round-in-detail for the
+exact quota/charging rules (including how boundaries/`governed=False` fit in,
+ADR-0013). With neither an active sanctioner nor a passed vote it is a no-op, so
+ordinary runs are unchanged (ADR-0005; ADR-0011; ADR-0012).
 
 `run()` just calls `step()` for every round and collects the records into a
 `RunResult`. Because the pool, the agents, and the RNG are all determined by
@@ -587,12 +584,10 @@ collapse.** That's the phenomenon this whole codebase exists to study.
 - **`AgentSpec.group` / `AgentSpec.governed`** *(not a stub — fully implemented,
   ADR-0012/0013)* — also no separate package, for the same reason as
   `collective_choice`: `_enforce()` needs to know group membership every round.
-  `group` scopes individual sanctioning to that group only (a sanctioner never caps
-  a different group's harvest); `governed=False` marks a batch as an ungoverned
-  outsider — excluded from the quota's fair-share denominator, present in the round
-  and rationed by the same feasibility scaling as everyone else, but never capped to
-  the sustainable yield. Boundaries (open vs. closed access) are expressed entirely
-  through this one flag — no separate engine mechanism. Studied in
+  Exactly what `group` scopes and what `governed=False` does (and doesn't) exclude
+  is in [architecture.md](architecture.md#known-simplifications-current)'s known
+  simplifications; boundaries (open vs. closed access) are expressed entirely
+  through this one flag, no separate engine mechanism. Studied in
   [E14](experiments/E14-population-diversity.md) (population composition, flat),
   [E15](experiments/E15-groups.md) (groups), and
   [E16](experiments/E16-boundaries.md) (boundaries).

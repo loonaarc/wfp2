@@ -51,6 +51,12 @@ results/**
 !results/E9_resilience_freeriders/**
 !results/E10_agent_failure/
 !results/E10_agent_failure/**
+!results/E11_voluntary_monitoring_loner/
+!results/E11_voluntary_monitoring_loner/**
+!results/E12_pool_punishment/
+!results/E12_pool_punishment/**
+!results/E13_binding_agreement/
+!results/E13_binding_agreement/**
 !results/E14_population_diversity/
 !results/E14_population_diversity/**
 !results/E15_groups_full_sweep/

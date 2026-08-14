@@ -599,11 +599,10 @@ this ranking:**
     machinery (E5/E11/E12's evolutionary dynamics, `payoff_gini`), same
     grounding gap as 11.
 
-**Numbering note, resolved 2026-08-09:** `docs/literature-review.md` and two
-Beven & Binley paper notes independently referenced a *different*,
-still-unbuilt "E14" (a GLUE-methodology experiment varying the starting
-resource level `R₀`), planned before population-diversity claimed the E14
-slot. Renumbered to **E17**.
+**Numbering note:** E14 was briefly double-booked with a different,
+still-unbuilt GLUE/`R₀` experiment, since renumbered to **E17** — see
+[complexity-synthesis.md](complexity-synthesis.md)'s own "Numbering caveat"
+for the full history.
 
 ## Sweep design: staircase vs. full factorial
 

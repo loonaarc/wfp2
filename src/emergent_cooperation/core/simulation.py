@@ -52,6 +52,12 @@ class Simulation:
         # quota never triggers the cap at all. Fixed once per run: group
         # membership never changes mid-run.
         self._n_governed = sum(1 for a in self.agents if a.governed) or len(self.agents)
+        # Agent indices bucketed by AgentSpec.group (ADR-0012), for _enforce()'s
+        # per-group quota loop. Fixed once per run for the same reason as
+        # _n_governed above: group membership never changes mid-run.
+        self._groups: dict[int, list[int]] = {}
+        for i, agent in enumerate(self.agents):
+            self._groups.setdefault(agent.group, []).append(i)
         # One independent, reproducible RNG stream per agent.
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
         # The whole population's total harvest last round (for the broadcast
@@ -176,8 +182,7 @@ class Simulation:
             is the per-agent monitoring/collective-fee cost paid this round (0 for
             agents subject to neither).
         """
-        n_total = len(self.agents)
-        penalties = [0.0] * n_total
+        penalties = [0.0] * len(self.agents)
         collective = self._collective_enforcement_active
         # The per-capita quota rations the *governed* community's own
         # sustainable share -- an outsider (AgentSpec.governed=False, ADR-0013)
@@ -191,17 +196,11 @@ class Simulation:
             agent.strategy.sanction_policy() if agent.active else None for agent in self.agents
         ]
 
-        groups: dict[int, list[int]] = {}
-        for i, agent in enumerate(self.agents):
-            groups.setdefault(agent.group, []).append(i)
-
         capped = list(harvests)
-        any_enforced = False
-        for member_indices in groups.values():
+        for member_indices in self._groups.values():
             active = [own_policies[i] for i in member_indices if own_policies[i] is not None]
             if not active and not collective:
                 continue
-            any_enforced = True
             quota_per_capita = (
                 min(p.quota_total for p in active) / n_governed
                 if active
@@ -223,8 +222,6 @@ class Simulation:
                     penalties[i] += share
                     agent.total_payoff -= share
 
-        if not any_enforced:
-            return harvests, sum(harvests), penalties
         return capped, sum(capped), penalties
 
     def _maybe_vote(self, round_index: int) -> bool:

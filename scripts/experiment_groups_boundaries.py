@@ -90,8 +90,14 @@ def _params(strategy: str) -> dict:
     return p
 
 
-def _experiment(m: int, k: int, *, outsiders: bool) -> ExperimentConfig:
-    """`m` groups of size `n = N/m`; the first `k` are sanctioning, rest selfish."""
+def _experiment(m: int, k: int, *, outsiders: bool, outsider_strategy: str = "selfish") -> ExperimentConfig:
+    """`m` groups of size `n = N/m`; the first `k` are sanctioning, rest selfish.
+    With `outsiders=True`, adds an own, ungoverned group running
+    `outsider_strategy` -- never covered by any group's sanctioning quota, and
+    `governed=False` so it's also excluded from the quota *denominator*
+    (ADR-0012's allocation correction) -- not counted and then left
+    unconstrained anyway.
+    """
     n = N // m
     agents = [
         AgentSpec(
@@ -103,13 +109,11 @@ def _experiment(m: int, k: int, *, outsiders: bool) -> ExperimentConfig:
         for g in range(m)
     ]
     if outsiders:
-        # Own, ungoverned group -> never covered by any group's sanctioning quota,
-        # and governed=False so it's also excluded from the quota *denominator*
-        # (ADR-0012's allocation correction) -- not counted and then left
-        # unconstrained anyway.
-        agents.append(AgentSpec("selfish", OUTSIDERS, {"greed": 1.0}, group=m, governed=False))
+        agents.append(
+            AgentSpec(outsider_strategy, OUTSIDERS, _params(outsider_strategy), group=m, governed=False)
+        )
     sim = SimulationConfig(
-        name=f"E15_m{m}_k{k}_{'open' if outsiders else 'closed'}",
+        name=f"E15_m{m}_k{k}_{'open-' + outsider_strategy if outsiders else 'closed'}",
         rounds=ROUNDS,
         information_model="global",
         resource=ResourceConfig(
@@ -127,7 +131,8 @@ def _payoff_by_strategy(result) -> dict[str, float]:
     """Mean net payoff per strategy present in a single run -- stays meaningful
     even when payoff_gini is undefined (negative net payoff breaks Gini's
     formula; a raw per-strategy mean never does). Single seed here, so no
-    averaging across runs is needed."""
+    averaging across runs is needed.
+    """
     from collections import defaultdict
 
     sums: dict[str, list[float]] = defaultdict(list)
@@ -139,7 +144,8 @@ def _payoff_by_strategy(result) -> dict[str, float]:
 def summarise() -> pd.DataFrame:
     """welfare_efficiency, sustainability_ratio, payoff_gini, per-strategy mean
     payoff, and collapsed, per (m, k, boundary). Single seed (SEEDS=(1,)), so
-    every value below is exact, not an average across runs."""
+    every value below is exact, not an average across runs.
+    """
     rows = []
     for m in GROUP_COUNTS:
         for k in range(m + 1):
@@ -190,30 +196,6 @@ def complexity_curve(summary: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def _outsider_experiment(m: int, outsider_strategy: str) -> ExperimentConfig:
-    """Full coverage (every one of the `m` governed groups is sanctioning) plus an
-    open, ungoverned outsider group running `outsider_strategy` instead of the
-    fixed `selfish` used in the main sweep above."""
-    n = N // m
-    agents = [AgentSpec("sanctioning", n, _params("sanctioning"), group=g) for g in range(m)]
-    agents.append(
-        AgentSpec(outsider_strategy, OUTSIDERS, _params(outsider_strategy), group=m, governed=False)
-    )
-    sim = SimulationConfig(
-        name=f"E15_outsider_m{m}_{outsider_strategy}",
-        rounds=ROUNDS,
-        information_model="global",
-        resource=ResourceConfig(
-            initial_level=CAPACITY / 2,
-            capacity=CAPACITY,
-            regeneration_rate=G,
-            collapse_threshold=1.0,
-        ),
-        agents=tuple(agents),
-    )
-    return ExperimentConfig(simulation=sim, seeds=SEEDS, record_history=False)
-
-
 def near_optimal_set(summary: pd.DataFrame) -> pd.DataFrame:
     """For each `m`, with every group covered (full coverage), classify every
     candidate outsider strategy as behavioural/non-behavioural at THRESHOLD, and
@@ -233,7 +215,9 @@ def near_optimal_set(summary: pd.DataFrame) -> pd.DataFrame:
             }
         )
         for strategy in OUTSIDER_STRATEGIES:
-            metrics = run_experiment(_outsider_experiment(m, strategy)).metrics
+            metrics = run_experiment(
+                _experiment(m, k=m, outsiders=True, outsider_strategy=strategy)
+            ).metrics
             we = float(metrics["welfare_efficiency"].mean())
             rows.append(
                 {
@@ -253,7 +237,8 @@ M_COLOR = {1: "#1f77b4", 2: "#d55e00", 4: "#009e73"}
 
 def make_figure(summary: pd.DataFrame, path: Path) -> None:
     """Panel A: welfare_efficiency vs fraction sanctioning, one line per m, closed vs open.
-    Panel B: same for sustainability_ratio."""
+    Panel B: same for sustainability_ratio.
+    """
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4.6))
 
     for ax, col, title in (
@@ -317,7 +302,8 @@ def make_complexity_figure(curve: pd.DataFrame, path: Path) -> None:
     is swept separately, see near_optimal_set.csv / E16's "by outsider type"
     section: at full coverage, count is 3/5 there, not 0/5, once the outsider
     isn't selfish). Labelled explicitly in the legend below so this chart
-    doesn't get read as the general answer for "boundary" on its own."""
+    doesn't get read as the general answer for "boundary" on its own.
+    """
     fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.8))
     style = {"closed": dict(color="#1f77b4", marker="o"), "open": dict(color="#d55e00", marker="s")}
 

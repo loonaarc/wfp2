@@ -931,6 +931,14 @@
     // An outsider's own observation still sees the literal total (n) -- it
     // has no governed community to reason about in the first place.
     const nGoverned = agents.filter((a) => a.governed).length || n;
+    // Agent indices bucketed by group (ADR-0012) -- fixed for the whole run
+    // since group membership never changes mid-run, same as nGoverned above.
+    const byGroup = new Map();
+    agents.forEach((a, i) => {
+      const g = a.group ?? 0;
+      if (!byGroup.has(g)) byGroup.set(g, []);
+      byGroup.get(g).push(i);
+    });
     let level = o.init ?? INIT, lastTotal = 0;
     // Collective-choice vote state (E13): rounds observed as over-using so far,
     // whether the vote has fired, and whether it passed.
@@ -976,12 +984,6 @@
       // so with `m=1` this reduces exactly to the original flat rule. The quota
       // itself is scoped to nGoverned (allocation correction, 2026-08-08) --
       // outsiders don't shrink it just by being instantiated.
-      const byGroup = new Map();
-      agents.forEach((a, i) => {
-        const g = a.group ?? 0;
-        if (!byGroup.has(g)) byGroup.set(g, []);
-        byGroup.get(g).push(i);
-      });
       for (const idxs of byGroup.values()) {
         const groupHasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active);  // a failed sanctioner stops enforcing
         if (!groupHasSanctioner && !collectiveActive) continue;
@@ -2223,6 +2225,11 @@
     return specs;
   }
   function cxWelfareEfficiency(specs) {
+    // Not delegated to welfareEfficiency(): that helper assumes the caller
+    // already unshifted a synthetic "round 0" frame (buildDisplaySim does
+    // this for the single-run view), which the sweep intentionally skips --
+    // it calls runSim() directly for speed, so frames.length is exactly
+    // CX_ROUNDS here, not CX_ROUNDS + 1.
     const sim = runSim(specs, CX_OPTS);
     return sim.payoff.reduce((a, b) => a + b, 0) / (MSY * CX_ROUNDS);
   }
@@ -2252,6 +2259,24 @@
                               // Python script's exhaustive 56,020-config enumeration, which
                               // blocked the tab for several seconds; ~+/-1.8% 95% CI
 
+  // One Monte Carlo draw: sample each of `m` groups' own sub-composition
+  // uniformly from `subComps`, optionally also an outsider composition from
+  // `outsiderComps` (open-boundary case only), and report whether the
+  // resulting population passes. Shared by the closed and open loops below --
+  // same rng() call order/count either way (m group draws, +1 more only when
+  // outsiderComps is given), so factoring it out changes nothing about which
+  // configurations get sampled for a given seed.
+  function cxSampleOnceDoesPass(subComps, m, rng, outsiderComps) {
+    const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rng() * subComps.length)]);
+    const specs = [];
+    groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
+    if (outsiderComps) {
+      const outsiderComp = outsiderComps[Math.floor(rng() * outsiderComps.length)];
+      specs.push(...cxSpecsFromComposition(outsiderComp, m, false));
+    }
+    return cxPasses(cxWelfareEfficiency(specs));
+  }
+
   // Each preset returns { series: [{label,color,points:[{x,count,tested}]}], table: {headers, rows} }.
   function cxRunSweep(kind) {
     if (kind === "groups" || kind === "groups_boundary") {
@@ -2269,10 +2294,7 @@
         const subComps = cxCompositionsOfSize(N_GOVERNED / m);
         let passing = 0;
         for (let i = 0; i < CX_N_SAMPLES; i++) {
-          const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rngClosed() * subComps.length)]);
-          const specs = [];
-          groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
-          if (cxPasses(cxWelfareEfficiency(specs))) passing++;
+          if (cxSampleOnceDoesPass(subComps, m, rngClosed)) passing++;
         }
         const frac = passing / CX_N_SAMPLES;
         const totalSpace = Math.pow(subComps.length, m);
@@ -2296,12 +2318,7 @@
         const subComps = cxCompositionsOfSize(N_GOVERNED / m);
         let passing = 0;
         for (let i = 0; i < CX_N_SAMPLES; i++) {
-          const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rngOpen() * subComps.length)]);
-          const outsiderComp = outsiderComps[Math.floor(rngOpen() * outsiderComps.length)];
-          const specs = [];
-          groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
-          specs.push(...cxSpecsFromComposition(outsiderComp, m, false));
-          if (cxPasses(cxWelfareEfficiency(specs))) passing++;
+          if (cxSampleOnceDoesPass(subComps, m, rngOpen, outsiderComps)) passing++;
         }
         const frac = passing / CX_N_SAMPLES;
         const totalSpace = Math.pow(subComps.length, m) * outsiderComps.length;
@@ -2345,9 +2362,7 @@
       const series = [{ label: "population-type diversity (E14)", color: css("--accent"), points: [] }];
       const byLevel = new Map(CX_DIVERSITY_LEVELS.map((d) => [d, { count: 0, tested: 0 }]));
       for (const composition of cxCompositions()) {
-        const specs = CX_DIVERSITY_TYPES
-          .map((kind2, i) => ({ kind: kind2, count: composition[i] }))
-          .filter((s) => s.count > 0);
+        const specs = cxSpecsFromComposition(composition);
         const diversity = composition.filter((c) => c > 0).length;
         const bucket = byLevel.get(diversity);
         bucket.tested++;
