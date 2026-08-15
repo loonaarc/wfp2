@@ -159,11 +159,15 @@ result — see the same doc section's "Demo-only sampling" note.
 
 Not yet built (see the ranking in
 [thesis-direction-equifinality.md](thesis-direction-equifinality.md#ranking-the-axes-by-fit-not-by-build-cost)):
-network reciprocity, multiple resources, reputation/indirect reciprocity,
-specialization, communication as its own named axis (built, E6/E7, never
-formally ranked). A **revised** population-diversity axis (two booleans —
-enforcer present, reciprocal-vs-compensating response — instead of a raw
-type count) is E14's own recommended follow-up, ahead of any of these.
+multiple resources, specialization, communication as its own named axis
+(built, E6/E7, never formally ranked). A **revised** population-diversity
+axis (two booleans — enforcer present, reciprocal-vs-compensating response —
+instead of a raw type count) is E14's own recommended follow-up, ahead of
+either. Reputation (E18) and network reciprocity (E19) are also both
+built — see the "Related but distinct" section below for why neither is in
+the count/fraction table above: both test a genuinely different question
+than "does the near-optimal set grow," not this project's central
+equifinality conjecture directly.
 
 ## The chart: population-type diversity (E14)
 
@@ -262,14 +266,56 @@ shocked `welfare_efficiency`, no collapse, same ranking against 3 alternative
 compositions tested. Consistent with E8's own finding that shock recovery is
 driven by observation/self-correction, not enforcement.
 
+## Related but distinct: reputation (E18) and network reciprocity (E19)
+
+Both are built and both are genuinely new mechanisms (see ADR-0014, ADR-0015)
+— but neither belongs in the count/fraction table above, and forcing them in
+would be exactly the mistake lesson 5 warns against: axis-count alone isn't
+evidence, the *mechanism* has to actually test "does the near-optimal set
+grow." E18 and E19 test a different pair of questions entirely:
+
+- **E14–E16 ask:** across a *fixed single run*, how many distinct
+  *compositions/structures* clear a near-optimal welfare threshold? The unit
+  of comparison is a whole population configuration; the metric is a
+  count/fraction over the composition space.
+- **E18 asks:** does conditioning retaliation on *one partner* instead of
+  the population's aggregate avoid the collapse blanket retaliation causes?
+  A strategy-level comparison at a single, fixed composition — not a sweep
+  over compositions at all.
+- **E19 asks:** does making that partner a *fixed graph neighbour* instead
+  of a fresh random draw change individual agents' outcomes based on their
+  *position*? Its headline finding (see
+  [E19's report](experiments/E19-network-reciprocity.md)) is distributional
+  — at a sparse ring (`k=2`), the free-rider's two fixed neighbours earn
+  ~117 on average across 20 seeds while agents on the far side of the ring
+  earn ~5, a >20× gap that well-mixed reputation (E18) cannot produce even
+  in principle, since it has no notion of position at all. Population-level
+  sustainability, by contrast, is roughly flat across every degree tested
+  (0.12–0.14) — the near-optimal-*set-size* question this document otherwise
+  tracks barely moves.
+
+**Why this matters for the equifinality conjecture specifically:** E19 is
+evidence about *inequality/luck*, not about *how many paths reach a good
+aggregate outcome* — a real, useful, and non-obvious finding in its own
+right (see ADR-0015's Consequences), but answering a different research
+question than the one this document exists to track. It would be a category
+error to add "network degree" as a fourth row next to diversity/groups/
+boundary in the table above: those three all vary *what the population
+looks like*, at a single well-mixed interaction; E19 varies *who interacts
+with whom*, at a fixed population. Recorded here for completeness and cross-
+reference, not folded into the count/fraction methodology.
+
 ## What's next
 
 Add a row/column here each time a new axis is built and tested against the
 existing ones — not a rewrite each time, an extension. Immediate follow-ups,
 per E15/E16's own: a matched same-space paired comparison (does a specific
 governed composition that passes closed *also* tend to pass open, rather
-than comparing aggregate fractions), then network reciprocity or multiple
-resources as the next wholly new axis.
+than comparing aggregate fractions), then multiple resources or
+specialization as the next wholly new composition-space axis (network
+reciprocity and reputation are now both built, but — see "Related but
+distinct" above — as their own standalone mechanism comparisons, not as
+entries in this document's count/fraction table).
 
 **Optional research, deferred until all complexity axes are built**: redo the
 ceiling/argmax check above *under a disturbance* (resource shock, agent
@@ -278,8 +324,10 @@ hand-picked candidates — does the identical champion composition stay optimal
 once shocked, at every axis and every level, or does robustness itself trade
 off against peak `welfare_efficiency` somewhere in the space? Genuinely new
 compute (unlike the no-shock ceiling, which was free), so worth doing once
-the full axis roster (network reciprocity, multiple resources, reputation,
-specialization) exists rather than repeating it after every single axis.
+the full composition-space axis roster (multiple resources, specialization —
+network reciprocity and reputation are standalone mechanism comparisons, not
+composition-space axes, see "Related but distinct" above) exists rather than
+repeating it after every single axis.
 
 **Optional research, no fixed timing**: an analytical (not simulated)
 derivation of the simplest observed pass/fail rules — e.g. E14's "any
@@ -288,8 +336,13 @@ quota cap bind," which is linear arithmetic once the harvest requests are
 written out, so it may have a clean closed-form proof rather than only an
 empirical one. Cheaper alternative to a from-scratch derivation: check this
 project's own simulated results *against* Nowak's already-derived exact
-conditions (`b/c > k` for network reciprocity, `b/c > 1 + n/m` for group
-selection) once those axes are built, rather than deriving new formulas.
-Useful for understanding *why* a rule holds, not required for reporting
-*that* it holds — the empirical count/fraction tables stand on their own
-either way.
+conditions — `b/c > 1 + n/m` for group selection (E15) remains an open
+check. **`b/c > k` for network reciprocity (E19) turned out not to be
+literally checkable**: as ADR-0015 documents, monitoring/enforcement's
+benefit in this project's single shared pool is a population-wide public
+good, not the pairwise donor-recipient transfer Nowak's `b` and `c` assume,
+so there is no operational `b/c` to compare against `k` in the first place —
+a real, useful negative finding about where the formula does and doesn't
+transfer, not a gap left to fill later. Useful for understanding *why* a
+rule holds, not required for reporting *that* it holds — the empirical
+count/fraction tables stand on their own either way.

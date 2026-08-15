@@ -68,10 +68,13 @@ of the shared resource does it try to take this round? There are seven (defined 
 - **`reputation_cooperator`** — cooperate unless this round's randomly-assigned
   *partner* has a bad reputation score, then retaliate against just that round
   (indirect reciprocity, E18, ADR-0014) — a partner-specific reaction, unlike
-  `conditional_cooperator`'s population-wide one.
+  `conditional_cooperator`'s population-wide one. That partner is normally a
+  fresh random draw every round; optionally fixing it to a persistent graph
+  neighbour instead (network reciprocity, E19, ADR-0015) makes an agent's
+  outcome depend on its graph position, not just the population's composition.
 
 The first two are the core contrast (and where this walkthrough focuses); the rest
-are studied in experiments E2–E7, E11, and E18 — see the
+are studied in experiments E2–E7, E11, E18, and E19 — see the
 [findings summary](findings-summary.md).
 
 ---
@@ -263,7 +266,7 @@ real part of the project's contribution, not bookkeeping
 You've seen the whole system. Good follow-ups, in order:
 
 0. **[findings-summary.md](findings-summary.md)** — the actual results (experiments
-   E1–E18, E17 reserved) in one page, with the overview figure. Read this to see what
+   E1–E19, E17 reserved) in one page, with the overview figure. Read this to see what
    the tool has *found*, not just how it works.
 1. **[project-overview.md](project-overview.md)** — the problem in plain language,
    now that you've seen it in action.

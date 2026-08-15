@@ -65,6 +65,8 @@ results/**
 !results/E16_boundaries_full_sweep/**
 !results/E18_reputation/
 !results/E18_reputation/**
+!results/E19_network_reciprocity/
+!results/E19_network_reciprocity/**
 
 # OS / editor
 .DS_Store

@@ -37,7 +37,7 @@ application area (traffic, energy, epidemics, etc.).
   over-usage, and fairness (Gini);
 - reproducible result export (config + metrics + history + provenance);
 - environmental **disturbances** (a resource shock) with resilience metrics (E8);
-- a CLI and eighteen experiments (E1–E18, E17 reserved) — current experiment and
+- a CLI and nineteen experiments (E1–E19, E17 reserved) — current experiment and
   test counts live in [docs/findings-summary.md](docs/findings-summary.md)'s
   Status line, the one place they're kept up to date.
 
@@ -127,7 +127,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ├── docs/                     Documentation — see docs/README.md for the index
 │   ├── README.md             Documentation index + recommended reading path
 │   ├── getting-started.md    Hands-on walkthrough (run it, tweak it)
-│   ├── findings-summary.md   The E1–E18 results in one page (the writeup spine)
+│   ├── findings-summary.md   The E1–E19 results in one page (the writeup spine)
 │   ├── project-overview.md   The problem in accessible language
 │   ├── research-direction.md Chosen direction and roadmap (canonical)
 │   ├── research-questions.md Broad questions, testable subquestions, hypotheses
@@ -136,11 +136,11 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 │   ├── architecture.md       Components, interfaces, data flow
 │   ├── experiment-design.md  Variables, baselines, seeds, reproducibility
 │   ├── metrics.md            Metric definitions, formulas, limitations
-│   ├── experiments/          One report per experiment E1–E18, E17 reserved (+ index)
+│   ├── experiments/          One report per experiment E1–E19, E17 reserved (+ index)
 │   ├── contribution-opportunities.md
 │   ├── literature-review.md  Structured overview of the field
 │   ├── paper-notes/          One analysed note per paper (+ template)
-│   ├── decisions/            Architecture decision records (ADRs 0001–0014)
+│   ├── decisions/            Architecture decision records (ADRs 0001–0015)
 │   └── meeting-notes/
 ├── src/emergent_cooperation/ Library (see docs/architecture.md)
 ├── tests/                    pytest suite
@@ -155,7 +155,7 @@ Full detail in [docs/architecture.md](docs/architecture.md).
 ## Results so far
 
 **➜ Read the [findings summary](docs/findings-summary.md)** — the whole story
-(experiments **E1–E18**, E17 reserved) in one page, with the overview figure. The
+(experiments **E1–E19**, E17 reserved) in one page, with the overview figure. The
 per-experiment reports and a one-line index live in
 [docs/experiments/](docs/experiments/).
 

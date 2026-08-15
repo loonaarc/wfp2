@@ -25,3 +25,4 @@ proposed decision and its trade-offs.
 | [0012](0012-nested-enterprise-groups.md) | Group-scoped ("nested enterprise") enforcement | Accepted |
 | [0013](0013-boundaries-via-groups-reuse.md) | Boundaries (open access vs. closed community) via groups reuse — no new mechanism | Accepted |
 | [0014](0014-reputation-indirect-reciprocity.md) | Reputation (indirect reciprocity) as a partner-targeted, not population-wide, mechanism | Accepted |
+| [0015](0015-network-reciprocity-fixed-neighbor-graph.md) | Network reciprocity as a fixed neighbour graph on reputation's partner selection | Accepted |

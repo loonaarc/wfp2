@@ -513,7 +513,23 @@
                 </td>
               </tr>
               <tr>
-                <td></td><td></td><td></td><td></td><td></td>
+                <td></td><td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="nettopo">Network topology <span class="val" id="nettopo_v"></span></label>
+                    <select id="nettopo">
+                      <option value="mixed">well-mixed (E18)</option>
+                      <option value="ring">fixed ring lattice (E19)</option>
+                    </select>
+                  </div>
+                </td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="netdeg">Network degree (k) <span class="val" id="netdeg_v">2</span></label>
+                    <input type="range" id="netdeg" min="2" max="6" step="2" value="2" />
+                  </div>
+                </td>
+                <td></td>
                 <td data-scope="evo">
                   <div class="field">
                     <label for="evo_str">Selection strength <span class="val" id="evo_str_v">0.30</span></label>
@@ -653,10 +669,10 @@
         across every configuration in that comparison, right here in the browser.</p>
       <div class="card cx-panel">
         <div class="cx-stairs" id="cx_stairs">
-          <div class="cx-stair active" id="cx_stair_diversity">
+          <button type="button" class="cx-stair active" id="cx_stair_diversity" aria-pressed="true">
             <span class="cx-stair-label"><span class="cx-stair-dot"></span>Population diversity</span>
-            <span class="cx-stair-sub">495 compositions × 5 types (E14) — always on</span>
-          </div>
+            <span class="cx-stair-sub">495 compositions × 5 types (E14) — the base rung</span>
+          </button>
           <span class="cx-stair-arrow">→</span>
           <button type="button" class="cx-stair" id="cx_stair_groups" aria-pressed="false">
             <span class="cx-stair-label"><span class="cx-stair-dot"></span>+ Groups</span>
@@ -667,10 +683,24 @@
             <span class="cx-stair-label"><span class="cx-stair-dot"></span>+ Boundary</span>
             <span class="cx-stair-sub">closed → open, sampled (E16)</span>
           </button>
+          <span class="cx-stair-arrow">→</span>
+          <button type="button" class="cx-stair" id="cx_stair_reputation" aria-pressed="false">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>⭐ + Reputation</span>
+            <span class="cx-stair-sub">reputation_cooperator as a 6th type (E18)</span>
+          </button>
+          <span class="cx-stair-arrow">→</span>
+          <button type="button" class="cx-stair" id="cx_stair_network" aria-pressed="false">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>🕸️ + Network</span>
+            <span class="cx-stair-sub">fixed neighbour graph, k=4 (E19)</span>
+          </button>
         </div>
         <p class="cx-stair-hint">Toggle an axis on to stack it onto the comparison — each click
-          re-runs the real engine live. Boundary builds on Groups, so switching it on turns Groups
-          on too (there's no boundary-alone sweep).</p>
+          re-runs the real engine live. Boundary builds on Groups, and Network builds on
+          Reputation, so switching either on turns its prerequisite on too. Reputation adds
+          <code>reputation_cooperator</code> as a 6th composable type (harmless no-op for every
+          composition that doesn't happen to use it — see the comment above
+          <code>CX_DIVERSITY_TYPES</code>); Network additionally restricts its partner selection to
+          a fixed ring lattice instead of a fresh random draw each round (ADR-0014/0015).</p>
         <p class="cx-outsider-link">Related, not part of the ladder:
           <button type="button" id="cx_outsider_btn">boundary × outsider-type, full coverage (E16)</button>
         </p>
@@ -982,6 +1012,19 @@
       if (!byGroup.has(g)) byGroup.set(g, []);
       byGroup.get(g).push(i);
     });
+    // Network reciprocity (E19, ADR-0015): a fixed ring-lattice neighbour
+    // list, built once from agent order. Unlike ADR-0014's default
+    // population-wide random partner draw, each agent can only ever be
+    // paired with its own *persistent* neighbours when a degree is set --
+    // the one ingredient that lets an outcome depend on graph position.
+    let neighborsOf = null;
+    if (o.network) {
+      const half = o.network / 2;
+      const offsets = [];
+      for (let d = -half; d < 0; d++) offsets.push(d);
+      for (let d = 1; d <= half; d++) offsets.push(d);
+      neighborsOf = agents.map((_, i) => offsets.map((d) => ((i + d) % n + n) % n));
+    }
     let level = o.init ?? INIT, lastTotal = 0;
     // Collective-choice vote state (E13): rounds observed as over-using so far,
     // whether the vote has fired, and whether it passed.
@@ -1018,8 +1061,14 @@
         // visibility value, so sweeping visibility doesn't shift other draws.
         let partnerRep = null;
         if (o.reputation && n > 1) {
-          const other = Math.floor(rng() * (n - 1));
-          const partnerIdx = other < i ? other : other + 1;
+          let partnerIdx;
+          if (neighborsOf) {
+            const nb = neighborsOf[i];
+            partnerIdx = nb[Math.floor(rng() * nb.length)];
+          } else {
+            const other = Math.floor(rng() * (n - 1));
+            partnerIdx = other < i ? other : other + 1;
+          }
           partners[i] = partnerIdx;
           if (rng() < o.repVisibility) {
             partnerRep = agents[partnerIdx].reputation;
@@ -1080,7 +1129,10 @@
                     partnerSeen: o.reputation ? partnerSeen : null,
                     partnerRepAtObs: o.reputation ? partnerRepAtObs : null });
     }
-    return { kinds: agents.map((a) => a.kind), groups: agents.map((a) => a.group), frames, payoff, n };
+    return {
+      kinds: agents.map((a) => a.kind), groups: agents.map((a) => a.group), frames, payoff, n,
+      neighbors: neighborsOf,
+    };
   }
   function gini(v) {
     const n = v.length;
@@ -1143,6 +1195,7 @@
     "🚪 Harmless outsiders — boundary doesn't matter (E16)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "cooperative" },
     "⭐ Reputation softens one free-rider (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 1.0 },
     "⭐ No visibility → reputation can't act (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 0.0 },
+    "🕸️ Fixed neighbours create winners and losers (E19)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 1.0, nettopo: "ring", netdeg: 2 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1152,6 +1205,7 @@
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
     shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
     groups: $("groups"), boundary: $("boundary"), otype: $("otype"), repvis: $("repvis"),
+    nettopo: $("nettopo"), netdeg: $("netdeg"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), gscrub: $("gscrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     rep_pair_legend: $("rep_pair_legend"),
@@ -1172,13 +1226,17 @@
   const HELP = {
     regime: { summary: "A preset scenario. Picking one sets every dial below (including, for the two evolution regimes, the ones in the Evolution column); changing any dial switches back to “— custom —”." },
     ctype: { summary: "How the plain (non-monitor, non-selfish) cooperators decide how much to harvest each round.",
-      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined. <b>reputation</b> (E18, ADR-0014, Nowak &amp; Sigmund 1998) is conditional too, but on one randomly-assigned <i>partner</i>'s reputation score each round, not the population's aggregate state — every agent's own score (visible below its payoff, coloured green/red) rises <code>+1</code> for a round at/below its fair share and falls <code>−1</code> above it, regardless of that agent's own strategy; only when the drawn partner is known and below 0 does a reputation cooperator switch to a selfish-sized grab. 'Reputation visibility' is the chance that lookup succeeds each round. The ring shows each reputation cooperator's own pairing this round as a curved line toward its partner: dashed gray = pairing happened but wasn't seen (defaults to trusting, cooperates regardless), solid green = seen and trusted (cooperates), solid red = seen and distrusted (this is exactly the round it grabs a selfish share instead)." },
+      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined. <b>reputation</b> (E18, ADR-0014, Nowak &amp; Sigmund 1998) is conditional too, but on one randomly-assigned <i>partner</i>'s reputation score each round, not the population's aggregate state — every agent's own score (visible below its payoff, coloured green/red) rises <code>+1</code> for a round at/below its fair share and falls <code>−1</code> above it, regardless of that agent's own strategy; only when the drawn partner is known and below 0 does a reputation cooperator switch to a selfish-sized grab. 'Reputation visibility' is the chance that lookup succeeds each round. The ring shows each reputation cooperator's own pairing this round as a curved line toward its partner: dashed gray = pairing happened but wasn't seen (defaults to trusting, cooperates regardless), solid green = seen and trusted (cooperates), solid red = seen and distrusted (this is exactly the round it grabs a selfish share instead). 'Network topology' (E19, ADR-0015) fixes that partner to a persistent set of graph neighbours instead of a fresh random draw every round — shown as faint permanent lines on the ring, distinct from the highlighted per-round pairing curve." },
     mon: { summary: "How many of the 8 agents are monitors — they cooperate and additionally enforce a quota on everyone.",
       mechanism: "Any harvest above the quota <code>q = MSY / n</code> (MSY = g·K/4 = 10) is capped back to <code>q</code> before it counts. Each monitor pays a fixed monitoring cost of <b>0.2</b> every round, whether or not anyone actually over-harvested. Their net payoff (harvest − cost) sits below a plain cooperator's — that gap is the second-order free-rider problem (E3): enforcement benefits everyone, only monitors pay for it." },
     nsel: { summary: "How many of the 8 agents are selfish.",
       mechanism: "A selfish agent requests an equal per-capita share of whatever it perceives — <code>stock / n</code> if it can see the stock, <code>K / n</code> if blind — with no adjustment for sustainability. Monitors + cooperators + selfish always sum to 8." },
     repvis: { summary: "Only matters when cooperator type is 'reputation' — the chance (q) that a reputation cooperator actually learns its randomly-assigned partner's current score this round.",
       mechanism: "At <b>q = 1.0</b> the lookup always succeeds. At lower q it sometimes fails, and an unobserved partner defaults to trusted — 'innocent until proven guilty' — so a reputation cooperator restrains more often the lower q gets, purely from missing information, not from anyone actually behaving better. Nowak &amp; Sigmund (1998)'s own stability condition for reputation-sustained cooperation is <code>q &gt; c/b</code>." },
+    nettopo: { summary: "Only matters when cooperator type is 'reputation' — whether a reputation cooperator's partner is a fresh random draw every round, or fixed to a persistent set of graph neighbours.",
+      mechanism: "<b>well-mixed (E18)</b> redraws the partner uniformly at random from the whole population every round — every agent has equal expected exposure to a free-rider, so no agent's outcome depends on its position. <b>fixed ring lattice (E19, ADR-0015)</b> restricts the partner to a fixed set of <i>k</i> neighbours (see 'Network degree'), built once from agent order and unchanged for the whole run — the same two agents keep meeting, so a free-rider's fixed neighbours can end up with a very different outcome than agents on the far side of the ring, something well-mixed pairing cannot produce (Nowak 2006, rule 4)." },
+    netdeg: { summary: "Only matters with the fixed ring lattice topology — how many fixed neighbours (k) each agent has, k/2 on each side.",
+      mechanism: "Lower k means fewer agents can ever be paired with a given free-rider — sparser exposure, but also a more extreme outcome for whoever the fixed neighbours actually are. This does not change the shared pool's own survival much (the free-rider's own harvest doesn't depend on the graph at all) — see E19 for why the effect is about who bears the cost, not whether the resource survives." },
     info: { summary: "Whether agents can see the current resource stock before deciding how much to harvest.",
       mechanism: "<b>global</b> feeds each agent the true current stock, so the cooperative rule can compute K/2 directly and self-correct after a shock. <b>private</b> blinds the agent to the stock; it falls back to the fixed estimate <code>kb × MSY / n</code> (see “Ecological knowledge” below), which cannot adapt if the real stock has moved." },
     kb: { summary: "How accurate a blind agent's fixed estimate of the sustainable yield is.",
@@ -1274,6 +1332,7 @@
     "🚪 Harmless outsiders — boundary doesn't matter (E16)": "Identical setup to 'Open access beats full coverage', except the outsiders are 'cooperative' instead of 'selfish' (see Outsider type). They restrain themselves on their own, so being unmonitored costs nothing — the pool stays healthy despite the open boundary. Boundaries only matter against an outsider that would actually over-harvest if left unexcluded (experiment E16).",
     "⭐ Reputation softens one free-rider (E18)": "7 reputation cooperators + 1 selfish. Each reputation cooperator is paired with one random *other* agent every round and only distrusts (defects) if that specific partner's own score is bad — so with only 1 free-rider out of 8, most rounds pair a reputation cooperator with another trustworthy one, and it cooperates as normal. Sustained here at sustainability ≈ 0.29 (welfare_efficiency ≈ 0.60) — worse than 'Compensating tolerates a free-rider' (≈0.47, ≈1.00, pure restraint never grabs back) but nowhere near 'Reciprocity spirals against one' (E14, conditional cooperators: fully COLLAPSED, ≈0.00) — a genuine third point on that spectrum, not a repeat of either. Watch each agent's own reputation score (below its payoff, green while trusted, red once distrusted) diverge over the run (experiment E18, ADR-0014).",
     "⭐ No visibility → reputation can't act (E18)": "Identical population to the regime above, but 'Reputation visibility' is 0 — no reputation cooperator ever actually learns its partner's score. An unobserved partner defaults to trusted ('innocent until proven guilty'), so every reputation cooperator behaves exactly like a plain, unconditional cooperative agent — sustainability climbs back to ≈0.44 (welfare_efficiency ≈1.00), close to 'Compensating tolerates a free-rider''s own numbers. The mechanism still runs (watch the reputation scores keep updating round to round) but has no way to act on what it knows, since it never gets to look — full visibility actually costs some sustainability here, because seeing the free-rider clearly is also what lets a reputation cooperator occasionally grab back (experiment E18, ADR-0014).",
+    "🕸️ Fixed neighbours create winners and losers (E19)": "Identical population to 'Reputation softens one free-rider', but 'Network topology' is now a fixed ring lattice (k=2) instead of a fresh random partner every round — watch the faint permanent lines connecting each agent to its two fixed neighbours. Only the free-rider's two ring neighbours can ever be paired with it; the other 5 agents never see it at all. In one representative run: the free-rider earns 152 while its two neighbours earn 66 and 84 (they occasionally distrust it and grab a selfish-sized share themselves — a real windfall, watch their red pairing lines) — but every agent on the far side of the ring is stuck at just 1.70, since their trusted neighbours never grab, and once the pool crashes there's rarely any surplus left to request at all. Sustainability (≈0.11) and welfare (≈0.56) barely differ from well-mixed reputation — the shared pool's survival doesn't depend on the graph — but *who bears the cost* changes completely, something well-mixed pairing cannot produce even in principle (experiment E19, ADR-0015).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1301,6 +1360,14 @@
       ? "" : "No effect: cooperator type isn't 'reputation (indirect)'.";
     if (els.rep_pair_legend) els.rep_pair_legend.style.display = isReputation ? "" : "none";
     $("repvis_v").textContent = (+els.repvis.value).toFixed(1);
+    els.nettopo.disabled = !isReputation;
+    els.nettopo.title = isReputation
+      ? "" : "No effect: cooperator type isn't 'reputation (indirect)'.";
+    const isNetwork = isReputation && els.nettopo.value === "ring";
+    els.netdeg.disabled = !isNetwork;
+    els.netdeg.title = isNetwork
+      ? "" : "No effect: network topology isn't 'fixed ring lattice'.";
+    $("netdeg_v").textContent = els.netdeg.value;
     const cshort = { cooperative: "cooperative", conditional_cooperator: "conditional",
                      compensating_cooperator: "compensating",
                      reputation_cooperator: "reputation" }[els.ctype.value];
@@ -1346,6 +1413,8 @@
     els.boundary.value = r.boundary ?? "closed";
     els.otype.value = r.otype ?? "selfish";
     els.repvis.value = r.repvis ?? 1.0;
+    els.nettopo.value = r.nettopo ?? "mixed";
+    els.netdeg.value = r.netdeg ?? 2;
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -1374,11 +1443,11 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis", "netdeg"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
-  ["groups", "boundary", "otype"].forEach((k) =>
+  ["groups", "boundary", "otype", "nettopo"].forEach((k) =>
     els[k].addEventListener("change", () => { toCustom(); scheduleRun(); }));
 
   // ── run + animation state ───────────────────────────────────────────────
@@ -1470,6 +1539,8 @@
       cvoteRound: +els.cvote.value,
       reputation: els.ctype.value === "reputation_cooperator",
       repVisibility: +els.repvis.value,
+      network: els.ctype.value === "reputation_cooperator" && els.nettopo.value === "ring"
+        ? +els.netdeg.value : null,
     };
     sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];
@@ -1627,6 +1698,31 @@
     // faint ring guide
     ctx.strokeStyle = css("--pool-ring"); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, 2 * Math.PI); ctx.stroke();
+
+    // Fixed neighbour graph (E19, ADR-0015): a faint, static overlay of
+    // every edge in the ring lattice -- who CAN ever be paired together
+    // this run, persistent across every round. Distinct from the
+    // highlighted, colour-coded per-round pairing curves drawn later, which
+    // show who WAS paired this specific round.
+    if (mode !== "evolution" && sim.neighbors) {
+      ctx.save();
+      ctx.strokeStyle = css("--muted");
+      ctx.globalAlpha = 0.16;
+      ctx.lineWidth = Math.max(1, size * 0.0018);
+      const drawnEdges = new Set();
+      sim.neighbors.forEach((nbs, i) => {
+        nbs.forEach((j) => {
+          const key = i < j ? `${i}-${j}` : `${j}-${i}`;
+          if (drawnEdges.has(key)) return;
+          drawnEdges.add(key);
+          ctx.beginPath();
+          ctx.moveTo(pos[i][0], pos[i][1]);
+          ctx.lineTo(pos[j][0], pos[j][1]);
+          ctx.stroke();
+        });
+      });
+      ctx.restore();
+    }
 
     // governed-vs-outsider boundary: one continuous arc for the governed
     // community, one dashed arc for the outsider block (ADR-0013) -- no
@@ -2389,12 +2485,38 @@
   const CX_OPTS = { info: "global", noise: 0, broadcast: 0, rounds: CX_ROUNDS, seed: 1,
                      init: K / 2, shock: 0, shockRound: -1, failCount: 0, failRound: -1, cvoteRound: 0 };
   const CX_M = [1, 2, 4];
-  // All five registered non-loner strategies -- matches
-  // scripts/experiment_population_diversity.py exactly (see E14).
+  // Five registered non-loner strategies -- matches
+  // scripts/experiment_population_diversity.py exactly (see E14). Reputation
+  // (E18, ADR-0014) stacks onto any of the three composition-sweep kinds
+  // below as an optional 6th composable type, same "additive, doesn't
+  // disturb what's already there" spirit as groups/boundary (ADR-0012/13):
+  // a composition using none of the original 5 types' + reputation_cooperator
+  // combinations is unaffected, since enabling `reputation` in the sim opts
+  // is a no-op for every strategy that doesn't read `partner_reputation`
+  // (confirmed by tests/test_reputation.py -- the same guarantee this sweep
+  // relies on for correctness without an RNG-perturbation confound, since
+  // noise=0/broadcast=0 here means no other strategy ever calls rng() at
+  // all, so the extra reputation partner-selection draws touch nothing).
   const CX_DIVERSITY_TYPES = [
     "cooperative", "conditional_cooperator", "compensating_cooperator", "selfish", "sanctioning",
   ];
+  const CX_REPUTATION_TYPE = "reputation_cooperator";
+  const CX_NETWORK_DEGREE = 4; // fixed value for the "+ Network" toggle -- NetworkConfig's own default
   const CX_DIVERSITY_LEVELS = [1, 2, 3, 4, 5];
+  const CX_DIVERSITY_LEVELS_REP = [1, 2, 3, 4, 5, 6];
+  function cxTypes() {
+    return cxState.reputation ? [...CX_DIVERSITY_TYPES, CX_REPUTATION_TYPE] : CX_DIVERSITY_TYPES;
+  }
+  function cxLevels() {
+    return cxState.reputation ? CX_DIVERSITY_LEVELS_REP : CX_DIVERSITY_LEVELS;
+  }
+  // The extra SimulationConfig options the "+ Reputation"/"+ Network" toggles
+  // need on top of CX_OPTS -- {} when neither is on, so every existing sweep
+  // path is unaffected unless the toggle is actually active.
+  function cxExtraOpts() {
+    if (!cxState.reputation) return {};
+    return { reputation: true, repVisibility: 1.0, network: cxState.network ? CX_NETWORK_DEGREE : null };
+  }
 
   function cxSpecs(m, k, boundary, outsiderType) {
     const n = N_GOVERNED / m;
@@ -2405,22 +2527,24 @@
     }
     return specs;
   }
-  function cxWelfareEfficiency(specs) {
+  function cxWelfareEfficiency(specs, extraOpts) {
     // Not delegated to welfareEfficiency(): that helper assumes the caller
     // already unshifted a synthetic "round 0" frame (buildDisplaySim does
     // this for the single-run view), which the sweep intentionally skips --
     // it calls runSim() directly for speed, so frames.length is exactly
     // CX_ROUNDS here, not CX_ROUNDS + 1.
-    const sim = runSim(specs, CX_OPTS);
+    const opts = extraOpts ? { ...CX_OPTS, ...extraOpts } : CX_OPTS;
+    const sim = runSim(specs, opts);
     return sim.payoff.reduce((a, b) => a + b, 0) / (MSY * CX_ROUNDS);
   }
   function cxPasses(we) { return we >= CX_THRESHOLD; }
 
-  // Every composition of CX_DIVERSITY_TYPES's counts (each >= 0) summing to
-  // N_GOVERNED -- stars-and-bars, 495 compositions for 5 types over 8 agents
-  // (same enumeration as _compositions() in the Python script).
-  function cxCompositionsOfSize(size) {
-    const k = CX_DIVERSITY_TYPES.length;
+  // Every composition of `types`' counts (each >= 0) summing to `size` --
+  // stars-and-bars, e.g. 495 compositions for the original 5 types over 8
+  // agents (same enumeration as _compositions() in the Python script), 1287
+  // once reputation adds a 6th.
+  function cxCompositionsOfSize(size, types) {
+    const k = types.length;
     const out = [];
     const rec = (idx, remaining, acc) => {
       if (idx === k - 1) { out.push([...acc, remaining]); return; }
@@ -2429,9 +2553,9 @@
     rec(0, size, []);
     return out;
   }
-  function cxCompositions() { return cxCompositionsOfSize(N_GOVERNED); }
-  function cxSpecsFromComposition(composition, group, governed) {
-    return CX_DIVERSITY_TYPES
+  function cxCompositions(types) { return cxCompositionsOfSize(N_GOVERNED, types); }
+  function cxSpecsFromComposition(composition, types, group, governed) {
+    return types
       .map((kind, i) => ({ kind, count: composition[i], group, governed }))
       .filter((s) => s.count > 0);
   }
@@ -2447,15 +2571,15 @@
   // same rng() call order/count either way (m group draws, +1 more only when
   // outsiderComps is given), so factoring it out changes nothing about which
   // configurations get sampled for a given seed.
-  function cxSampleOnceDoesPass(subComps, m, rng, outsiderComps) {
+  function cxSampleOnceDoesPass(subComps, m, rng, types, extraOpts, outsiderComps) {
     const groupComps = Array.from({ length: m }, () => subComps[Math.floor(rng() * subComps.length)]);
     const specs = [];
-    groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, g, true)));
+    groupComps.forEach((comp, g) => specs.push(...cxSpecsFromComposition(comp, types, g, true)));
     if (outsiderComps) {
       const outsiderComp = outsiderComps[Math.floor(rng() * outsiderComps.length)];
-      specs.push(...cxSpecsFromComposition(outsiderComp, m, false));
+      specs.push(...cxSpecsFromComposition(outsiderComp, types, m, false));
     }
-    return cxPasses(cxWelfareEfficiency(specs));
+    return cxPasses(cxWelfareEfficiency(specs, extraOpts));
   }
 
   // Each preset returns { series: [{label,color,points:[{x,count,tested}]}], table: {headers, rows} }.
@@ -2467,15 +2591,16 @@
       // 2,820/4,900, 18,737/50,625) live in E15's own doc/Python script;
       // this panel trades exactness for responsiveness, same tradeoff E16's
       // outsider side already made.
+      const types = cxTypes(), extraOpts = cxExtraOpts();
       const closedColor = css("--accent");
       const closedSeries = { label: "closed, sampled (E15)", color: closedColor, points: [] };
       const closedByM = new Map();
       const rngClosed = mulberry32(7);
       for (const m of CX_M) {
-        const subComps = cxCompositionsOfSize(N_GOVERNED / m);
+        const subComps = cxCompositionsOfSize(N_GOVERNED / m, types);
         let passing = 0;
         for (let i = 0; i < CX_N_SAMPLES; i++) {
-          if (cxSampleOnceDoesPass(subComps, m, rngClosed)) passing++;
+          if (cxSampleOnceDoesPass(subComps, m, rngClosed, types, extraOpts)) passing++;
         }
         const frac = passing / CX_N_SAMPLES;
         const totalSpace = Math.pow(subComps.length, m);
@@ -2493,13 +2618,13 @@
       // groups_boundary: add a Monte Carlo-sampled open (governed x outsider) series
       const openSeries = { label: "open, sampled (E16)", color: css("--bad"), points: [] };
       const rngOpen = mulberry32(42);
-      const outsiderComps = cxCompositionsOfSize(OUTSIDERS);
+      const outsiderComps = cxCompositionsOfSize(OUTSIDERS, types);
       const rows = [];
       for (const m of CX_M) {
-        const subComps = cxCompositionsOfSize(N_GOVERNED / m);
+        const subComps = cxCompositionsOfSize(N_GOVERNED / m, types);
         let passing = 0;
         for (let i = 0; i < CX_N_SAMPLES; i++) {
-          if (cxSampleOnceDoesPass(subComps, m, rngOpen, outsiderComps)) passing++;
+          if (cxSampleOnceDoesPass(subComps, m, rngOpen, types, extraOpts, outsiderComps)) passing++;
         }
         const frac = passing / CX_N_SAMPLES;
         const totalSpace = Math.pow(subComps.length, m) * outsiderComps.length;
@@ -2540,22 +2665,26 @@
       return { series, table: { headers: ["m", "count", "detail (full coverage, k=m)"], rows }, xValues: CX_M, xLabel: "m -- number of groups" };
     }
     if (kind === "diversity") {
-      const series = [{ label: "population-type diversity (E14)", color: css("--accent"), points: [] }];
-      const byLevel = new Map(CX_DIVERSITY_LEVELS.map((d) => [d, { count: 0, tested: 0 }]));
-      for (const composition of cxCompositions()) {
-        const specs = cxSpecsFromComposition(composition);
+      const types = cxTypes(), extraOpts = cxExtraOpts(), levels = cxLevels();
+      const label = cxState.reputation
+        ? "population-type diversity + reputation as a 6th type (E14 + E18)"
+        : "population-type diversity (E14)";
+      const series = [{ label, color: css("--accent"), points: [] }];
+      const byLevel = new Map(levels.map((d) => [d, { count: 0, tested: 0 }]));
+      for (const composition of cxCompositions(types)) {
+        const specs = cxSpecsFromComposition(composition, types);
         const diversity = composition.filter((c) => c > 0).length;
         const bucket = byLevel.get(diversity);
         bucket.tested++;
-        if (cxPasses(cxWelfareEfficiency(specs))) bucket.count++;
+        if (cxPasses(cxWelfareEfficiency(specs, extraOpts))) bucket.count++;
       }
       const rows = [];
-      for (const d of CX_DIVERSITY_LEVELS) {
+      for (const d of levels) {
         const { count, tested } = byLevel.get(d);
         series[0].points.push({ x: d, count, tested });
         rows.push([String(d), `${count}/${tested}`]);
       }
-      return { series, table: { headers: ["diversity", "count"], rows }, xValues: CX_DIVERSITY_LEVELS, xLabel: "diversity -- number of distinct types present" };
+      return { series, table: { headers: ["diversity", "count"], rows }, xValues: levels, xLabel: "diversity -- number of distinct types present" };
     }
     return { series: [], table: { headers: [], rows: [] }, xValues: CX_M, xLabel: "m -- number of groups" };
   }
@@ -2655,15 +2784,18 @@
       "the old single-adversarial-outsider reading suggested.",
     outsider_type: "Boundary always open, full coverage (k=m) only, the outsider's own strategy swept " +
       "instead of fixed -- the complementary, non-adversarial reading (see E16).",
-    diversity: "All 495 compositions of 8 agents across cooperative/conditional/compensating/selfish/" +
-      "sanctioning, closed and flat -- E14. Don't read the shape at face value: it's mostly explained by " +
-      "whether a sanctioning agent is present (330/330 pass) and, absent one, by selfish count and " +
-      "response type (compensating tolerates one free-rider, conditional doesn't) -- see the table below.",
+    diversity: "Don't read the shape at face value: it's mostly explained by whether a sanctioning " +
+      "agent is present (330/330 pass in the original 5-type space) and, absent one, by selfish count " +
+      "and response type (compensating tolerates one free-rider, conditional doesn't) -- see the table " +
+      "below.",
   };
   let cxBusy = false;
   function cxSetControlsDisabled(disabled) {
+    $("cx_stair_diversity").disabled = disabled || false;
     $("cx_stair_groups").disabled = disabled || false;
     $("cx_stair_boundary").disabled = disabled || false;
+    $("cx_stair_reputation").disabled = disabled || false;
+    $("cx_stair_network").disabled = disabled || false;
     $("cx_outsider_btn").disabled = disabled;
   }
   function cxRun(kind) {
@@ -2691,30 +2823,62 @@
       $("cx_charts").style.display = "grid";
       $("cx_table_wrap").style.display = "block";
       $("cx_caption").style.display = "block";
-      $("cx_caption").textContent = CX_CAPTIONS[kind] || "";
+      let caption = "";
+      if (kind === "diversity") {
+        const n = cxState.reputation ? "1,287 compositions of 8 agents across 6 types (adding " +
+          "reputation_cooperator)" : "495 compositions of 8 agents across 5 types";
+        caption += `All ${n}, closed and flat (E14). `;
+      }
+      caption += CX_CAPTIONS[kind] || "";
+      if (cxState.reputation) {
+        caption += cxState.network
+          ? " Reputation is on (reputation_cooperator is a 6th composable type, ADR-0014) and Network " +
+            `is also on (that type's partner selection is restricted to a fixed degree-${CX_NETWORK_DEGREE} ` +
+            "ring lattice instead of a fresh random draw each round, ADR-0015)."
+          : " Reputation is on: reputation_cooperator is a 6th composable type (ADR-0014) -- compositions " +
+            "that don't happen to use it are unaffected (a no-op for every strategy that doesn't read " +
+            "partner_reputation).";
+      }
+      $("cx_caption").textContent = caption;
       $("cx_status").textContent = `Done -- threshold welfare_efficiency ≥ ${CX_THRESHOLD.toFixed(2)} (provisional).`;
       cxBusy = false;
       cxSetControlsDisabled(false);
     });
   }
 
-  // the staircase: population diversity is always the base rung (E14, and
-  // literally the same 495-composition sweep as groups' own m=1 point);
-  // groups/boundary stack on top of it one axis at a time, so clicking a
-  // rung shows exactly which axis just got added, matching how
-  // complexity-synthesis.md itself reads the results.
-  const cxState = { groups: false, boundary: false };
+  // the staircase: population diversity is the base rung of the composition
+  // ladder (E14, and literally the same 495-composition sweep as groups' own
+  // m=1 point); groups/boundary/reputation/network all stack on top of it
+  // one axis at a time, so clicking a rung shows exactly which axis just got
+  // added, matching how complexity-synthesis.md itself reads the results.
+  // `kind` (diversity/groups/groups_boundary) picks which of the three
+  // *shapes* of sweep runs; reputation/network are orthogonal modifiers
+  // within whichever shape is active (a 6th composable type, optionally
+  // restricted to a fixed neighbour graph -- see cxTypes()/cxExtraOpts()
+  // above), not a fourth shape, so they never change `kind` itself.
+  const cxState = { groups: false, boundary: false, reputation: false, network: false };
   function cxKindFromState() {
     if (cxState.boundary) return "groups_boundary";
     if (cxState.groups) return "groups";
     return "diversity";
   }
   function cxSyncStairUI() {
-    $("cx_stair_groups").classList.toggle("active", cxState.groups);
-    $("cx_stair_groups").setAttribute("aria-pressed", String(cxState.groups));
-    $("cx_stair_boundary").classList.toggle("active", cxState.boundary);
-    $("cx_stair_boundary").setAttribute("aria-pressed", String(cxState.boundary));
+    const setActive = (id, on) => {
+      $(id).classList.toggle("active", on);
+      $(id).setAttribute("aria-pressed", String(on));
+    };
+    setActive("cx_stair_diversity", true);  // always the base of whichever composition sweep is showing
+    setActive("cx_stair_groups", cxState.groups);
+    setActive("cx_stair_boundary", cxState.boundary);
+    setActive("cx_stair_reputation", cxState.reputation);
+    setActive("cx_stair_network", cxState.network);
   }
+  $("cx_stair_diversity").addEventListener("click", () => {
+    cxState.groups = false; cxState.boundary = false;
+    cxState.reputation = false; cxState.network = false;
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
   $("cx_stair_groups").addEventListener("click", () => {
     cxState.groups = !cxState.groups;
     if (!cxState.groups) cxState.boundary = false;  // boundary can't outlive its prerequisite
@@ -2729,9 +2893,22 @@
     cxSyncStairUI();
     cxRun(cxKindFromState());
   });
+  $("cx_stair_reputation").addEventListener("click", () => {
+    cxState.reputation = !cxState.reputation;
+    if (!cxState.reputation) cxState.network = false;  // network can't outlive its prerequisite
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
+  $("cx_stair_network").addEventListener("click", () => {
+    // network builds on reputation rather than requiring it to already be on
+    cxState.reputation = true;
+    cxState.network = !cxState.network;
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
   $("cx_outsider_btn").addEventListener("click", () => cxRun("outsider_type"));
   cxSyncStairUI();
-  cxRun(cxKindFromState());  // population diversity runs immediately -- it's always on
+  cxRun(cxKindFromState());  // population diversity runs immediately -- it's the base rung
 
   // collapse/expand the config panel, freeing vertical space once it's set up
   $("collapse_toggle").addEventListener("click", () => {

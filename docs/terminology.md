@@ -109,6 +109,17 @@ should link here rather than re-enumerate.
   population doesn't synchronize into collapse (Nowak & Sigmund 1998; E18, ADR-0014).
   *(model term: `reputation_cooperator`, via `ReputationCooperatorStrategy` +
   `SimulationConfig.reputation`.)*
+- **Network reciprocity** — restricts reputation's partner selection to a
+  *fixed, persistent* graph neighbour instead of a fresh random draw every
+  round: a ring lattice built once from agent order, where each agent has
+  `k` fixed neighbours (`k/2` on each side). Unlike ordinary reputation
+  (above), where every agent has equal expected exposure to a free-rider,
+  this lets an agent's outcome depend on its graph *position* — a
+  free-rider's fixed neighbours can end up with a very different outcome
+  than agents on the far side of the ring (Nowak 2006, rule 4; E19,
+  ADR-0015). *(model term: `SimulationConfig.network`,
+  `NetworkConfig.degree`; has no effect without `reputation` also
+  configured.)*
 
 Related concepts:
 

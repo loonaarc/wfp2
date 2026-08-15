@@ -70,6 +70,13 @@ current front-runner for the project's specific focus — not yet locked.
   `visibility` (how often a partner's score is actually seen) protects fairness but
   costs the resource, the same trade-off E2 found, rediscovered inside one
   mechanism's own information parameter.
+- **SQ-5c** 🟢 Does fixing that partner to a persistent graph neighbour instead of
+  a fresh random draw every round (network reciprocity, Nowak 2006 rule 4) make
+  an agent's outcome depend on its graph *position*? **→ Answered (E19): yes,
+  dramatically** — at a sparse ring, a free-rider's fixed neighbours earn ~117 on
+  average (20 seeds) vs. ~5 for agents on the far side, a >20× gap well-mixed
+  reputation (SQ-5b) cannot produce; population-level sustainability barely
+  moves, so the effect is distributional, not aggregate.
 
 ### Communication (RQ-A)
 - **SQ-6** 🟢 Does broadcasting reduce exploitation / improve outcomes in mixed
@@ -149,9 +156,15 @@ current front-runner for the project's specific focus — not yet locked.
 - Do learning/adaptive (RL) agents discover cooperative equilibria the hand-written
   rules miss? *(Deferred: adds large complexity and reproducibility burden.)*
 - How do spatial structure and locality of the resource change results?
-  *(Deferred: requires a spatial environment; see ADR-0001.)*
+  *(Still deferred: requires a spatial environment for the resource itself
+  (a grid/local sub-pools); see ADR-0001. Not the same question as E19's
+  graph — that fixes who a reputation-conditioned agent's partner can be,
+  not where the shared resource physically lives; the pool stays one
+  scalar, well-mixed for harvesting, exactly as before.)*
 - ~~Reputation-based mechanisms (indirect reciprocity).~~ *(Built — see SQ-5b,
   E18, ADR-0014.)*
+- ~~Network reciprocity (fixed-neighbour interaction structure).~~ *(Built —
+  see SQ-5c, E19, ADR-0015.)*
 - Reinforcement-learning agents. *(Deferred; but rule-based evolutionary/replicator
   dynamics are used — E5, ADR-0006.)*
 
@@ -170,3 +183,5 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-13 | full compositional sweep | ✅ `AgentSpec` composition sweep + E14 |
 | SQ-14 | group-scoped enforcement | ✅ `AgentSpec.group`, ADR-0012 + E15 |
 | SQ-15 | ungoverned outsider batch | ✅ `AgentSpec.governed=False`, ADR-0013 + E16 |
+| SQ-5b | partner-specific reputation | ✅ `ReputationConfig`, ADR-0014 + E18 |
+| SQ-5c | fixed neighbour graph on partner selection | ✅ `NetworkConfig`, ADR-0015 + E19 |

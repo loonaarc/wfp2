@@ -147,6 +147,44 @@ class ReputationConfig:
 
 
 @dataclass(frozen=True)
+class NetworkConfig:
+    """A fixed graph restricting who a partner-conditioned strategy can pair with.
+
+    Nowak (2006)'s network reciprocity (rule 4): individuals occupy the
+    vertices of a graph and interact only with their ``k`` graph neighbours,
+    not the whole population -- cooperators can then survive by forming
+    clusters that mutually protect each other, favoured when ``b/c > k``. In
+    this project that ``k`` neighbours-only restriction is applied to
+    :class:`ReputationConfig`'s partner selection specifically (see ADR-0015):
+    instead of a fresh, uniformly random partner every round (ADR-0014's
+    well-mixed default, closer to Nowak's *indirect* reciprocity), each agent
+    is paired with a random member of its own *fixed, persistent* neighbour
+    set on a ring lattice -- built once per run from agent order, unchanged
+    across rounds. Persistence is the one ingredient this adds that neither
+    groups (ADR-0012, a hard partition) nor well-mixed reputation (ADR-0014,
+    a fresh random draw every round) has: it lets the *same* two agents
+    repeatedly interact, so an agent's outcome can depend on its graph
+    position, not just the population's aggregate composition.
+
+    Requires ``SimulationConfig.reputation`` to also be configured -- it has
+    no effect on its own, the same way ``ReputationConfig`` has no effect
+    without a strategy that reads ``Observation.partner_reputation``.
+
+    Attributes:
+        degree: Number of fixed neighbours per agent (``k``), ``k/2`` on each
+            side of the ring. Must be even and less than the population size.
+    """
+
+    degree: int = 4
+
+    def __post_init__(self) -> None:
+        if self.degree < 0:
+            raise ValueError("degree must be non-negative")
+        if self.degree % 2 != 0:
+            raise ValueError("degree must be even (symmetric neighbours on each side)")
+
+
+@dataclass(frozen=True)
 class AgentSpec:
     """A homogeneous group of agents sharing one strategy.
 
@@ -212,6 +250,10 @@ class SimulationConfig:
         reputation: Optional indirect-reciprocity tracking (``None`` by
             default, so existing experiments are unchanged; see
             :class:`ReputationConfig` and ADR-0014).
+        network: Optional fixed-neighbour restriction on reputation's partner
+            selection (``None`` by default -- partner selection stays
+            population-wide, exactly ADR-0014's original behaviour; see
+            :class:`NetworkConfig` and ADR-0015).
     """
 
     name: str = "unnamed"
@@ -225,6 +267,7 @@ class SimulationConfig:
     disturbances: tuple[DisturbanceConfig, ...] = field(default_factory=tuple)
     collective_choice: CollectiveChoiceConfig | None = None
     reputation: ReputationConfig | None = None
+    network: NetworkConfig | None = None
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -248,6 +291,11 @@ class SimulationConfig:
                 f"collective_choice.vote_round {self.collective_choice.vote_round} is outside "
                 f"the run ({self.rounds} rounds)"
             )
+        if self.network is not None and self.network.degree >= self.num_agents:
+            raise ValueError(
+                f"network.degree {self.network.degree} must be less than the population size "
+                f"({self.num_agents})"
+            )
 
     @property
     def num_agents(self) -> int:
@@ -269,12 +317,15 @@ class SimulationConfig:
         )
         reputation_data = data.pop("reputation", None)
         reputation = ReputationConfig(**reputation_data) if reputation_data is not None else None
+        network_data = data.pop("network", None)
+        network = NetworkConfig(**network_data) if network_data is not None else None
         return cls(
             resource=resource,
             agents=agents,
             disturbances=disturbances,
             collective_choice=collective_choice,
             reputation=reputation,
+            network=network,
             **data,
         )
 

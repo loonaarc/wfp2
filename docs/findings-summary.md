@@ -1,19 +1,22 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E18 (E17 reserved). E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E19 (E17 reserved). E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
 voted agreement can substitute for pre-committed enforcement; E14–E16 shift to the
 equifinality/complexity-axis question — as the population, its governance structure,
 and its boundary get structurally richer, does the set of near-optimal approaches
-grow? E18 is a standalone mechanism comparison (built, not yet folded into the
-complexity-axis sweep — see its own doc): does conditioning retaliation on one
-partner's reputation, rather than the population's aggregate trend, avoid the
-collapse blanket retaliation causes? This is the narrative spine for the writeup;
-each claim links to its full experiment report and the code that produced it.*
+grow? E18 and E19 are standalone mechanism comparisons (built, not folded into the
+complexity-axis sweep — see `complexity-synthesis.md`'s "Related but distinct"
+section for why): does conditioning retaliation on one partner's reputation, rather
+than the population's aggregate trend, avoid the collapse blanket retaliation
+causes (E18)? And does fixing that partner to a persistent graph neighbour, instead
+of a fresh random draw, make an agent's outcome depend on its graph position (E19)?
+This is the narrative spine for the writeup; each claim links to its full experiment
+report and the code that produced it.*
 
-**Status:** 2026-08-14 · 7 strategies · 17 experiments built (E1–E18, E17
-reserved) · 115 tests · results reproducible from `scripts/` and the committed
+**Status:** 2026-08-15 · 7 strategies · 18 experiments built (E1–E19, E17
+reserved) · 120 tests · results reproducible from `scripts/` and the committed
 `results/` data.
 
 ---
@@ -116,12 +119,14 @@ flowchart TD
     end
 
     E18["E18 — reputation (indirect reciprocity)<br/>partner-specific retaliation avoids E2's collapse"]
+    E19["E19 — network reciprocity<br/>fixed graph position creates 20x payoff inequality"]
 
     E3 -.the cost E5 explains.-> E5
     E3 -.the mechanism E7 confirms.-> E7
     E3 -.extended into a shock.-> E8
     E3 -.the flat baseline P4 restructures.-> E14
     E2 -.rediscovered inside one mechanism's own dial.-> E18
+    E18 -.fixes the fresh-partner draw into a persistent graph.-> E19
 ```
 
 Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
@@ -339,8 +344,10 @@ evidence (a measured set-size trend, not a point comparison).
 *(Full report: [E18](experiments/E18-reputation.md). Mechanism:
 [ADR-0014](decisions/0014-reputation-indirect-reciprocity.md).)*
 
-A standalone mechanism comparison, in the E1–E13 style (not (yet) folded into
-Phase 4's compositional sweep): Nowak & Sigmund (1998)'s indirect reciprocity
+A standalone mechanism comparison, in the E1–E13 style (deliberately not
+folded into Phase 4's compositional sweep — see `complexity-synthesis.md`'s
+"Related but distinct" section for why it tests a different question):
+Nowak & Sigmund (1998)'s indirect reciprocity
 says cooperation can be sustained via a public reputation score, without
 repeated personal interaction. `conditional_cooperator` (E2) already
 retaliates, but against the *population's aggregate* trend — E2's own
@@ -364,6 +371,46 @@ finding is that this collapses the resource with even one free-rider.
   reciprocates against the real free-rider, protecting itself individually
   at the shared pool's expense — the same tension E2 found between two
   *different* mechanisms, found again inside one mechanism's own dial.
+
+## Network reciprocity: fixed graph position vs. a fresh partner every round (E19)
+
+*(Full report: [E19](experiments/E19-network-reciprocity.md). Mechanism:
+[ADR-0015](decisions/0015-network-reciprocity-fixed-neighbor-graph.md).)*
+
+E18's reputation partner is redrawn uniformly at random every round — closer
+to Nowak's rule 3 (indirect reciprocity) than his rule 4 (network
+reciprocity: individuals occupy a graph and interact only with fixed
+neighbours, so cooperators can cluster and mutually protect each other).
+E19 adds the one ingredient E18 doesn't have: a fixed, persistent ring
+lattice restricting who can ever be drawn as a partner. An earlier
+evolutionary-dynamics operationalization of this axis was built and
+rejected first — see ADR-0015's Considered Options — because this project's
+single shared pool makes any protective action a population-wide public
+good, which cannot produce the *local* payoff variance Nowak's mechanism
+actually depends on. Reputation's individually-targeted harvest decision,
+by contrast, genuinely can.
+
+- **Fixed graph position produces inequality well-mixed reputation cannot
+  produce, even in principle.** At a sparse ring (k=2) with one free-rider,
+  its two fixed neighbours earn ~117 on average (20 seeds) while agents on
+  the far side of the ring earn ~5 — over 20× apart. Under E18's own
+  well-mixed setup, the same agent-index labels earn statistically
+  indistinguishable amounts (~37 vs. ~41): there is no "position" for a
+  well-mixed mechanism to depend on.
+- **The direction is the opposite of the naive guess.** The free-rider's
+  neighbours do *better*, not worse: they're the only agents who ever draw
+  it as a partner, so they're also the only agents who ever distrust it and
+  grab a selfish-sized share themselves — a one-time windfall captured
+  before the shared pool crashes. The five distant agents never get that
+  chance, and once the pool stays depleted their own cooperative "surplus"
+  formula returns ~0 for almost every remaining round.
+- **Population-level sustainability barely moves across degree** (0.12–0.14
+  across every `k` tested, including well-mixed) — the free-rider's own
+  behaviour doesn't depend on the graph at all, so the *shared pool's*
+  fate is largely unaffected by who else happens to be nearby. The effect
+  this experiment surfaces is distributional (who bears the cost), not
+  aggregate (whether the resource survives) — a different kind of claim
+  than E14–E16's near-optimal-set-size framing.
 
 ## Relation to the literature
 
@@ -411,12 +458,15 @@ The standout open threads:
 
 1. **Remaining complexity axes (Phase 4, in progress):** population diversity
    (E14), groups (E15), and boundaries (E16) are done. Next in the ranking:
-   network reciprocity (Nowak 2006, exact condition `b/c > k`), multiple resources,
-   and specialization — plus `R₀` (starting resource level, reserved as **E17**)
-   as a smaller side-sweep. Reputation/indirect reciprocity is *built* (**E18**,
-   ADR-0014), but as a standalone mechanism comparison in the E1–E13 style, not
-   yet folded into Phase 4's compositional sweep — whether it should be is an
-   open question, not assumed (see ADR-0014's Status Notes).
+   multiple resources and specialization — plus `R₀` (starting resource level,
+   reserved as **E17**) as a smaller side-sweep. Reputation/indirect
+   reciprocity (**E18**, ADR-0014) and network reciprocity (**E19**,
+   ADR-0015, Nowak 2006 rule 4) are both *built*, but as standalone mechanism
+   comparisons in the E1–E13 style, not folded into Phase 4's compositional
+   sweep — deliberately: they test a different question (does a specific
+   mechanism avoid a known collapse / does graph position create inequality),
+   not "does the near-optimal set grow" (see
+   `complexity-synthesis.md`'s "Related but distinct" section).
 2. **Disturbances (Phase 3):** the resource shock (E8/E9) and agent failure (E10)
    are in. Next — **communication failure** against the same interface;
    **monitor-redundancy** sweeps (how much redundancy buys back the single point of
@@ -449,5 +499,6 @@ python scripts/experiment_population_diversity.py    # E14
 python scripts/experiment_groups_full_sweep.py       # E15
 python scripts/experiment_boundaries_full_sweep.py   # E16
 python scripts/experiment_reputation.py              # E18
-pytest                                               # 115 tests
+python scripts/experiment_network_reciprocity.py     # E19
+pytest                                               # 120 tests
 ```

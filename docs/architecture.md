@@ -21,7 +21,8 @@ src/emergent_cooperation/
 ├── core/
 │   ├── config.py       ResourceConfig, AgentSpec (incl. group/governed, ADR-0012/13),
 │   │                     SimulationConfig, ExperimentConfig, CollectiveChoiceConfig
-│   │                     (ADR-0011), ReputationConfig (ADR-0014); YAML loading
+│   │                     (ADR-0011), ReputationConfig (ADR-0014), NetworkConfig
+│   │                     (ADR-0015); YAML loading
 │   ├── rng.py          make_rng, spawn_streams (independent per-agent streams)
 │   ├── state.py        RoundRecord, RunResult (plain data, no behaviour)
 │   └── simulation.py   Simulation engine + run_simulation()
@@ -77,10 +78,14 @@ carries an optional `signal` — a communicated aggregate (the group's total har
 last round) delivered by the broadcast communication channel when
 `broadcast_reliability > 0` (ADR-0007); this is how communication can supply
 information the direct observation withholds. It also carries an optional
-`partner_reputation` — this round's randomly-paired other agent's reputation score,
+`partner_reputation` — this round's paired other agent's reputation score,
 revealed with probability `visibility` when `SimulationConfig.reputation` is
 configured (ADR-0014); unlike `signal`, this is individually targeted, not a
-population-wide aggregate.
+population-wide aggregate. The partner is a fresh, population-wide random
+draw every round by default; if `SimulationConfig.network` is also
+configured (ADR-0015), it is instead drawn from that agent's own fixed,
+persistent ring-lattice neighbours, letting an outcome depend on graph
+position, not just population composition.
 
 ### `agents.Agent` and `strategies.Strategy`
 `Agent` owns identity and mutable per-run state (payoff, last harvest) and
@@ -243,10 +248,15 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
   (`Observation` never carries group membership); only which sanctioner's cap
   applies to which agent's harvest is group-scoped. There is no spatial/network
   structure and no per-group information locality.
-- Reputation (ADR-0014) is population-wide, not group-scoped: partner pairing draws
-  from the whole population regardless of `AgentSpec.group`, and the fair-share
-  reference always uses the governed population size. Combining reputation with
-  groups/boundaries is possible (nothing prevents it) but untested. Partner
-  selection is uniform-random each round, not a fixed network — a true
-  network-reciprocity axis (neighbours only, Nowak 2006 rule 4) remains a separate,
-  unbuilt extension.
+- Reputation (ADR-0014) is population-wide, not group-scoped, unless `network` is
+  also configured: partner pairing draws from the whole population regardless of
+  `AgentSpec.group` by default, and the fair-share reference always uses the
+  governed population size. Combining reputation/network with groups/boundaries is
+  possible (nothing prevents it) but untested.
+- Network reciprocity (ADR-0015) is a fixed ring lattice only — no random-regular,
+  small-world, or scale-free topology, and it only scopes reputation's partner
+  selection, not enforcement or the broadcast signal. `b/c > k` (Nowak 2006 rule 4)
+  is not literally testable here: monitoring/enforcement's benefit is a
+  population-wide public good in this project's single shared pool, not the
+  pairwise donor-recipient transfer Nowak's formula assumes (see ADR-0015's
+  Rationale).

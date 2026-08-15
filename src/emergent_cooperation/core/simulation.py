@@ -28,6 +28,19 @@ from .config import SimulationConfig
 from .state import RoundRecord, RunResult
 
 
+def _ring_lattice(n: int, k: int) -> list[tuple[int, ...]]:
+    """A circulant ring lattice used for network reciprocity (ADR-0015).
+
+    Agent ``i``'s fixed neighbours are the ``k/2`` nearest agents on each
+    side, in agent-order. ``k`` is validated even and ``< n`` by
+    :class:`~emergent_cooperation.core.config.NetworkConfig` and
+    :class:`SimulationConfig` before this is ever called.
+    """
+    half = k // 2
+    offsets = list(range(-half, 0)) + list(range(1, half + 1))
+    return [tuple((i + off) % n for off in offsets) for i in range(n)]
+
+
 class Simulation:
     """A single seeded run of the common-pool-resource game."""
 
@@ -58,6 +71,17 @@ class Simulation:
         self._groups: dict[int, list[int]] = {}
         for i, agent in enumerate(self.agents):
             self._groups.setdefault(agent.group, []).append(i)
+        # Network reciprocity (ADR-0015): a fixed ring-lattice neighbour list,
+        # built once from agent order -- unlike group membership this has no
+        # existing per-agent field to derive from, so it's computed directly
+        # from position in ``self.agents``. ``None`` unless configured, so
+        # ``_observe`` falls back to ADR-0014's original population-wide
+        # partner selection exactly.
+        self._neighbors: list[tuple[int, ...]] | None = (
+            _ring_lattice(len(self.agents), config.network.degree)
+            if config.network is not None
+            else None
+        )
         # One independent, reproducible RNG stream per agent.
         self._agent_rngs = rng_module.spawn_streams(self.seed, len(self.agents))
         # The whole population's total harvest last round (for the broadcast
@@ -117,11 +141,22 @@ class Simulation:
         # Reputation (ADR-0014): pair with one random *other* agent this round
         # and, with probability `visibility`, reveal their current score --
         # individually targeted, unlike `signal`'s population-wide aggregate.
+        # Network reciprocity (ADR-0015): if a fixed neighbour graph is
+        # configured, the partner is drawn only from that agent's own
+        # *persistent* neighbour set instead of the whole population --
+        # otherwise this is exactly ADR-0014's original well-mixed draw.
+        # Either way exactly two rng calls happen (partner index, then the
+        # visibility roll), so sweeping visibility or degree never shifts any
+        # other draw.
         partner_reputation = None
         rep = self.config.reputation
         if rep is not None and len(self.agents) > 1:
-            other = int(rng.integers(0, len(self.agents) - 1))
-            partner_idx = other if other < agent.agent_id else other + 1
+            if self._neighbors is not None:
+                neighbors = self._neighbors[agent.agent_id]
+                partner_idx = neighbors[int(rng.integers(0, len(neighbors)))]
+            else:
+                other = int(rng.integers(0, len(self.agents) - 1))
+                partner_idx = other if other < agent.agent_id else other + 1
             if rng.random() < rep.visibility:
                 partner_reputation = self.agents[partner_idx].reputation
         return Observation(

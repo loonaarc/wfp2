@@ -225,13 +225,13 @@ does it just make a *specific realization* of an unchanged structure go worse?
 
 Also not the same axis of difficulty: whether a candidate is cheap to test.
 `information_model` already has both `"global"` and `"private"` implemented in
-`config.py`, and population-composition, groups, boundaries, and reputation are
-now built too (E14/E15/E16/E18, ADR-0012/0013/0014) — testing any of these is
-picking a value or running an existing sweep script. Multiple resources,
-network reciprocity, and specialization have no implemented code path yet
-(there is no `num_resources` field, no interaction graph, no agent-role
-concept) — testing any of them means writing new mechanism first, not just
-choosing a value. See "Ranking the axes" below for which is which.
+`config.py`, and population-composition, groups, boundaries, reputation, and
+network reciprocity are now built too (E14/E15/E16/E18/E19,
+ADR-0012/0013/0014/0015) — testing any of these is picking a value or
+running an existing sweep script. Multiple resources and specialization
+have no implemented code path yet (there is no `num_resources` field, no
+agent-role concept) — testing either means writing new mechanism first, not
+just choosing a value. See "Ranking the axes" below for which is which.
 
 ### Additional candidate axes (surfaced later, checked against already-read literature)
 
@@ -270,14 +270,19 @@ Maskin 1986):**
 read ([note](paper-notes/2006-nowak-five-rules.md)); two of the five mechanisms
 map directly onto axes here, one of them with an exact formula for an axis
 already built:**
-- **Network reciprocity — corrects an earlier mis-classification.** Previously
-  logged below as "communication network structure, not yet grounded" — wrong;
-  this is Nowak's own rule 4. Instead of the well-mixed interaction this project
-  already has (one shared pool, one broadcast channel reaching everyone equally),
-  agents sit on a graph and interact only with neighbours. Nowak gives an exact
-  condition: cooperation is favoured when `b/c > k` (`k` = average number of
-  neighbours) — a precise, citable target to test against, not a vague "add a
-  network" idea.
+- **Network reciprocity — built, as E19 (ADR-0015).** Previously logged below
+  as "communication network structure, not yet grounded" — wrong; this is
+  Nowak's own rule 4. Instead of the well-mixed interaction this project
+  already has (one shared pool, one broadcast channel reaching everyone
+  equally), agents sit on a graph and interact only with neighbours. Nowak
+  gives an exact condition, `b/c > k` (`k` = average number of neighbours),
+  but it turned out not to be literally testable in this model — monitoring's
+  benefit is a population-wide public good here, not the pairwise transfer
+  Nowak's `b`/`c` assume (see ADR-0015). Built instead as a fixed ring-lattice
+  restriction on E18's reputation partner selection, which *does* have a
+  genuinely individual, position-capable interaction — confirming the
+  qualitative claim (fixed position creates real inequality) without the
+  exact threshold.
 - **Group selection formula — sharpens the axis already built (ADR-0012), not a
   new axis.** Nowak's rule 5 gives an exact condition for when cooperation wins
   under group structure: `b/c > 1 + n/m` (`n` = max group size, `m` = number of
@@ -564,9 +569,19 @@ this ranking:**
    Gordon), and directly repairs the shared-pool gap ADR-0012's own
    "Consequences" section exposed. Natural pairing with groups (both
    Ostrom-grounded, directly complementary).
-4. **Network reciprocity** (Nowak 2006, rule 4) — newly corrected from "not
-   grounded" (was mis-filed as "communication topology"). Exact condition
-   `b/c > k`; a real, citable mechanism, not a vague structural idea.
+4. **Network reciprocity** (built, Nowak 2006 rule 4, now
+   [E19](experiments/E19-network-reciprocity.md), ADR-0015) — grounded,
+   though `b/c > k` turned out not to be literally testable here (see
+   ADR-0015's Rationale: monitoring's benefit in this project's single
+   shared pool is a population-wide public good, not the pairwise transfer
+   Nowak's formula assumes). Built as a fixed ring-lattice restriction on
+   E18's reputation partner selection instead — a small, surgical extension
+   that produces a real, qualitative confirmation of the mechanism (fixed
+   graph position creates a >20× payoff gap between a free-rider's fixed
+   neighbours and agents on the far side of the ring) without claiming the
+   exact threshold transfers. An earlier evolutionary-dynamics
+   operationalization (graph-structured replicator dynamics on E5/E11/E12)
+   was built and rejected first — see ADR-0015's Considered Options.
 5. **Multiple resources** — upgraded from "an early hunch" to
    citation-grounded: GovSim (2024) names "multiple resource types" and
    "varying regeneration rates" directly as its own future work. Likely the
@@ -578,10 +593,13 @@ this ranking:**
    `peer_scores`/threshold sketch originally envisioned here; validated as a
    genuinely distinct third point on the reciprocity spectrum, not a
    disguised `conditional_cooperator`. Really an extension of the
-   information axis (E1), not a fully independent one. **Not yet folded into
-   the complexity-axis composition sweep** (E14–E16's machinery) — see
-   ADR-0014's Status Notes for why that's still an open question, not a
-   foregone conclusion. Also the cheapest bridge toward the
+   information axis (E1), not a fully independent one. **Deliberately not
+   folded into the complexity-axis composition sweep** (E14–E16's
+   machinery) — see ADR-0014's Status Notes and
+   `complexity-synthesis.md`'s "Related but distinct" section for why it
+   tests a different question. Extended by network reciprocity (E19,
+   above) with a persistent partner graph. Also the cheapest bridge toward
+   the
    wealth-weighted-choice/capture candidates below, if that direction gets
    picked up later — per-partner reputation tracking is close to the
    machinery a "does the population let itself be fooled" study would need
@@ -677,9 +695,10 @@ whether a *fixed, unmonitored batch of outsiders is present in the config
 at all* — which the groups mechanism (ADR-0012) already expresses exactly,
 by comparing a config with vs. without an extra, ungoverned outsider group.
 No new field, no new engine logic — a documented *experimental-design
-pattern* reusing groups, not a second mechanism. Network reciprocity,
-multiple resources, reputation, and specialization still need real new
-code; boundaries likely doesn't.
+pattern* reusing groups, not a second mechanism. Network reciprocity and
+reputation did need real new code, confirming the prediction (`NetworkConfig`
++ `ReputationConfig`, ADR-0014/0015); multiple resources and specialization
+still would; boundaries didn't.
 
 ## Relationship to existing docs
 
