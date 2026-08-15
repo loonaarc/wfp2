@@ -9,7 +9,7 @@ and how to run it), **results** (what we found), **reference** (how it works), a
 1. [getting-started.md](getting-started.md) — hands-on: run it, tweak a config, see
    cooperation succeed or collapse (~20 min).
 2. [findings-summary.md](findings-summary.md) — the actual results (experiments
-   E1–E16, E17 reserved) in one page, with the overview figure.
+   E1–E18, E17 reserved) in one page, with the overview figure.
 3. [project-overview.md](project-overview.md) — the problem in plain language.
 4. [code-walkthrough.md](code-walkthrough.md) — a guided tour of the Python code,
    with diagrams.
@@ -34,9 +34,9 @@ see [getting-started.md](getting-started.md) for setup.
 
 | Doc | What it's for |
 | --- | ------------- |
-| [findings-summary.md](findings-summary.md) | The whole E1–E16 story + overview figure (the writeup spine) — **also the canonical current experiment/test count**, other docs link here rather than restate it. |
+| [findings-summary.md](findings-summary.md) | The whole E1–E18 story + overview figure (the writeup spine) — **also the canonical current experiment/test count**, other docs link here rather than restate it. |
 | [complexity-synthesis.md](complexity-synthesis.md) | *What Phase 4 found:* the living, numbers-first synthesis of the equifinality/complexity question — grows every time a new axis is tested. |
-| [experiments/](experiments/) | One detailed report per experiment (E1–E16, E17 reserved); see its index for the one-line summaries. |
+| [experiments/](experiments/) | One detailed report per experiment (E1–E18, E17 reserved); see its index for the one-line summaries. |
 
 ## Reference (how it works)
 
@@ -56,7 +56,7 @@ see [getting-started.md](getting-started.md) for setup.
 | [contribution-opportunities.md](contribution-opportunities.md) | Candidate contributions, assessed for feasibility/risk. |
 | [literature-review.md](literature-review.md) | Structured field overview + implications for the model. |
 | [paper-notes/](paper-notes/) | One analysed note per paper read. |
-| [decisions/](decisions/) | Architecture decision records (ADRs 0001–0013). |
+| [decisions/](decisions/) | Architecture decision records (ADRs 0001–0014). |
 
 ## Conventions
 

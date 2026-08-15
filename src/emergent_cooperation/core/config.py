@@ -117,6 +117,36 @@ class CollectiveChoiceConfig:
 
 
 @dataclass(frozen=True)
+class ReputationConfig:
+    """Indirect reciprocity via reputation (Nowak & Sigmund 1998; ADR-0014).
+
+    Every agent's own reputation score is tracked and updated by the engine
+    every round regardless of strategy (``+1`` for staying at/below the
+    governed community's fair share that round, ``-1`` above it) -- a real,
+    always-on number. Separately, each agent is paired with one random
+    *other* agent every round and, with probability ``visibility``, gets to
+    see that specific partner's current score
+    (``Observation.partner_reputation``). Only
+    :class:`~emergent_cooperation.strategies.reputation.
+    ReputationCooperatorStrategy` actually reads it; every other strategy
+    ignores it, the same as an unread broadcast ``signal``.
+
+    Attributes:
+        visibility: Probability ``q`` that a given round's partner-lookup
+            succeeds, in ``[0, 1]``. Structurally the same kind of parameter
+            as ``broadcast_reliability`` -- an imperfect information channel,
+            not a new kind of thing. Nowak & Sigmund's own stability
+            condition for reputation-sustained cooperation is ``q > c/b``.
+    """
+
+    visibility: float = 1.0
+
+    def __post_init__(self) -> None:
+        if not 0 <= self.visibility <= 1:
+            raise ValueError("visibility must be in [0, 1]")
+
+
+@dataclass(frozen=True)
 class AgentSpec:
     """A homogeneous group of agents sharing one strategy.
 
@@ -179,6 +209,9 @@ class SimulationConfig:
         collective_choice: An optional group vote on jointly-funded enforcement
             (``None`` by default, so existing experiments are unchanged; see
             :class:`CollectiveChoiceConfig` and ADR-0011).
+        reputation: Optional indirect-reciprocity tracking (``None`` by
+            default, so existing experiments are unchanged; see
+            :class:`ReputationConfig` and ADR-0014).
     """
 
     name: str = "unnamed"
@@ -191,6 +224,7 @@ class SimulationConfig:
     agents: tuple[AgentSpec, ...] = field(default_factory=tuple)
     disturbances: tuple[DisturbanceConfig, ...] = field(default_factory=tuple)
     collective_choice: CollectiveChoiceConfig | None = None
+    reputation: ReputationConfig | None = None
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -233,11 +267,14 @@ class SimulationConfig:
             if collective_choice_data is not None
             else None
         )
+        reputation_data = data.pop("reputation", None)
+        reputation = ReputationConfig(**reputation_data) if reputation_data is not None else None
         return cls(
             resource=resource,
             agents=agents,
             disturbances=disturbances,
             collective_choice=collective_choice,
+            reputation=reputation,
             **data,
         )
 

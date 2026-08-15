@@ -114,6 +114,16 @@ class Simulation:
         # isn't part of that accounting, so it sees the literal total instead
         # -- it has no community to exclude itself from.
         num_agents = self._n_governed if agent.governed else len(self.agents)
+        # Reputation (ADR-0014): pair with one random *other* agent this round
+        # and, with probability `visibility`, reveal their current score --
+        # individually targeted, unlike `signal`'s population-wide aggregate.
+        partner_reputation = None
+        rep = self.config.reputation
+        if rep is not None and len(self.agents) > 1:
+            other = int(rng.integers(0, len(self.agents) - 1))
+            partner_idx = other if other < agent.agent_id else other + 1
+            if rng.random() < rep.visibility:
+                partner_reputation = self.agents[partner_idx].reputation
         return Observation(
             round_index=round_index,
             num_agents=num_agents,
@@ -122,7 +132,25 @@ class Simulation:
             own_last_harvest=agent.last_harvest,
             own_total_payoff=agent.total_payoff,
             signal=signal,
+            partner_reputation=partner_reputation,
         )
+
+    def _update_reputation(self, requests: list[float]) -> None:
+        """Update every active agent's own reputation score (ADR-0014).
+
+        ``+1`` for a round at/below the governed community's fair share,
+        ``-1`` above it -- scored from the raw *request* (intent), not the
+        realised post-rationing/enforcement harvest, and always tracked
+        regardless of whether ``ReputationCooperatorStrategy`` is even
+        present in this run (a real number, not a fiction specific to one
+        strategy). No-op if reputation isn't configured.
+        """
+        if self.config.reputation is None:
+            return
+        fair_share = self._sustainable_yield() / self._n_governed
+        for agent, request in zip(self.agents, requests, strict=True):
+            if agent.active:
+                agent.reputation += 1.0 if request <= fair_share else -1.0
 
     def _allocate(self, requests: list[float]) -> tuple[list[float], float]:
         """Scale requests to fit the available stock and return realised harvests.
@@ -290,6 +318,9 @@ class Simulation:
         vote_taken = self._maybe_vote(round_index)
         harvests, total_harvested, penalties = self._enforce(harvests)
         self._track_overuse(total_harvested)
+        # Reputation is scored from this round's raw requests (ADR-0014), so it
+        # reflects intent, not what feasibility/enforcement happened to allow.
+        self._update_reputation(requests)
 
         for agent, amount in zip(self.agents, harvests, strict=True):
             agent.record_harvest(amount)
@@ -309,6 +340,9 @@ class Simulation:
             disturbed=disturbed,
             vote_taken=vote_taken,
             collective_enforcement_active=self._collective_enforcement_active,
+            reputations=(
+                tuple(a.reputation for a in self.agents) if self.config.reputation is not None else ()
+            ),
         )
 
     def run(self) -> RunResult:

@@ -29,6 +29,11 @@ class Observation:
             ``None`` if no message was received / communication is off. This is the
             channel through which communication supplies information the direct
             observation may withhold (see ADR-0007).
+        partner_reputation: This round's randomly-assigned other agent's current
+            reputation score, or ``None`` if reputation tracking is off or this
+            round's observation roll failed (see ``ReputationConfig.visibility``
+            and ADR-0014). Individually-targeted, unlike ``signal`` -- a different
+            partner, possibly with a different score, every round.
     """
 
     round_index: int
@@ -38,3 +43,4 @@ class Observation:
     own_last_harvest: float
     own_total_payoff: float
     signal: float | None = None
+    partner_reputation: float | None = None

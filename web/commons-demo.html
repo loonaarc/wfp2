@@ -28,6 +28,7 @@
     --s-compensating_cooperator: #9467bd;
     --s-sanctioning: #2ca02c;
     --s-loner: #bcbd22;
+    --s-reputation_cooperator: #17becf;
     --serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -228,6 +229,8 @@
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
   .legend i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  .legend .pair-line { width: 20px; height: 0; border-top: 2px solid; border-radius: 0; display: inline-block; }
+  .legend .pair-line.dashed { border-top-style: dashed; }
   .traj { display: block; width: 100%; height: 90px; }
   .caption { font-size: 12px; color: var(--muted); margin: 10px 2px 0; max-width: 78ch; }
   .caption code { font-family: var(--mono); font-size: 11px; background: var(--panel-2); padding: 1px 5px; border-radius: 5px; }
@@ -358,6 +361,7 @@
                       <option value="cooperative">cooperative</option>
                       <option value="conditional_cooperator">conditional (retaliate)</option>
                       <option value="compensating_cooperator">compensating (restrain)</option>
+                      <option value="reputation_cooperator">reputation (indirect, E18)</option>
                     </select>
                   </div>
                 </td>
@@ -476,7 +480,12 @@
                 </td>
               </tr>
               <tr>
-                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="repvis">Reputation visibility <span class="val" id="repvis_v">1.0</span></label>
+                    <input type="range" id="repvis" min="0" max="1" step="0.1" value="1.0" />
+                  </div>
+                </td>
                 <td data-scope="single">
                   <div class="field">
                     <label for="bcast">Communication <span class="val" id="bcast_v">off</span></label>
@@ -554,6 +563,14 @@
             <div class="foot-row">
               <span class="foot-label">Agents — colour = strategy, number = net payoff (harvest − monitoring cost):</span>
               <div class="legend" id="legend"></div>
+            </div>
+            <div class="foot-row" id="rep_pair_legend" style="display:none">
+              <span class="foot-label">Reputation pairing this round — arrow points from the agent to its partner (reputation cooperators only):</span>
+              <div class="legend">
+                <span><i class="pair-line dashed" style="border-color:var(--muted)"></i> not seen — trusts by default</span>
+                <span><i class="pair-line" style="border-color:var(--good)"></i> seen, trusted — cooperates</span>
+                <span><i class="pair-line" style="border-color:var(--bad)"></i> seen, distrusted — grabs a selfish share</span>
+              </div>
             </div>
           </div>
           <div class="card evo-count-card" id="evo_count_card" style="display:none">
@@ -789,7 +806,7 @@
   // Collective choice (E13 / ADR-0011): fixed to match the Python script's
   // defaults rather than exposed as extra sliders, to keep the panel legible.
   const COLLECTIVE_OVERUSE_THRESHOLD = 0.5, COLLECTIVE_COST_SHARE = 0.2;
-  const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning"];
+  const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning","reputation_cooperator"];
 
   // A small drawn icon per strategy, on the agent itself in the ring -- so the
   // *behaviour* is legible at a glance, not just the colour (also helps
@@ -841,6 +858,20 @@
         ctx.lineTo(Math.sin(a) * s * 0.28, s * 0.55);
         ctx.stroke();
       }
+    } else if (kind === "reputation_cooperator") {
+      // star: a rating/reputation, judged on one randomly-assigned partner
+      // each round (ADR-0014), not the population's aggregate state
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const outer = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        const inner = outer + Math.PI / 5;
+        const ox = Math.cos(outer) * s, oy = Math.sin(outer) * s;
+        const ix = Math.cos(inner) * s * 0.42, iy = Math.sin(inner) * s * 0.42;
+        if (i === 0) ctx.moveTo(ox, oy); else ctx.lineTo(ox, oy);
+        ctx.lineTo(ix, iy);
+      }
+      ctx.closePath();
+      ctx.stroke();
     }
     ctx.restore();
   }
@@ -853,6 +884,7 @@
     conditional_cooperator: '<svg viewBox="-10 -10 20 20" width="13" height="13"><path d="M 5.2 -5.9 A 7.2 7.2 0 1 1 -7 5.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M -9.3 3.4 L -7 5.8 L -3.6 4.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>',
     compensating_cooperator: '<svg viewBox="-10 -10 20 20" width="13" height="13"><rect x="-5.5" y="-8.5" width="3.8" height="17" fill="currentColor"/><rect x="1.7" y="-8.5" width="3.8" height="17" fill="currentColor"/></svg>',
     selfish: '<svg viewBox="-10 -10 20 20" width="13" height="13"><path d="M -4.7 -9 L -2.4 5.5 M 0 -9 L 0 5.5 M 4.7 -9 L 2.4 5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+    reputation_cooperator: '<svg viewBox="-10 -10 20 20" width="13" height="13"><path d="M 0,-9 L 2.22,-3.06 L 8.56,-2.78 L 3.60,1.17 L 5.29,7.28 L 0,3.78 L -5.29,7.28 L -3.60,1.17 L -8.56,-2.78 L -2.22,-3.06 Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
   };
   // Open/closed eye: whether the population can see the stock (a shared,
   // population-wide setting here, not per-agent).
@@ -912,6 +944,17 @@
       if (declined) return 0;
       return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
     }
+    if (kind === "reputation_cooperator") {
+      // ADR-0014: reacts to ONE randomly-assigned partner's reputation, not
+      // the population aggregate -- distinct from conditional_cooperator.
+      const distrust = obs.partnerRep !== null && obs.partnerRep < 0;  // trust_threshold=0
+      if (obs.level === null) {
+        if (distrust) return p.dg * K / n;
+        return p.restraint * p.kb * MSY / n;
+      }
+      if (distrust) return p.dg * obs.level / n;
+      return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
+    }
     return 0;
   }
 
@@ -921,7 +964,7 @@
       kind: s.kind,
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
-      group: s.group ?? 0, governed: s.governed ?? true,
+      group: s.group ?? 0, governed: s.governed ?? true, reputation: 0,
     });
     const n = agents.length, rng = mulberry32(o.seed);
     // ADR-0012 allocation correction: a governed agent's own "fair share" and
@@ -957,15 +1000,44 @@
       }
       const afterRegen = level;  // post-regrowth, pre-harvest -- lets the ring animate grow-then-shrink
       const heard = new Array(n).fill(false);  // who received the broadcast this round (per-agent roll)
+      // Reputation pairing this round (E18, ADR-0014) -- who each agent was
+      // paired with, whether that partner's score was actually revealed
+      // (probability = repVisibility), and the value seen if so. Recorded for
+      // every agent (pairing happens regardless of which strategy reads it),
+      // so the animation can show the mechanism even for a mixed population.
+      const partners = new Array(n).fill(null);
+      const partnerSeen = new Array(n).fill(false);
+      const partnerRepAtObs = new Array(n).fill(null);
       const req = agents.map((a, i) => {
         if (!a.active) return 0;  // a failed agent requests nothing
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) { signal = lastTotal; heard[i] = true; }
-        const obs = { level: o.info === "global" ? level : null, signal, n: a.governed ? nGoverned : n, cap: K };
+        // Reputation (ADR-0014): pair with one random *other* agent this round
+        // and, with probability repVisibility, reveal their current score --
+        // both rng draws happen whenever reputation is on, regardless of the
+        // visibility value, so sweeping visibility doesn't shift other draws.
+        let partnerRep = null;
+        if (o.reputation && n > 1) {
+          const other = Math.floor(rng() * (n - 1));
+          const partnerIdx = other < i ? other : other + 1;
+          partners[i] = partnerIdx;
+          if (rng() < o.repVisibility) {
+            partnerRep = agents[partnerIdx].reputation;
+            partnerSeen[i] = true;
+            partnerRepAtObs[i] = partnerRep;
+          }
+        }
+        const obs = { level: o.info === "global" ? level : null, signal, n: a.governed ? nGoverned : n, cap: K, partnerRep };
         let r = decide(a.kind, a.p, obs, a.st);
         if (o.noise > 0) r *= 1 + (rng() * 2 - 1) * o.noise;
         return Math.max(0, r);
       });
+      if (o.reputation) {
+        // Scored from the raw request (intent), before rationing/enforcement --
+        // the only thing under the agent's own control (mirrors ADR-0014).
+        const fairShare = MSY / nGoverned;
+        agents.forEach((a, i) => { if (a.active) a.reputation += req[i] <= fairShare ? 1 : -1; });
+      }
       const tot = req.reduce((x, y) => x + y, 0);
       let h = tot <= level || tot === 0 ? req.slice() : req.map((r) => (r * level) / tot);
       const pen = new Array(n).fill(0);
@@ -1002,7 +1074,11 @@
       level -= total; lastTotal = total;
       frames.push({ harv: h, pen: pen.slice(), stock: level, afterRegen, collapsed: level <= THRESH,
                     shock: shocked, fail: failed, vote: voted, voteActive: collectiveActive,
-                    heard, active: agents.map((a) => a.active) });
+                    heard, active: agents.map((a) => a.active),
+                    reputations: o.reputation ? agents.map((a) => a.reputation) : null,
+                    partners: o.reputation ? partners : null,
+                    partnerSeen: o.reputation ? partnerSeen : null,
+                    partnerRepAtObs: o.reputation ? partnerRepAtObs : null });
     }
     return { kinds: agents.map((a) => a.kind), groups: agents.map((a) => a.group), frames, payoff, n };
   }
@@ -1065,6 +1141,8 @@
     "🧩 Full nested coverage recovers (E15)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4 },
     "🚪 Open access beats full coverage (E16)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "selfish" },
     "🚪 Harmless outsiders — boundary doesn't matter (E16)": { ctype: "cooperative", mon: 8, nsel: 0, info: "global", kb: 1, noise: 0, bcast: 0, groups: 4, boundary: "open", otype: "cooperative" },
+    "⭐ Reputation softens one free-rider (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 1.0 },
+    "⭐ No visibility → reputation can't act (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 0.0 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1073,9 +1151,10 @@
     regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
     shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
-    groups: $("groups"), boundary: $("boundary"), otype: $("otype"),
+    groups: $("groups"), boundary: $("boundary"), otype: $("otype"), repvis: $("repvis"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), gscrub: $("gscrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
+    rep_pair_legend: $("rep_pair_legend"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
     m_harvest: $("m_harvest"), m_stock: $("m_stock"), m_round: $("m_round"), m_welfare: $("m_welfare"),
   };
@@ -1093,11 +1172,13 @@
   const HELP = {
     regime: { summary: "A preset scenario. Picking one sets every dial below (including, for the two evolution regimes, the ones in the Evolution column); changing any dial switches back to “— custom —”." },
     ctype: { summary: "How the plain (non-monitor, non-selfish) cooperators decide how much to harvest each round.",
-      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined." },
+      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined. <b>reputation</b> (E18, ADR-0014, Nowak &amp; Sigmund 1998) is conditional too, but on one randomly-assigned <i>partner</i>'s reputation score each round, not the population's aggregate state — every agent's own score (visible below its payoff, coloured green/red) rises <code>+1</code> for a round at/below its fair share and falls <code>−1</code> above it, regardless of that agent's own strategy; only when the drawn partner is known and below 0 does a reputation cooperator switch to a selfish-sized grab. 'Reputation visibility' is the chance that lookup succeeds each round. The ring shows each reputation cooperator's own pairing this round as a curved line toward its partner: dashed gray = pairing happened but wasn't seen (defaults to trusting, cooperates regardless), solid green = seen and trusted (cooperates), solid red = seen and distrusted (this is exactly the round it grabs a selfish share instead)." },
     mon: { summary: "How many of the 8 agents are monitors — they cooperate and additionally enforce a quota on everyone.",
       mechanism: "Any harvest above the quota <code>q = MSY / n</code> (MSY = g·K/4 = 10) is capped back to <code>q</code> before it counts. Each monitor pays a fixed monitoring cost of <b>0.2</b> every round, whether or not anyone actually over-harvested. Their net payoff (harvest − cost) sits below a plain cooperator's — that gap is the second-order free-rider problem (E3): enforcement benefits everyone, only monitors pay for it." },
     nsel: { summary: "How many of the 8 agents are selfish.",
       mechanism: "A selfish agent requests an equal per-capita share of whatever it perceives — <code>stock / n</code> if it can see the stock, <code>K / n</code> if blind — with no adjustment for sustainability. Monitors + cooperators + selfish always sum to 8." },
+    repvis: { summary: "Only matters when cooperator type is 'reputation' — the chance (q) that a reputation cooperator actually learns its randomly-assigned partner's current score this round.",
+      mechanism: "At <b>q = 1.0</b> the lookup always succeeds. At lower q it sometimes fails, and an unobserved partner defaults to trusted — 'innocent until proven guilty' — so a reputation cooperator restrains more often the lower q gets, purely from missing information, not from anyone actually behaving better. Nowak &amp; Sigmund (1998)'s own stability condition for reputation-sustained cooperation is <code>q &gt; c/b</code>." },
     info: { summary: "Whether agents can see the current resource stock before deciding how much to harvest.",
       mechanism: "<b>global</b> feeds each agent the true current stock, so the cooperative rule can compute K/2 directly and self-correct after a shock. <b>private</b> blinds the agent to the stock; it falls back to the fixed estimate <code>kb × MSY / n</code> (see “Ecological knowledge” below), which cannot adapt if the real stock has moved." },
     kb: { summary: "How accurate a blind agent's fixed estimate of the sustainable yield is.",
@@ -1191,6 +1272,8 @@
     "🧩 Full nested coverage recovers (E15)": "Same 4 groups of 2, but now every group has its own monitor. Welfare recovers fully — identical to a single flat group of 8, because the quota is always sized against the whole population, not each group. Compare to 'Partial nested coverage backfires' above: it's a cliff, not a slope — try 'Monitors' = 6 to see the tipping point itself (experiment E15).",
     "🚪 Open access beats full coverage (E16)": "Every one of the 4 groups is fully monitored — internally, this is the healthiest possible setup. But switch Boundary to 'open' and 4 unmonitored selfish outsiders join: no amount of internal monitoring can reach them, since a group's quota only ever covers its own members. The pool collapses anyway. Try setting Boundary back to 'closed' to see the difference boundaries alone make (experiment E16).",
     "🚪 Harmless outsiders — boundary doesn't matter (E16)": "Identical setup to 'Open access beats full coverage', except the outsiders are 'cooperative' instead of 'selfish' (see Outsider type). They restrain themselves on their own, so being unmonitored costs nothing — the pool stays healthy despite the open boundary. Boundaries only matter against an outsider that would actually over-harvest if left unexcluded (experiment E16).",
+    "⭐ Reputation softens one free-rider (E18)": "7 reputation cooperators + 1 selfish. Each reputation cooperator is paired with one random *other* agent every round and only distrusts (defects) if that specific partner's own score is bad — so with only 1 free-rider out of 8, most rounds pair a reputation cooperator with another trustworthy one, and it cooperates as normal. Sustained here at sustainability ≈ 0.29 (welfare_efficiency ≈ 0.60) — worse than 'Compensating tolerates a free-rider' (≈0.47, ≈1.00, pure restraint never grabs back) but nowhere near 'Reciprocity spirals against one' (E14, conditional cooperators: fully COLLAPSED, ≈0.00) — a genuine third point on that spectrum, not a repeat of either. Watch each agent's own reputation score (below its payoff, green while trusted, red once distrusted) diverge over the run (experiment E18, ADR-0014).",
+    "⭐ No visibility → reputation can't act (E18)": "Identical population to the regime above, but 'Reputation visibility' is 0 — no reputation cooperator ever actually learns its partner's score. An unobserved partner defaults to trusted ('innocent until proven guilty'), so every reputation cooperator behaves exactly like a plain, unconditional cooperative agent — sustainability climbs back to ≈0.44 (welfare_efficiency ≈1.00), close to 'Compensating tolerates a free-rider''s own numbers. The mechanism still runs (watch the reputation scores keep updating round to round) but has no way to act on what it knows, since it never gets to look — full visibility actually costs some sustainability here, because seeing the free-rider clearly is also what lets a reputation cooperator occasionally grab back (experiment E18, ADR-0014).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1212,8 +1295,15 @@
     els.ctype.title = ncoop === 0
       ? "No effect: 0 cooperative agents in this population (monitors + selfish = 8)."
       : "";
+    const isReputation = els.ctype.value === "reputation_cooperator";
+    els.repvis.disabled = !isReputation;
+    els.repvis.title = isReputation
+      ? "" : "No effect: cooperator type isn't 'reputation (indirect)'.";
+    if (els.rep_pair_legend) els.rep_pair_legend.style.display = isReputation ? "" : "none";
+    $("repvis_v").textContent = (+els.repvis.value).toFixed(1);
     const cshort = { cooperative: "cooperative", conditional_cooperator: "conditional",
-                     compensating_cooperator: "compensating" }[els.ctype.value];
+                     compensating_cooperator: "compensating",
+                     reputation_cooperator: "reputation" }[els.ctype.value];
     const parts = [];
     if (ncoop > 0) parts.push(`<b>${ncoop}</b> ${cshort}`);
     if (nmon > 0) parts.push(`<b>${nmon}</b> monitors`);
@@ -1255,6 +1345,7 @@
     els.groups.value = r.groups ?? 1;
     els.boundary.value = r.boundary ?? "closed";
     els.otype.value = r.otype ?? "selfish";
+    els.repvis.value = r.repvis ?? 1.0;
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -1283,7 +1374,7 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -1358,8 +1449,12 @@
     }
     s.maxCum = Math.max(1, ...s.cum[s.cum.length - 1]);
     s.frames.unshift({ harv: new Array(s.n).fill(0), stock: opts.init ?? INIT,
-                       afterRegen: opts.init ?? INIT,
-                       collapsed: false, active: new Array(s.n).fill(true) });
+                       afterRegen: opts.init ?? INIT, collapsed: false,
+                       active: new Array(s.n).fill(true),
+                       reputations: opts.reputation ? new Array(s.n).fill(0) : null,
+                       partners: opts.reputation ? new Array(s.n).fill(null) : null,
+                       partnerSeen: opts.reputation ? new Array(s.n).fill(false) : null,
+                       partnerRepAtObs: opts.reputation ? new Array(s.n).fill(null) : null });
     s.cum.unshift(new Array(s.n).fill(0));
     return s;
   }
@@ -1373,6 +1468,8 @@
       shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
       cvoteRound: +els.cvote.value,
+      reputation: els.ctype.value === "reputation_cooperator",
+      repVisibility: +els.repvis.value,
     };
     sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];
@@ -1396,7 +1493,8 @@
   function buildLegend() {
     const present = [...new Set(sim.kinds)];
     const nice = { selfish: "selfish", cooperative: "cooperative",
-      conditional_cooperator: "conditional", compensating_cooperator: "compensating", sanctioning: "monitor" };
+      conditional_cooperator: "conditional", compensating_cooperator: "compensating", sanctioning: "monitor",
+      reputation_cooperator: "reputation" };
     els.legend.innerHTML = "";
     for (const k of STRATS) if (present.includes(k)) {
       const s = document.createElement("span");
@@ -1574,6 +1672,78 @@
       ctx.restore();
     }
 
+    // reputation pairing (E18, ADR-0014): each reputation cooperator's random
+    // partner this round, drawn from agent i toward whoever it was paired
+    // with. Whether it actually defects is a two-part condition -- a solid,
+    // trust-colored line means the pairing was *seen* (probability =
+    // visibility) and shows what was seen (green = trusted, red = distrusted
+    // -> this agent grabs a selfish share this round); a faint dashed gray
+    // line means the pairing happened but was never revealed, so this agent
+    // defaults to trusting it and cooperates regardless of the partner's
+    // actual score. Only drawn for reputation_cooperator agents -- other
+    // strategies are paired too (fixed RNG order) but never read the result.
+    if (mode !== "evolution" && f.partners) {
+      ctx.save();
+      ctx.lineWidth = Math.max(1, size * 0.0028);
+      for (let i = 0; i < n; i++) {
+        if (sim.kinds[i] !== "reputation_cooperator" || !f.active[i]) continue;
+        const j = f.partners[i];
+        if (j === null || j === undefined || !f.active[j]) continue;
+        const seen = f.partnerSeen[i];
+        const distrust = seen && f.partnerRepAtObs[i] < 0;
+        const color = seen ? css(distrust ? "--bad" : "--good") : css("--muted");
+        const [x1, y1] = pos[i], [x2, y2] = pos[j];
+        // Bow each pair's own chord toward the ring centre, scaled by that
+        // chord's own length -- NOT by pulling every curve toward the exact
+        // same (cx, cy) point. Pulling toward one shared point made unrelated
+        // pairs' curves cross right on top of each other near the middle,
+        // reading as "everyone connects to one hub" even though each agent
+        // only has the single outgoing partner recorded in f.partners[i].
+        // Scaling by chord length also keeps neighbouring agents' lines
+        // nearly straight instead of bowing them just as deep as a
+        // diametrically-opposite pair.
+        const dx = x2 - x1, dy = y2 - y1;
+        const chordLen = Math.hypot(dx, dy) || 1;
+        const nx = -dy / chordLen, ny = dx / chordLen;
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+        const sign = Math.sign((cx - mx) * nx + (cy - my) * ny) || 1;
+        const bow = chordLen * 0.16 * sign;
+        const bx = mx + nx * bow, by = my + ny * bow;
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = seen ? (distrust ? 0.8 : 0.5) : 0.22;
+        ctx.setLineDash(seen ? [] : [size * 0.006, size * 0.006]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.quadraticCurveTo(bx, by, x2, y2);
+        ctx.stroke();
+        // Arrowhead partway along the curve (t=0.88, not t=1) -- a direction
+        // cue for "i is looking at j," pointing along the curve's own tangent
+        // there. Stopping short of the endpoint deliberately leaves it clear
+        // of j's own agent marker (drawn later, on top, at t=1 exactly) so
+        // the arrow stays visible instead of being painted over.
+        ctx.setLineDash([]);
+        const at = 0.88, mt = 1 - at;
+        const ax = mt * mt * x1 + 2 * mt * at * bx + at * at * x2;
+        const ay = mt * mt * y1 + 2 * mt * at * by + at * at * y2;
+        const tx = 2 * mt * (bx - x1) + 2 * at * (x2 - bx);
+        const ty = 2 * mt * (by - y1) + 2 * at * (y2 - by);
+        const tlen = Math.hypot(tx, ty) || 1;
+        const ux = tx / tlen, uy = ty / tlen, px = -uy, py = ux;
+        const alen = size * 0.016, awid = size * 0.009;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = seen ? 0.9 : 0.4;
+        ctx.beginPath();
+        ctx.moveTo(ax + ux * alen * 0.6, ay + uy * alen * 0.6);
+        ctx.lineTo(ax - ux * alen * 0.4 + px * awid, ay - uy * alen * 0.4 + py * awid);
+        ctx.lineTo(ax - ux * alen * 0.4 - px * awid, ay - uy * alen * 0.4 - py * awid);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     // harvest lines (single-run detail only; too busy for 40 evolving agents)
     if (mode !== "evolution") {
       const maxH = Math.max(1e-6, ...f.harv);
@@ -1734,6 +1904,17 @@
         ctx.font = `600 ${Math.round(size * 0.026)}px ${css("--mono")}`;
         ctx.lineWidth = 3; ctx.strokeStyle = css("--panel"); ctx.strokeText(txt, lx, ly);
         ctx.fillStyle = css("--text"); ctx.fillText(txt, lx, ly);
+        // Reputation score (ADR-0014): a small colour-coded number under the
+        // payoff, present whenever reputation tracking is on -- green while
+        // trusted (>=0), red once distrusted (<0), for every agent, not just
+        // reputation_cooperator ones (the score is tracked regardless of
+        // strategy).
+        if (f.reputations) {
+          const rep = f.reputations[i];
+          ctx.font = `700 ${Math.round(size * 0.02)}px ${css("--mono")}`;
+          ctx.fillStyle = rep >= 0 ? css("--good") : css("--bad");
+          ctx.fillText(`rep ${rep >= 0 ? "+" : ""}${rep.toFixed(0)}`, lx, ly + size * 0.03);
+        }
         ctx.globalAlpha = 1;
         // "+N this round" -- stays invisible during the regrow phase, pops in
         // exactly as the harvest (shrink) phase starts, so it's clearly tied

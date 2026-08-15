@@ -225,14 +225,13 @@ does it just make a *specific realization* of an unchanged structure go worse?
 
 Also not the same axis of difficulty: whether a candidate is cheap to test.
 `information_model` already has both `"global"` and `"private"` implemented in
-`config.py`, and population-composition, groups, and boundaries are now
-built too (E14/E15/E16, ADR-0012/0013) — testing any of these is picking a
-value or running an existing sweep script. Multiple resources, network
-reciprocity, reputation, and specialization have no implemented code path
-yet (there is no `num_resources` field, no interaction graph, no
-`peer_scores`, no agent-role concept) — testing any of them means writing
-new mechanism first, not just choosing a value. See "Ranking the axes"
-below for which is which.
+`config.py`, and population-composition, groups, boundaries, and reputation are
+now built too (E14/E15/E16/E18, ADR-0012/0013/0014) — testing any of these is
+picking a value or running an existing sweep script. Multiple resources,
+network reciprocity, and specialization have no implemented code path yet
+(there is no `num_resources` field, no interaction graph, no agent-role
+concept) — testing any of them means writing new mechanism first, not just
+choosing a value. See "Ranking the axes" below for which is which.
 
 ### Additional candidate axes (surfaced later, checked against already-read literature)
 
@@ -291,17 +290,17 @@ already built:**
 **From Nowak & Sigmund (1998), "Evolution of Indirect Reciprocity by Image
 Scoring" — already read ([note](paper-notes/1998-nowak-sigmund-indirect-reciprocity.md)).
 Really an extension/refinement of the *information* axis (E1), not a fully
-separate one — its own paper note already has a near-complete implementation
-sketch:**
-- **Reputation-based (indirect) reciprocity.** Instead of the binary
-  global/private information split, agents track a per-partner **image score**
-  (rises with restraint, falls with over-extraction) and cooperate conditionally
-  on a specific partner's score, not just the aggregate stock. Exact condition:
-  cooperation is evolutionarily stable when `q > c/b` (`q` = probability of
-  knowing a partner's reputation). The paper note already sketches how to wire
-  this in: extend `Observation` with per-agent `peer_scores`, add a
-  `ReputationCooperatorStrategy` with a threshold `k`. More implementation-ready
-  than most other candidates here, since the design work is already written up.
+separate one — built as [E18](experiments/E18-reputation.md) (ADR-0014):**
+- **Reputation-based (indirect) reciprocity.** Built. Every agent tracks its
+  own reputation score (rises with restraint, falls with over-extraction,
+  updated by the engine regardless of strategy); each round `ReputationCooperatorStrategy`
+  is paired with one random partner and, with probability `visibility` (`q`),
+  observes that partner's score, cooperating unless it's known and below a
+  trust threshold. The final design differs from the original sketch here
+  (population-wide `peer_scores` on every `Observation`) — see ADR-0014's
+  Considered Options for why a partner-specific, not population-aggregate,
+  trigger was necessary to avoid recreating `conditional_cooperator`'s
+  collapse.
 
 **From GovSim (Piatti et al., 2024) — already read
 ([note](paper-notes/2024-piatti-govsim-cooperate-or-collapse.md)). Upgrades two
@@ -572,15 +571,21 @@ this ranking:**
    citation-grounded: GovSim (2024) names "multiple resource types" and
    "varying regeneration rates" directly as its own future work. Likely the
    richest strategy space (diversify, specialise, switch) of any axis here.
-6. **Reputation / indirect reciprocity** (Nowak & Sigmund 1998) — grounded,
-   exact condition `q > c/b`, and its own paper note already has a
-   near-complete implementation sketch (extend `Observation` with
-   `peer_scores`, add a `ReputationCooperatorStrategy`). Really an extension
-   of the information axis (E1), not a fully independent one. Also the
-   cheapest bridge toward the wealth-weighted-choice/capture candidates
-   below, if that direction gets picked up later — per-partner reputation
-   tracking is close to the machinery a "does the population let itself be
-   fooled" study would need anyway.
+6. **Reputation / indirect reciprocity** (built, Nowak & Sigmund 1998, now
+   [E18](experiments/E18-reputation.md), ADR-0014) — grounded, though built
+   as a partner-specific strategy comparison (`reputation_cooperator` vs.
+   `conditional_cooperator` vs. `compensating_cooperator`) rather than the
+   `peer_scores`/threshold sketch originally envisioned here; validated as a
+   genuinely distinct third point on the reciprocity spectrum, not a
+   disguised `conditional_cooperator`. Really an extension of the
+   information axis (E1), not a fully independent one. **Not yet folded into
+   the complexity-axis composition sweep** (E14–E16's machinery) — see
+   ADR-0014's Status Notes for why that's still an open question, not a
+   foregone conclusion. Also the cheapest bridge toward the
+   wealth-weighted-choice/capture candidates below, if that direction gets
+   picked up later — per-partner reputation tracking is close to the
+   machinery a "does the population let itself be fooled" study would need
+   anyway.
 7. **Specialization** — upgraded from "no grounding" to a named GovSim gap
    ("different stakeholder interests"), though still without a worked
    formula the way the Nowak-sourced axes above have.

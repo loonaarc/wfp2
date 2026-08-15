@@ -62,6 +62,14 @@ current front-runner for the project's specific focus — not yet locked.
   *fairness* (starves free-riders) but collapses the *resource* faster; unconditional
   restraint protects the resource but is heavily exploited. Neither protects both —
   motivating sanctioning. Caveat: depends on retaliation severity (`defection_greed`).
+- **SQ-5b** 🟢 Does conditioning retaliation on one randomly-assigned partner's
+  reputation (indirect reciprocity, Nowak & Sigmund 1998) avoid the collapse
+  blanket, population-aggregate retaliation causes (SQ-5/E2)? **→ Answered (E18):
+  yes** — `reputation_cooperator` survives at 1 free-rider where
+  `conditional_cooperator` collapses (though worse than pure restraint); raising
+  `visibility` (how often a partner's score is actually seen) protects fairness but
+  costs the resource, the same trade-off E2 found, rediscovered inside one
+  mechanism's own information parameter.
 
 ### Communication (RQ-A)
 - **SQ-6** 🟢 Does broadcasting reduce exploitation / improve outcomes in mixed
@@ -142,8 +150,8 @@ current front-runner for the project's specific focus — not yet locked.
   rules miss? *(Deferred: adds large complexity and reproducibility burden.)*
 - How do spatial structure and locality of the resource change results?
   *(Deferred: requires a spatial environment; see ADR-0001.)*
-- Reputation-based mechanisms (indirect reciprocity). *(Deferred; sanctioning is now
-  implemented — E3.)*
+- ~~Reputation-based mechanisms (indirect reciprocity).~~ *(Built — see SQ-5b,
+  E18, ADR-0014.)*
 - Reinforcement-learning agents. *(Deferred; but rule-based evolutionary/replicator
   dynamics are used — E5, ADR-0006.)*
 

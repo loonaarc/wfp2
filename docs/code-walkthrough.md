@@ -50,7 +50,8 @@ src/emergent_cooperation/
 ├── core/            The machinery: config, randomness, run-state, the engine
 │   ├── config.py        Turns YAML into validated settings objects
 │   │                     (incl. CollectiveChoiceConfig — the voted, jointly-funded
-│   │                     enforcement mechanism, ADR-0011)
+│   │                     enforcement mechanism, ADR-0011 — and ReputationConfig,
+│   │                     ADR-0014)
 │   ├── rng.py           Reproducible random-number generators
 │   ├── state.py         Plain data records of what happened (results)
 │   └── simulation.py    THE ENGINE — the per-round loop
@@ -66,6 +67,7 @@ src/emergent_cooperation/
 │   ├── conditional.py   Reciprocity: cooperate until others over-extract, then retaliate
 │   ├── compensating.py  Restraint: on over-extraction, withhold to let the pool recover
 │   ├── sanctioning.py   Cooperate AND enforce a sustainable harvest quota
+│   ├── reputation.py    Indirect reciprocity: retaliate against a bad-reputation partner only
 │   └── registry.py      Name → strategy class lookup (the extension point)
 ├── metrics/
 │   └── metrics.py       Turn a result into numbers (harvest, collapse, fairness)
@@ -131,9 +133,11 @@ flowchart LR
     SC --> RC[ResourceConfig]
     SC --> AS["agents: (AgentSpec, ...)"]
     SC --> CC["collective_choice: CollectiveChoiceConfig | None"]
+    SC --> RP["reputation: ReputationConfig | None"]
     AS --> spec["strategy, count, params"]
     RC --> rc["capacity, regen_rate, ..."]
     CC --> ccf["vote_round, overuse_threshold, cost_share"]
+    RP --> rpf["visibility"]
 ```
 
 - **`ResourceConfig`** — the resource: `initial_level`, `capacity` (K),
@@ -147,6 +151,9 @@ flowchart LR
 - **`CollectiveChoiceConfig`** *(optional, `None` by default)* — a group vote on
   jointly-funded enforcement: `vote_round`, `overuse_threshold`, `cost_share`.
   See §5's enforcement step and ADR-0011.
+- **`ReputationConfig`** *(optional, `None` by default)* — turns on per-agent
+  reputation tracking: `visibility` (`q`, the probability a paired partner's score
+  is actually observed). See §4d's `reputation_cooperator` and ADR-0014.
 
 Each has a `__post_init__` method that **validates** on creation — e.g. it rejects a
 negative capacity or an unknown information model immediately, so bad configs fail
@@ -237,6 +244,7 @@ Observation(
     resource_level=60.0,   # ← the shared stock ... or None under "private" info
     own_last_harvest=0.0,
     own_total_payoff=0.0,
+    partner_reputation=None,  # ← this round's paired partner's score, or None (unobserved / no reputation config)
 )
 ```
 
@@ -282,7 +290,8 @@ flowchart TB
     S --> Cp["CompensatingCooperatorStrategy"]
     S --> Sa["SanctioningStrategy"]
     S --> Lo["LonerStrategy"]
-    R["registry: name → class"] -.builds.-> Se & Co & Cc & Cp & Sa & Lo
+    S --> Rp["ReputationCooperatorStrategy"]
+    R["registry: name → class"] -.builds.-> Se & Co & Cc & Cp & Sa & Lo & Rp
 ```
 
 **Selfish** (`selfish.py`) — grab an equal share of the *visible* stock, scaled by
@@ -343,16 +352,29 @@ script (E11), not the engine. It exists to test whether an opt-out option rescue
 voluntary monitoring from collapse (Hauert et al. 2007) — it delays the collapse but
 doesn't prevent it (E11, ADR-0009).
 
+**Reputation cooperator** (`reputation.py`) — *indirect* reciprocity. It cooperates
+like the cooperative rule, but each round the engine pairs it with one random other
+agent and, with probability `visibility` (set via `SimulationConfig.reputation`),
+reveals that partner's reputation score to it (`Observation.partner_reputation`).
+Every agent's own score is tracked and updated by the engine every round regardless
+of its own strategy (`+1` at/below fair share, `-1` above). Unlike `conditional`,
+which retaliates against the *whole population* the moment it detects any
+over-extraction, this strategy only retaliates against *that one partner*, for that
+one round — so a single free-rider triggers scattered, partial defection rather than
+a population-wide, self-reinforcing collapse (Nowak & Sigmund 1998; experiment E18,
+ADR-0014).
+
 **The registry** (`registry.py`) maps a name string to a strategy class, so a config
 can say `strategy: cooperative` and the code can build it:
 
 ```python
 make_strategy("cooperative", {"capacity": 100.0})   # → CooperativeStrategy(capacity=100.0)
 available_strategies()  # → ["compensating_cooperator", "conditional_cooperator",
-                        #    "cooperative", "loner", "sanctioning", "selfish"]
+                        #    "cooperative", "loner", "reputation_cooperator",
+                        #    "sanctioning", "selfish"]
 ```
 
-The full set of six strategies (and what each does) is defined in
+The full set of seven strategies (and what each does) is defined in
 [terminology.md](terminology.md#cooperation-mechanisms-the-strategies); this section
 walks through `selfish` and `cooperative` as the core contrast.
 
@@ -591,6 +613,14 @@ collapse.** That's the phenomenon this whole codebase exists to study.
   [E14](experiments/E14-population-diversity.md) (population composition, flat),
   [E15](experiments/E15-groups.md) (groups), and
   [E16](experiments/E16-boundaries.md) (boundaries).
+- **`reputation`** *(not a stub — fully implemented, ADR-0014)* — also lives
+  directly in `core.config`/`core.simulation`, for the same reason: every agent's
+  score has to update every round (`Simulation._update_reputation`) regardless of
+  its own strategy, and partner selection/visibility happen in `Simulation._observe`
+  alongside the rest of the `Observation` build. Orthogonal to
+  `AgentSpec.group`/`governed` — partner pairing is population-wide, not
+  group-scoped; combining the two is possible but untested (see ADR-0014's
+  Consequences). Studied in [E18](experiments/E18-reputation.md).
 
 ---
 

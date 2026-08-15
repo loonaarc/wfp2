@@ -44,12 +44,13 @@ Available strategies:
   - conditional_cooperator
   - cooperative
   - loner
+  - reputation_cooperator
   - sanctioning
   - selfish
 ```
 
 A **strategy** is an agent's decision rule — given what the agent sees, how much
-of the shared resource does it try to take this round? There are six (defined in
+of the shared resource does it try to take this round? There are seven (defined in
 [terminology.md](terminology.md#cooperation-mechanisms-the-strategies)):
 
 - **`selfish`** — grab a large share of whatever is currently available.
@@ -64,9 +65,13 @@ of the shared resource does it try to take this round? There are six (defined in
 - **`loner`** — opt out of the shared resource entirely for a fixed side payoff;
   used only in the evolution-mode experiments (E11), see
   [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
+- **`reputation_cooperator`** — cooperate unless this round's randomly-assigned
+  *partner* has a bad reputation score, then retaliate against just that round
+  (indirect reciprocity, E18, ADR-0014) — a partner-specific reaction, unlike
+  `conditional_cooperator`'s population-wide one.
 
 The first two are the core contrast (and where this walkthrough focuses); the rest
-are studied in experiments E2–E7 and E11 — see the
+are studied in experiments E2–E7, E11, and E18 — see the
 [findings summary](findings-summary.md).
 
 ---
@@ -258,7 +263,7 @@ real part of the project's contribution, not bookkeeping
 You've seen the whole system. Good follow-ups, in order:
 
 0. **[findings-summary.md](findings-summary.md)** — the actual results (experiments
-   E1–E16, E17 reserved) in one page, with the overview figure. Read this to see what
+   E1–E18, E17 reserved) in one page, with the overview figure. Read this to see what
    the tool has *found*, not just how it works.
 1. **[project-overview.md](project-overview.md)** — the problem in plain language,
    now that you've seen it in action.

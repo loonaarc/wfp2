@@ -99,6 +99,16 @@ should link here rather than re-enumerate.
   monitoring from the second-order free-rider problem (Hauert et al. 2007; E11).
   Earns a fixed payoff set at the experiment level, not by the engine. *(model term:
   `loner`.)*
+- **Reputation (indirect reciprocity)** — cooperate like `cooperative`, unless this
+  round's randomly-assigned *partner* is known to have a bad reputation score, in
+  which case retaliate against just that partner for that round. Every agent's
+  reputation is tracked and updated by the engine every round regardless of its own
+  strategy (`+1` at/below fair share, `-1` above); the partner is observed with
+  probability `visibility` (`q`). Unlike `conditional_cooperator`'s population-wide
+  trigger, only whoever draws a bad-reputation partner defects, so the whole
+  population doesn't synchronize into collapse (Nowak & Sigmund 1998; E18, ADR-0014).
+  *(model term: `reputation_cooperator`, via `ReputationCooperatorStrategy` +
+  `SimulationConfig.reputation`.)*
 
 Related concepts:
 

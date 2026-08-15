@@ -36,6 +36,8 @@ class RoundRecord:
         collective_enforcement_active: Whether collectively-chosen enforcement is
             in effect as of this round (``False`` before any vote, or if the vote
             failed).
+        reputations: Per-agent reputation score as of the end of this round
+            (ADR-0014), or ``()`` if reputation tracking isn't configured.
     """
 
     round_index: int
@@ -49,6 +51,7 @@ class RoundRecord:
     disturbed: bool = False
     vote_taken: bool = False
     collective_enforcement_active: bool = False
+    reputations: tuple[float, ...] = ()
 
     @property
     def total_requested(self) -> float:

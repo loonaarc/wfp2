@@ -121,8 +121,12 @@ supervisor feedback.
   fraction still falls.
 - ✅ **Boundaries / open access (E16, ADR-0013)** — expressed via the same groups
   mechanism, no new engine code; opening costs a consistent ~2× fraction.
+- ✅ **Reputation / indirect reciprocity (E18, ADR-0014)** — built and demo'd as a
+  standalone mechanism comparison, not yet folded into the complexity-axis sweep
+  (see ADR-0014's Status Notes for why). Partner-specific retaliation avoids the
+  collapse blanket retaliation (`conditional_cooperator`, E2) causes.
 - ⏳ Next: see the ranked candidate list linked above (network reciprocity,
-  multiple resources, reputation, specialization; `R₀` reserved as **E17**).
+  multiple resources, specialization; `R₀` reserved as **E17**).
 
 ### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

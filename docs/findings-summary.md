@@ -1,16 +1,20 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E16 (E17 reserved). E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E18 (E17 reserved). E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
 voted agreement can substitute for pre-committed enforcement; E14–E16 shift to the
 equifinality/complexity-axis question — as the population, its governance structure,
 and its boundary get structurally richer, does the set of near-optimal approaches
-grow? This is the narrative spine for the writeup; each claim links to its full
-experiment report and the code that produced it.*
+grow? E18 is a standalone mechanism comparison (built, not yet folded into the
+complexity-axis sweep — see its own doc): does conditioning retaliation on one
+partner's reputation, rather than the population's aggregate trend, avoid the
+collapse blanket retaliation causes? This is the narrative spine for the writeup;
+each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-08-10 · 6 strategies · 16 experiments (E1–E16, E17 reserved) · 108
-tests · results reproducible from `scripts/` and the committed `results/` data.
+**Status:** 2026-08-14 · 7 strategies · 17 experiments built (E1–E18, E17
+reserved) · 115 tests · results reproducible from `scripts/` and the committed
+`results/` data.
 
 ---
 
@@ -111,10 +115,13 @@ flowchart TD
         E14 --> E15 --> E16
     end
 
+    E18["E18 — reputation (indirect reciprocity)<br/>partner-specific retaliation avoids E2's collapse"]
+
     E3 -.the cost E5 explains.-> E5
     E3 -.the mechanism E7 confirms.-> E7
     E3 -.extended into a shock.-> E8
     E3 -.the flat baseline P4 restructures.-> E14
+    E2 -.rediscovered inside one mechanism's own dial.-> E18
 ```
 
 Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
@@ -327,6 +334,37 @@ configurations per experiment, E14–E16 exhaustively (or, once the space gets t
 large, Monte Carlo-) sweep the full composition space — a different kind of
 evidence (a measured set-size trend, not a point comparison).
 
+## Reputation: indirect reciprocity vs. blanket retaliation (E18)
+
+*(Full report: [E18](experiments/E18-reputation.md). Mechanism:
+[ADR-0014](decisions/0014-reputation-indirect-reciprocity.md).)*
+
+A standalone mechanism comparison, in the E1–E13 style (not (yet) folded into
+Phase 4's compositional sweep): Nowak & Sigmund (1998)'s indirect reciprocity
+says cooperation can be sustained via a public reputation score, without
+repeated personal interaction. `conditional_cooperator` (E2) already
+retaliates, but against the *population's aggregate* trend — E2's own
+finding is that this collapses the resource with even one free-rider.
+`reputation_cooperator` retaliates only against one randomly-assigned
+*partner* it happens to distrust this round.
+
+- **The partner-specific trigger avoids E2's collapse.** At 1 free-rider,
+  `conditional_cooperator` is fully collapsed (sustainability 0.000); the
+  reputation-based strategy survives (0.095) — worse than pure unconditional
+  restraint (0.469) but a genuine third point on that spectrum, since only a
+  minority of rounds pair any one reputation-cooperator with the actual
+  free-rider.
+- **More accurate reputation information costs the resource, but protects
+  fairness — E2's own trade-off, rediscovered inside one mechanism's own
+  information parameter.** Sweeping `visibility` (Nowak & Sigmund's `q`)
+  from 0 to 1: sustainability falls monotonically (0.438 → 0.095), while the
+  free-rider's payoff falls (670.7 → 332.0) and inequality falls (Gini 0.552
+  → 0.417). At `q=0` a reputation-cooperator never learns anyone's score and
+  behaves like an unconditional cooperator; at `q=1` it reliably detects and
+  reciprocates against the real free-rider, protecting itself individually
+  at the shared pool's expense — the same tension E2 found between two
+  *different* mechanisms, found again inside one mechanism's own dial.
+
 ## Relation to the literature
 
 - **Hardin (1968):** the all-selfish collapse is the tragedy of the commons.
@@ -374,8 +412,11 @@ The standout open threads:
 1. **Remaining complexity axes (Phase 4, in progress):** population diversity
    (E14), groups (E15), and boundaries (E16) are done. Next in the ranking:
    network reciprocity (Nowak 2006, exact condition `b/c > k`), multiple resources,
-   reputation/indirect reciprocity, and specialization — plus `R₀` (starting
-   resource level, reserved as **E17**) as a smaller side-sweep.
+   and specialization — plus `R₀` (starting resource level, reserved as **E17**)
+   as a smaller side-sweep. Reputation/indirect reciprocity is *built* (**E18**,
+   ADR-0014), but as a standalone mechanism comparison in the E1–E13 style, not
+   yet folded into Phase 4's compositional sweep — whether it should be is an
+   open question, not assumed (see ADR-0014's Status Notes).
 2. **Disturbances (Phase 3):** the resource shock (E8/E9) and agent failure (E10)
    are in. Next — **communication failure** against the same interface;
    **monitor-redundancy** sweeps (how much redundancy buys back the single point of
@@ -407,5 +448,6 @@ python scripts/experiment_binding_agreement.py       # E13
 python scripts/experiment_population_diversity.py    # E14
 python scripts/experiment_groups_full_sweep.py       # E15
 python scripts/experiment_boundaries_full_sweep.py   # E16
-pytest                                               # 108 tests
+python scripts/experiment_reputation.py              # E18
+pytest                                               # 115 tests
 ```

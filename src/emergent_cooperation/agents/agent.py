@@ -34,6 +34,12 @@ class Agent:
             :attr:`~emergent_cooperation.core.config.AgentSpec.governed`).
             ``False`` for an outsider (ADR-0013) — excluded from every
             group's per-capita quota denominator, not just left unmonitored.
+        reputation: Image score (Nowak & Sigmund 1998; ADR-0014) — updated by
+            the engine every round regardless of this agent's own strategy
+            (``+1`` for a round at/below the governed community's fair share,
+            ``-1`` above it), so it is a real, always-tracked number, not a
+            fiction specific to :class:`~emergent_cooperation.strategies.
+            reputation.ReputationCooperatorStrategy`.
     """
 
     def __init__(
@@ -63,6 +69,7 @@ class Agent:
         self.total_payoff: float = 0.0
         self.last_harvest: float = 0.0
         self.active: bool = True
+        self.reputation: float = 0.0
 
     @property
     def strategy_name(self) -> str:

@@ -21,7 +21,7 @@ src/emergent_cooperation/
 ├── core/
 │   ├── config.py       ResourceConfig, AgentSpec (incl. group/governed, ADR-0012/13),
 │   │                     SimulationConfig, ExperimentConfig, CollectiveChoiceConfig
-│   │                     (ADR-0011); YAML loading
+│   │                     (ADR-0011), ReputationConfig (ADR-0014); YAML loading
 │   ├── rng.py          make_rng, spawn_streams (independent per-agent streams)
 │   ├── state.py        RoundRecord, RunResult (plain data, no behaviour)
 │   └── simulation.py   Simulation engine + run_simulation()
@@ -37,6 +37,7 @@ src/emergent_cooperation/
 │   ├── conditional.py  ConditionalCooperatorStrategy (reciprocity / retaliate)
 │   ├── compensating.py CompensatingCooperatorStrategy (restraint / withhold)
 │   ├── sanctioning.py  SanctioningStrategy (enforced quota + monitoring cost)
+│   ├── reputation.py   ReputationCooperatorStrategy (indirect reciprocity, ADR-0014)
 │   └── registry.py     name → class registry (extension point)
 ├── communication/      per-agent CommunicationModel protocol (reserved); broadcast lives in core
 ├── disturbances/       Disturbance protocol + ResourceShock / AgentFailure (config-scheduled; ADR-0008)
@@ -75,7 +76,11 @@ about the world. Under `private` information the shared `resource_level` is set 
 carries an optional `signal` — a communicated aggregate (the group's total harvest
 last round) delivered by the broadcast communication channel when
 `broadcast_reliability > 0` (ADR-0007); this is how communication can supply
-information the direct observation withholds.
+information the direct observation withholds. It also carries an optional
+`partner_reputation` — this round's randomly-paired other agent's reputation score,
+revealed with probability `visibility` when `SimulationConfig.reputation` is
+configured (ADR-0014); unlike `signal`, this is individually targeted, not a
+population-wide aggregate.
 
 ### `agents.Agent` and `strategies.Strategy`
 `Agent` owns identity and mutable per-run state (payoff, last harvest) and
@@ -150,7 +155,11 @@ For round `t` (in `Simulation.step`):
    the stock, or an agent failure deactivates some agents; the round is flagged
    `disturbed`. No-op when nothing is scheduled (ADR-0008).
 4. **Observe:** build each agent's `Observation` of the (regrown, possibly shocked)
-   stock, respecting the information model.
+   stock, respecting the information model. If `reputation` is configured, also pair
+   each agent with one random other agent and, with probability `visibility`, reveal
+   that partner's current reputation score (`partner_reputation`) — both draws
+   happen regardless of the `visibility` value, so sweeping it doesn't shift other
+   RNG calls (ADR-0014).
 5. **Decide:** each agent returns a non-negative requested consumption.
 6. **Allocate:** if `Σ requests > stock`, scale every request by the same factor
    `stock / Σ requests` (strategy-neutral rationing); otherwise grant requests.
@@ -171,7 +180,10 @@ For round `t` (in `Simulation.step`):
    `cost_share` charged to every other active agent that doesn't already pay
    individually. No-op when neither applies (ADR-0005; ADR-0011; ADR-0012).
 9. **Harvest:** update per-agent payoffs (net of penalties), withdraw the total,
-   record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`.
+   record `resource_after_harvest` (carried into `t+1`), and flag `collapsed`. If
+   `reputation` is configured, also update every active agent's own score from its
+   *requested* (not post-rationing) amount: `+1` at/below the governed population's
+   fair share, `-1` above it (ADR-0014).
 
 Regenerating **before** harvest makes the all-cooperative equilibrium exactly
 stable (agents harvest exactly the regrowth), which gives clean, interpretable
@@ -231,3 +243,10 @@ baselines. See [decisions/0002-round-order-and-cooperative-rule.md](decisions/00
   (`Observation` never carries group membership); only which sanctioner's cap
   applies to which agent's harvest is group-scoped. There is no spatial/network
   structure and no per-group information locality.
+- Reputation (ADR-0014) is population-wide, not group-scoped: partner pairing draws
+  from the whole population regardless of `AgentSpec.group`, and the fair-share
+  reference always uses the governed population size. Combining reputation with
+  groups/boundaries is possible (nothing prevents it) but untested. Partner
+  selection is uniform-random each round, not a fixed network — a true
+  network-reciprocity axis (neighbours only, Nowak 2006 rule 4) remains a separate,
+  unbuilt extension.
