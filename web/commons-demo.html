@@ -29,6 +29,7 @@
     --s-sanctioning: #2ca02c;
     --s-loner: #bcbd22;
     --s-reputation_cooperator: #17becf;
+    --s-grim_trigger: #8c564b;
     --serif: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -367,6 +368,7 @@
                       <option value="conditional_cooperator">conditional (retaliate)</option>
                       <option value="compensating_cooperator">compensating (restrain)</option>
                       <option value="reputation_cooperator">reputation (indirect, E18)</option>
+                      <option value="grim_trigger">grim trigger (never forgives, E21)</option>
                     </select>
                   </div>
                 </td>
@@ -389,6 +391,12 @@
                   <div class="field">
                     <label for="cvote">Collective vote round <span class="val" id="cvote_v">off</span></label>
                     <input type="range" id="cvote" min="0" max="20" step="1" value="0" />
+                  </div>
+                </td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="wealthfloor">Wealth floor <span class="val" id="wealthfloor_v">off</span></label>
+                    <input type="range" id="wealthfloor" min="0" max="0.95" step="0.05" value="0" />
                   </div>
                 </td>
                 <td data-scope="single">
@@ -421,6 +429,12 @@
                   <div class="field">
                     <label for="shock">Resource shock <span class="val" id="shock_v">off</span></label>
                     <input type="range" id="shock" min="0" max="0.8" step="0.1" value="0" />
+                  </div>
+                </td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="shockround">Shock round <span class="val" id="shockround_v">50%</span></label>
+                    <input type="range" id="shockround" min="5" max="95" step="5" value="50" />
                   </div>
                 </td>
                 <td data-scope="single">
@@ -476,7 +490,12 @@
                     </select>
                   </div>
                 </td>
-                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="wealthmonitor">Wealth monitor <span class="val" id="wealthmonitor_v">off</span></label>
+                    <input type="range" id="wealthmonitor" min="0" max="1.5" step="0.02" value="0" />
+                  </div>
+                </td>
                 <td data-scope="evo">
                   <div class="field">
                     <label for="evo_loner">Start loner % <span class="val" id="evo_loner_v">0</span></label>
@@ -920,7 +939,7 @@
   // Collective choice (E13 / ADR-0011): fixed to match the Python script's
   // defaults rather than exposed as extra sliders, to keep the panel legible.
   const COLLECTIVE_OVERUSE_THRESHOLD = 0.5, COLLECTIVE_COST_SHARE = 0.2;
-  const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning","reputation_cooperator"];
+  const STRATS = ["selfish","cooperative","conditional_cooperator","compensating_cooperator","sanctioning","reputation_cooperator","grim_trigger"];
 
   // A small drawn icon per strategy, on the agent itself in the ring -- so the
   // *behaviour* is legible at a glance, not just the colour (also helps
@@ -1081,6 +1100,21 @@
       if (distrust) return p.dg * obs.level / n;
       return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
     }
+    if (kind === "grim_trigger") {
+      // Friedman (1971), E21/ADR-0018: identical rule to conditional_cooperator,
+      // but st.triggered latches permanently once a decline is ever detected --
+      // never reset, unlike conditional_cooperator's fresh-every-round check.
+      if (obs.level === null) {
+        if (obs.signal !== null && obs.signal > MSY + SENS) st.triggered = true;
+        if (st.triggered) return p.dg * K / n;
+        return p.restraint * p.kb * myMsy / n;
+      }
+      const declined = st.last !== null && obs.level < st.last - SENS;
+      st.last = obs.level;
+      if (declined) st.triggered = true;
+      if (st.triggered) return p.dg * obs.level / n;
+      return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
+    }
     return 0;
   }
 
@@ -1089,7 +1123,7 @@
     for (const s of specs) for (let i = 0; i < s.count; i++) agents.push({
       kind: s.kind,
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
-      isS: s.kind === "sanctioning", st: { last: null }, active: true,
+      isS: s.kind === "sanctioning", st: { last: null, triggered: false }, active: true,
       group: s.group ?? 0, governed: s.governed ?? true, reputation: 0,
       // Multiple resources (E20, ADR-0016): split=1.0 (all request to pool A)
       // is a no-op whenever the second pool is off. `st2` is a *separate*
@@ -1097,7 +1131,7 @@
       // `st` between both pools would corrupt conditional/compensating's
       // own "did the stock I'm watching decline" comparison for both,
       // exactly the bug ADR-0016 caught and fixed in the Python engine.
-      split: s.split ?? 1.0, st2: { last: null },
+      split: s.split ?? 1.0, st2: { last: null, triggered: false },
     });
     const n = agents.length, rng = mulberry32(o.seed);
     // ADR-0012 allocation correction: a governed agent's own "fair share" and
@@ -1140,16 +1174,18 @@
     // in -- a pure pool-A specialist (split=1.0) neither enforces nor pays
     // to enforce pool B, and vice versa. `poolSide` is null for the
     // single-pool case (every active policy counts, exactly as before).
-    function enforcePool(h, pen, msyForQuota, poolSide) {
+    function enforcePool(h, pen, msyForQuota, poolSide, wealthVolunteer) {
       const eligible = (i) => poolSide === null ||
         (poolSide === "a" ? agents[i].split > 0 : agents[i].split < 1);
       for (const idxs of byGroup.values()) {
-        const hasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active && eligible(i));
+        const hasSanctioner = idxs.some((i) =>
+          (agents[i].isS && agents[i].active && eligible(i)) || i === wealthVolunteer);
         if (!hasSanctioner && !collectiveActive) continue;
         const q = msyForQuota / nGoverned;
         for (const i of idxs) {
           h[i] = Math.min(h[i], q);
           if (agents[i].isS && agents[i].active && eligible(i)) pen[i] = agents[i].p.mc;
+          else if (i === wealthVolunteer) pen[i] = agents[i].p.mc;  // ad-hoc, E22/ADR-0020
         }
       }
     }
@@ -1177,8 +1213,16 @@
       const partnerSeen = new Array(n).fill(false);
       const partnerRepAtObs = new Array(n).fill(null);
       const reqA = new Array(n).fill(0), reqB = new Array(n).fill(0);
+      // Wealth-based participation floor (Chen & Szolnoki 2016; E23, ADR-0019):
+      // relative to the population's own current average payoff, recomputed
+      // fresh every round -- an agent can drop out and rejoin as its own
+      // wealth moves, unlike agent_failure's permanent exclusion.
+      const wealthFloor = o.wealthFloor != null
+        ? o.wealthFloor * (payoff.reduce((x, y) => x + y, 0) / n)
+        : null;
       agents.forEach((a, i) => {
         if (!a.active) return;  // a failed agent requests nothing (from either pool)
+        if (wealthFloor !== null && payoff[i] < wealthFloor) return;  // below the wealth floor this round
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) { signal = lastTotal; heard[i] = true; }
         // Reputation (ADR-0014): pair with one random *other* agent this round
@@ -1248,7 +1292,24 @@
         voted = true;
         if (t > 0) collectiveActive = (overuseRounds / t) > COLLECTIVE_OVERUSE_THRESHOLD;
       }
-      enforcePool(hA, penA, MSY, o.res2 ? "a" : null);
+      // Wealth-triggered ad-hoc voluntary monitoring (Olson 1965; E22,
+      // ADR-0020): the single wealthiest agent with no intrinsic sanction
+      // policy, not selfish (enforcement would cap its own over-extraction
+      // too), whose accumulated payoff so far exceeds this multiple of the
+      // population's current average volunteers as monitor this round only
+      // -- re-evaluated fresh every round, scoped to pool A only.
+      let wealthVolunteer = -1;
+      if (o.wealthMonitorThreshold != null) {
+        const avgPayoff = payoff.reduce((x, y) => x + y, 0) / n;
+        let bestPayoff = -Infinity;
+        agents.forEach((a, i) => {
+          if (!a.active || a.isS || a.kind === "selfish") return;
+          if (payoff[i] > o.wealthMonitorThreshold * avgPayoff && payoff[i] > bestPayoff) {
+            wealthVolunteer = i; bestPayoff = payoff[i];
+          }
+        });
+      }
+      enforcePool(hA, penA, MSY, o.res2 ? "a" : null, wealthVolunteer);
       if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually -- pool A only (ADR-0016)
         agents.forEach((a, i) => { if (a.active && !a.isS) penA[i] += COLLECTIVE_COST_SHARE; });
       }
@@ -1356,6 +1417,9 @@
     "🌊 Diversifying beats concentrating (E20)": { ctype: "cooperative", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, res2: "on", split: 0.5 },
     "⚖️ Specialist monitors: cheaper, not better (E20)": { ctype: "cooperative", nsel: 2, mon: 2, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, res2: "on", split: 0.5, monarr: "specialist" },
     "⚠️ Starting above K/2 collapses conditional cooperators (E17)": { ctype: "conditional_cooperator", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 95 },
+    "⏳ Grim trigger: a finite horizon has a price (E21)": { ctype: "grim_trigger", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 50, shock: 0.15, shockround: 30 },
+    "💸 A wealth floor excludes the monitors, not free-riders (E23)": { ctype: "cooperative", nsel: 0, mon: 2, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 50, wealthfloor: 0.9 },
+    "🎩 The wealthy volunteer to monitor — until a free-rider shows up (E22)": { ctype: "cooperative", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0.15, bcast: 0, rounds: 100, init: 50, wealthmonitor: 1.02 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1363,7 +1427,7 @@
   const els = {
     regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
-    shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
+    shock: $("shock"), shockround: $("shockround"), fail: $("fail"), cvote: $("cvote"), wealthfloor: $("wealthfloor"), wealthmonitor: $("wealthmonitor"), rounds: $("rounds"), seed: $("seed"),
     groups: $("groups"), boundary: $("boundary"), otype: $("otype"), repvis: $("repvis"),
     nettopo: $("nettopo"), netdeg: $("netdeg"),
     res2: $("res2"), split: $("split"), monarr: $("monarr"),
@@ -1391,7 +1455,7 @@
   const HELP = {
     regime: { summary: "A preset scenario. Picking one sets every dial below (including, for the two evolution regimes, the ones in the Evolution column); changing any dial switches back to “— custom —”." },
     ctype: { summary: "How the plain (non-monitor, non-selfish) cooperators decide how much to harvest each round.",
-      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined. <b>reputation</b> (E18, ADR-0014, Nowak &amp; Sigmund 1998) is conditional too, but on one randomly-assigned <i>partner</i>'s reputation score each round, not the population's aggregate state — every agent's own score (visible below its payoff, coloured green/red) rises <code>+1</code> for a round at/below its fair share and falls <code>−1</code> above it, regardless of that agent's own strategy; only when the drawn partner is known and below 0 does a reputation cooperator switch to a selfish-sized grab. 'Reputation visibility' is the chance that lookup succeeds each round. The ring shows each reputation cooperator's own pairing this round as a curved line toward its partner: dashed gray = pairing happened but wasn't seen (defaults to trusting, cooperates regardless), solid green = seen and trusted (cooperates), solid red = seen and distrusted (this is exactly the round it grabs a selfish share instead). 'Network topology' (E19, ADR-0015) fixes that partner to a persistent set of graph neighbours instead of a fresh random draw every round — shown as faint permanent lines on the ring, distinct from the highlighted per-round pairing curve." },
+      mechanism: "<b>cooperative</b> and <b>sanctioning</b> both harvest <code>max(0, stock − K/2) / n</code> when observing — only the surplus above the healthy reference level. <b>conditional</b> follows that same rule, but if the stock has fallen since its last look it switches to a one-round grab of <code>stock / n</code> instead. <b>compensating</b> does the opposite: it withholds entirely (harvests 0) for a round when it detects the stock has declined. <b>reputation</b> (E18, ADR-0014, Nowak &amp; Sigmund 1998) is conditional too, but on one randomly-assigned <i>partner</i>'s reputation score each round, not the population's aggregate state — every agent's own score (visible below its payoff, coloured green/red) rises <code>+1</code> for a round at/below its fair share and falls <code>−1</code> above it, regardless of that agent's own strategy; only when the drawn partner is known and below 0 does a reputation cooperator switch to a selfish-sized grab. 'Reputation visibility' is the chance that lookup succeeds each round. The ring shows each reputation cooperator's own pairing this round as a curved line toward its partner: dashed gray = pairing happened but wasn't seen (defaults to trusting, cooperates regardless), solid green = seen and trusted (cooperates), solid red = seen and distrusted (this is exactly the round it grabs a selfish share instead). 'Network topology' (E19, ADR-0015) fixes that partner to a persistent set of graph neighbours instead of a fresh random draw every round — shown as faint permanent lines on the ring, distinct from the highlighted per-round pairing curve. <b>grim trigger</b> (E21, ADR-0018, Friedman 1971) follows the exact same rule as <b>conditional</b> — same decline trigger, same one-round selfish grab — with one deliberate difference: once triggered, it never goes back to cooperating, for the rest of the run, no matter what the stock does afterward. 'Shock round' lets you test whether <i>when</i> that permanent switch flips matters." },
     mon: { summary: "How many of the 8 agents are monitors — they cooperate and additionally enforce a quota on everyone.",
       mechanism: "Any harvest above the quota <code>q = MSY / n</code> (MSY = g·K/4 = 10) is capped back to <code>q</code> before it counts. Each monitor pays a fixed monitoring cost of <b>0.2</b> every round, whether or not anyone actually over-harvested. Their net payoff (harvest − cost) sits below a plain cooperator's — that gap is the second-order free-rider problem (E3): enforcement benefits everyone, only monitors pay for it." },
     nsel: { summary: "How many of the 8 agents are selfish.",
@@ -1419,11 +1483,17 @@
     bcast: { summary: "Chance each round that agents hear a broadcast of the group's total harvest.",
       mechanism: "Drawn independently every round (from round 1 on) at this probability; when it fires, every agent — even blind ones — learns the group's actual total harvest from the previous round, letting them detect free-riding without seeing the stock directly." },
     shock: { summary: "A one-off disturbance that removes a fraction of the stock partway through the run.",
-      mechanism: "Applied once, at round <code>round(rounds × 0.5)</code>: <code>stock ← max(0, stock × (1 − shock))</code>. Reveals resilience rather than steady-state behaviour — compare who recovers (observing agents) against who collapses (blind agents), experiments E8–E9." },
+      mechanism: "Applied once, at the round set by 'Shock round' below: <code>stock ← max(0, stock × (1 − shock))</code>. Reveals resilience rather than steady-state behaviour — compare who recovers (observing agents) against who collapses (blind agents), experiments E8–E9." },
+    shockround: { summary: "Which round (as a % of the run) the resource shock above actually fires.",
+      mechanism: "Only matters with 'Resource shock' above set to something nonzero. For an all-'grim trigger' population, moving this earlier costs far more cumulative welfare than moving it later — a permanent, un-forgiving reaction has more of the fixed round budget left to act on the earlier it's triggered (Fudenberg & Maskin 1986's finite-horizon point, tested directly: experiment E21, ADR-0018)." },
     fail: { summary: "Number of agents that drop out partway through the run.",
       mechanism: "At round <code>round(rounds × 0.5)</code>, this many agents stop acting entirely — no harvest, and if one was a monitor, no more enforcement. Monitors are placed first in the agent order, so they fail first as this number increases. Losing the sole enforcer collapses a commons that depended on it; losing a member of a self-correcting cooperative group does not (experiment E10)." },
     cvote: { summary: "The round at which the group holds a one-time vote on whether to adopt enforcement.",
       mechanism: "At this round (0 = no vote), the group checks whether it has been over-using the commons in more than half of all rounds so far (<code>overuse-rounds / t &gt; 0.5</code>); if so, everyone adopts the same quota a monitor would enforce (<code>MSY / n</code>), funded by a shared fee of <b>0.2</b>/round on every non-monitor, from then on. Voting late lets damage accumulate that a flat quota can't undo (experiment E13). If any monitor is already present, the vote can still fire but has no additional effect, since the quota is already being enforced." },
+    wealthfloor: { summary: "Excludes any agent whose own accumulated payoff falls below this fraction of the population's own current average, from requesting this round.",
+      mechanism: "Recomputed fresh every round (an agent can drop out and rejoin as its own wealth moves) — not the same as agent failure, which is permanent. Chen &amp; Szolnoki (2016) found this self-corrects against free-riders on a spatial lattice, since a defector's own local resource base shrinks from its own defection. In this demo's single shared pool, that channel doesn't exist: a free-rider's request scales with the same global stock everyone draws from, so it never ends up poor — instead the gate excludes whoever sacrificed for the pool (a restrained cooperator, or a monitor paying its own monitoring cost), and welfare gets <i>worse</i>, not better. Try it with monitors on: it's the monitors who stop requesting once their own enforcement cost outpaces their harvest (experiment E23, ADR-0019)." },
+    wealthmonitor: { summary: "The single wealthiest non-selfish, non-monitor agent volunteers to enforce a quota, unpaid and uncoerced, once its own accumulated payoff clears this multiple of the population's current average.",
+      mechanism: "Olson (1965): a group member has an individual incentive to unilaterally provide a collective good exactly when its own share of the group's benefit clears the good's cost — and the largest member ends up bearing a disproportionate share of the burden (\"exploitation of the great by the small\"). Recomputed fresh every round, scoped to whoever isn't already a designated monitor and isn't selfish (enforcement would cap a free-rider's own over-extraction too, a pure loss). With deterministic strategies, same-type agents never organically diverge in wealth — turn on Decision noise to see it engage. With even one selfish free-rider present, its own dominant payoff inflates the population average so far that no cooperator ever clears the bar: the mechanism is inert in exactly the population it would need to protect (experiment E22, ADR-0020)." },
     groups: { summary: "Splits the 8 governed agents into this many separately-monitored groups, instead of one flat population.",
       mechanism: "A monitor's quota now only caps <b>its own group's</b> members, computed as that group's fair share of the <i>governed</i> population's sustainable yield (<code>MSY / 8</code>, not divided by the group's own size, and not diluted by any open-access outsiders either — so full coverage always reaches the same result no matter how many groups there are or whether the boundary is open). A group with no monitor of its own is left completely uncapped by enforcement, even if another group has one — unlike the flat model, one monitor no longer protects everyone. At 1 group this is identical to the original flat rule (ADR-0012)." },
     boundary: { summary: "Whether the community can exclude outsiders from the shared pool entirely.",
@@ -1507,6 +1577,9 @@
     "🌊 Diversifying beats concentrating (E20)": "8 cooperative agents, split evenly (0.5) between two independent pools — Pool A (K=100, g=0.4, 'reliable') and Pool B (K=100, g=0.2, 'fragile', half the growth rate, shown top-right). Both are genuinely harvested — Pool B settles around 55, Pool A around 61 — welfare_efficiency ≈ 0.96 against the *combined* sustainable yield of both pools. Try dragging 'Allocation split' to 1.0 (pool A only): welfare_efficiency drops to ≈0.67 — Pool B just sits there, growing to full capacity, its own sustainable yield never captured at all. Splitting effort isn't about spreading risk — it's about not leaving a second sustainable resource on the table (experiment E20, ADR-0016).",
     "⚖️ Specialist monitors: cheaper, not better (E20)": "2 of 8 agents are monitors, arranged as specialists — one watches (and pays to enforce) only Pool A, the other only Pool B — half the raw monitoring cost of a generalist pair that would each watch both pools. 2 selfish free-riders and 4 cooperative agents (split=0.5) fill the rest. welfare_efficiency ≈ 0.84 here; switch 'Monitor arrangement' to generalist with everything else unchanged and it climbs to ≈0.91 — cheaper monitoring doesn't win on *net* welfare, because a specialist that ignores a pool doesn't just stop enforcing it, it stops harvesting from it too, leaving some of that pool's own sustainable surplus uncaptured (experiment E20, ADR-0016).",
     "⚠️ Starting above K/2 collapses conditional cooperators (E17)": "8 conditional cooperators, no free-riders at all, starting stock 95 (drag 'Initial stock' down to see it change) — the pool empties to 0 within two rounds and never recovers, even though nobody is misbehaving. Mechanism: this strategy detects 'over-extraction' by comparing the stock to what it saw last round; starting above the healthy target (K/2 = 50) means the population's own first, completely legitimate harvest — bringing the stock back down toward 50 — looks exactly like a decline caused by a free-rider, to a rule that has no way to tell the two apart. Every agent 'retaliates' at once, grabbing a selfish share, which empties the pool outright. Try dragging Initial stock to 50 or below: perfectly stable at exactly 50, every time — the threshold is a knife-edge at R₀ = K/2, not a gradient (experiment E17, ADR-0017). Every prior experiment used this same strategy starting at exactly K/2, which is exactly why this was never seen before.",
+    "⏳ Grim trigger: a finite horizon has a price (E21)": "8 grim trigger agents — identical to conditional cooperator, except once it detects a decline it never forgives, for the rest of the run (Friedman 1971's 'grim trigger': permanent reversion after any deviation, no return path). A modest one-off shock (−15%) hits at round 30 (see 'Shock round'), which is enough to trigger a permanent, population-wide selfish grab that empties the pool for good — welfare_efficiency ≈ 0.38 over the full 100-round run. Drag 'Shock round' later — 50 → ≈0.58, 70 → ≈0.78, 90 → ≈0.98 — and welfare climbs almost exactly linearly with how little of the fixed round budget is left for the permanent punishment to act on: a direct, measurable demonstration of Fudenberg & Maskin's (1986) point that finite horizons change what a punishment costs, without any of their discounting machinery — just a mechanical rule that never forgives, tested against a clock (experiment E21, ADR-0018).",
+    "💸 A wealth floor excludes the monitors, not free-riders (E23)": "6 plain cooperative agents + 2 sanctioning monitors, no free-riders at all — 'Wealth floor' set to 0.9 (any agent below 90% of the population's own current average payoff can't request that round). welfare_efficiency ≈ 0.71 here; drag 'Wealth floor' back to 0 (off) and it climbs to ≈0.96, stock settling at the healthy target (50) instead of drifting to ≈75. Nobody is a free-rider in this population, so who gets excluded? The monitors — paying a monitoring cost every round leaves them poorer than everyone else, even though they're the ones protecting the pool, so a 'low wealth = suspect' filter locks out exactly the wrong agents and enforcement quietly stops. Chen & Szolnoki (2016) found wealth-gating self-corrects against free-riders on a spatial lattice, where defection erodes a defector's own *local* resource base; this demo's shared pool has no such channel, so the gate instead tracks who sacrificed for the commons, not who exploited it (experiment E23, ADR-0019).",
+    "🎩 The wealthy volunteer to monitor — until a free-rider shows up (E22)": "8 plain cooperative agents, no free-riders, 'Decision noise' at 0.15 (the only source of wealth inequality here — deterministic agents never organically diverge) and 'Wealth monitor' set to 1.02× the population average. welfare_efficiency ≈ 0.99 — a whisper below the noiseless 1.00, the small cost of protection nobody actually asked for: watch a few agents' net payoff pull briefly ahead, then dip back down as they take a turn paying to enforce a quota — Olson's (1965) own claim that whoever has the largest stake in a shared good ends up unilaterally funding it, 'the exploitation of the great by the small.' Now drag 'Selfish agents' up to just 1: welfare stays ≈0.99, identical to the mechanism being off — a single free-rider earns so much more than everyone else that it drags the population average up far above what any cooperator could ever reach, so nobody ever looks 'wealthy enough' to volunteer. The mechanism is inert in exactly the population it would need to protect (experiment E22, ADR-0020).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1574,8 +1647,11 @@
     $("noise_v").textContent = (+els.noise.value).toFixed(2);
     $("bcast_v").textContent = +els.bcast.value === 0 ? "off" : (+els.bcast.value).toFixed(1);
     $("shock_v").textContent = +els.shock.value === 0 ? "off" : "−" + Math.round(+els.shock.value * 100) + "%";
+    $("shockround_v").textContent = els.shockround.value + "%";
     $("fail_v").textContent = +els.fail.value === 0 ? "off" : +els.fail.value + " agent" + (+els.fail.value > 1 ? "s" : "");
     $("cvote_v").textContent = +els.cvote.value === 0 ? "off" : "round " + els.cvote.value;
+    $("wealthfloor_v").textContent = +els.wealthfloor.value === 0 ? "off" : (+els.wealthfloor.value).toFixed(2);
+    $("wealthmonitor_v").textContent = +els.wealthmonitor.value === 0 ? "off" : (+els.wealthmonitor.value).toFixed(2);
     $("rounds_v").textContent = els.rounds.value;
     $("seed_v").textContent = els.seed.value;
     updatePanelSummary();
@@ -1591,8 +1667,11 @@
     els.mon.value = r.mon ?? 0;
     els.init.value = r.init ?? 50;
     els.shock.value = r.shock ?? 0;
+    els.shockround.value = r.shockround ?? 50;
     els.fail.value = r.fail ?? 0;
     els.cvote.value = r.cvote ?? 0;
+    els.wealthfloor.value = r.wealthfloor ?? 0;
+    els.wealthmonitor.value = r.wealthmonitor ?? 0;
     els.rounds.value = r.rounds ?? 40;
     els.groups.value = r.groups ?? 1;
     els.boundary.value = r.boundary ?? "closed";
@@ -1631,7 +1710,7 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis", "netdeg", "split"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "shockround", "fail", "cvote", "wealthfloor", "wealthmonitor", "repvis", "netdeg", "split"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -1742,7 +1821,7 @@
     const opts = {
       info: els.info.value, noise: +els.noise.value, broadcast: +els.bcast.value,
       rounds, seed: +els.seed.value, init,
-      shock: +els.shock.value, shockRound: Math.round(rounds * 0.5),
+      shock: +els.shock.value, shockRound: Math.round(rounds * (+els.shockround.value / 100)),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
       cvoteRound: +els.cvote.value,
       reputation: els.ctype.value === "reputation_cooperator",
@@ -1750,6 +1829,8 @@
       network: els.ctype.value === "reputation_cooperator" && els.nettopo.value === "ring"
         ? +els.netdeg.value : null,
       res2: els.res2 && els.res2.value === "on",
+      wealthFloor: +els.wealthfloor.value > 0 ? +els.wealthfloor.value : null,
+      wealthMonitorThreshold: +els.wealthmonitor.value > 0 ? +els.wealthmonitor.value : null,
     };
     sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];

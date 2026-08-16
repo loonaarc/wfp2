@@ -185,6 +185,51 @@ class NetworkConfig:
 
 
 @dataclass(frozen=True)
+class WealthMonitoringConfig:
+    """Wealth-triggered ad-hoc voluntary monitoring (Olson 1965; E22, ADR-0020).
+
+    Operationalizes Olson's own formal result: a group member has an
+    individual incentive to unilaterally provide a collective good exactly
+    when its own share of the benefit clears the good's cost relative to its
+    total value (`F_i > C/V_g`, p. 33). Here, "share of benefit" is an
+    agent's own accumulated ``total_payoff`` relative to the population's
+    current average -- exactly Olson's own worked example ("an owner of vast
+    estates... will have a larger F_i," p. 29). Re-evaluated fresh every
+    round: an agent with no intrinsic :meth:`Strategy.sanction_policy`
+    (i.e., not already a ``sanctioning``-strategy agent) and not
+    ``selfish`` (enforcement would cap its own over-extraction too, so it is
+    never a net gain for a fixed-greed extractor -- Olson's ``F_i`` presumes
+    the volunteer actually values the good provided) whose own
+    ``total_payoff`` exceeds ``threshold`` times the population's current
+    average becomes this round's ad-hoc volunteer monitor -- only the single
+    *wealthiest* eligible agent, matching this engine's existing "any one
+    monitor enforces fully" simplification and Olson's own point that once
+    the largest member has provided the amount it wants, no one else has any
+    further incentive to also contribute.
+
+    Attributes:
+        threshold: Multiple of the population's current average
+            ``total_payoff`` an agent's own wealth must exceed to volunteer.
+            Values above ``1.0`` mean "above average," the range Olson's own
+            argument is about; ``<= 1.0`` is a permissive degenerate case,
+            not disallowed but not the motivating one.
+        monitoring_cost: Payoff the volunteer forfeits each round it
+            monitors -- the same quantity, and same default, as
+            :class:`~emergent_cooperation.strategies.sanctioning.SanctioningStrategy`'s
+            own ``monitoring_cost``.
+    """
+
+    threshold: float
+    monitoring_cost: float = 0.2
+
+    def __post_init__(self) -> None:
+        if self.threshold < 0:
+            raise ValueError("threshold must be non-negative")
+        if self.monitoring_cost < 0:
+            raise ValueError("monitoring_cost must be non-negative")
+
+
+@dataclass(frozen=True)
 class AgentSpec:
     """A homogeneous group of agents sharing one strategy.
 
@@ -274,6 +319,24 @@ class SimulationConfig:
             already has) against *each* pool's own observation and split
             between them by its ``AgentSpec.allocation_split`` -- no strategy
             code changes, only the engine learns to run two pools.
+        wealth_floor_fraction: Optional wealth-gated participation floor
+            (Chen & Szolnoki 2016; E23, ADR-0019). ``None`` by default, so
+            existing experiments are unchanged. When set, an agent whose own
+            accumulated ``total_payoff`` falls below
+            ``wealth_floor_fraction`` times the *governed* population's
+            current average ``total_payoff`` is excluded from requesting
+            (and, if a sanctioner, from enforcing) that round -- re-evaluated
+            fresh every round, not permanent. Relative to the population's
+            own average, not a fixed absolute number, so it scales with
+            however much wealth has actually accumulated and never excludes
+            anyone at round 0 (everyone starts at exactly the average: zero).
+        wealth_monitoring: Optional wealth-triggered ad-hoc voluntary
+            monitoring (Olson 1965; E22, ADR-0020). ``None`` by default, so
+            existing experiments are unchanged. When set, the single
+            wealthiest agent with no intrinsic sanction policy whose
+            ``total_payoff`` exceeds the configured multiple of the
+            population's current average volunteers as monitor for that
+            round only -- see :class:`WealthMonitoringConfig`.
     """
 
     name: str = "unnamed"
@@ -289,6 +352,8 @@ class SimulationConfig:
     reputation: ReputationConfig | None = None
     network: NetworkConfig | None = None
     second_resource: ResourceConfig | None = None
+    wealth_floor_fraction: float | None = None
+    wealth_monitoring: WealthMonitoringConfig | None = None
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -317,6 +382,8 @@ class SimulationConfig:
                 f"network.degree {self.network.degree} must be less than the population size "
                 f"({self.num_agents})"
             )
+        if self.wealth_floor_fraction is not None and self.wealth_floor_fraction < 0:
+            raise ValueError("wealth_floor_fraction must be non-negative")
 
     @property
     def num_agents(self) -> int:
@@ -344,6 +411,12 @@ class SimulationConfig:
         second_resource = (
             ResourceConfig(**second_resource_data) if second_resource_data is not None else None
         )
+        wealth_monitoring_data = data.pop("wealth_monitoring", None)
+        wealth_monitoring = (
+            WealthMonitoringConfig(**wealth_monitoring_data)
+            if wealth_monitoring_data is not None
+            else None
+        )
         return cls(
             resource=resource,
             agents=agents,
@@ -352,6 +425,7 @@ class SimulationConfig:
             reputation=reputation,
             network=network,
             second_resource=second_resource,
+            wealth_monitoring=wealth_monitoring,
             **data,
         )
 

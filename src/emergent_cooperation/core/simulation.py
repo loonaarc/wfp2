@@ -22,7 +22,7 @@ from ..agents.agent import Agent
 from ..agents.observation import Observation
 from ..disturbances.shocks import build_disturbances
 from ..environment.resource import ResourcePool
-from ..strategies.base import Strategy
+from ..strategies.base import SanctionPolicy, Strategy
 from ..strategies.registry import make_strategy
 from . import rng as rng_module
 from .config import ResourceConfig, SimulationConfig
@@ -321,6 +321,7 @@ class Simulation:
         harvests: list[float],
         resource: ResourceConfig | None = None,
         pool_side: str | None = None,
+        wealth_volunteer: int | None = None,
     ) -> tuple[list[float], float, list[float]]:
         """Apply sanctioning: cap harvests at the quota and charge monitoring costs.
 
@@ -368,6 +369,11 @@ class Simulation:
                 applied when ``self.pool_b`` is configured; ``None`` (the
                 single-pool default) enforces with every active policy,
                 unfiltered, exactly as before.
+            wealth_volunteer: Index of this round's wealth-triggered ad-hoc
+                volunteer monitor (Olson 1965; E22, ADR-0020), or ``None``.
+                Injected as an extra :class:`SanctionPolicy` alongside every
+                agent's own intrinsic one, so it flows through the same
+                per-group quota/penalty logic below unchanged.
 
         Returns:
             A ``(harvests, total_harvested, penalties)`` triple, where ``penalties``
@@ -413,6 +419,16 @@ class Simulation:
                 own_policies = [
                     p if self._agent_split[i] < 1.0 else None for i, p in enumerate(own_policies)
                 ]
+
+        # Wealth-triggered ad-hoc volunteer monitoring (Olson 1965; E22,
+        # ADR-0020): only overrides an agent with no intrinsic policy of its
+        # own -- a designated sanctioner is never double-charged.
+        if wealth_volunteer is not None and own_policies[wealth_volunteer] is None:
+            wm = self.config.wealth_monitoring
+            assert wm is not None
+            own_policies[wealth_volunteer] = SanctionPolicy(
+                quota_total=self._sustainable_yield(resource), monitoring_cost=wm.monitoring_cost
+            )
 
         capped = list(harvests)
         for member_indices in self._groups.values():
@@ -507,12 +523,48 @@ class Simulation:
         resource_after_regen = self.pool.level
         resource_after_regen_b = self.pool_b.level if self.pool_b is not None else None
 
-        # Failed agents (agent_failure disturbance) request nothing; active ones
-        # decide once per pool and are split by their own allocation_split.
+        # Wealth-gated participation (Chen & Szolnoki 2016; E23, ADR-0019):
+        # relative to the governed population's own current average payoff,
+        # recomputed fresh every round -- an agent can drop out and rejoin as
+        # its own wealth moves, unlike agent_failure's permanent exclusion.
+        wealth_floor: float | None = None
+        if self.config.wealth_floor_fraction is not None:
+            avg_payoff = sum(a.total_payoff for a in self.agents) / len(self.agents)
+            wealth_floor = self.config.wealth_floor_fraction * avg_payoff
+
+        # Wealth-triggered ad-hoc voluntary monitoring (Olson 1965; E22,
+        # ADR-0020): the single wealthiest agent with no intrinsic sanction
+        # policy, if its own total_payoff clears the configured multiple of
+        # the population's current average, volunteers as monitor this round.
+        # Excludes ``selfish``: enforcement caps the volunteer's own harvest
+        # at the sustainable quota too, so it is only ever a net gain for a
+        # strategy that already values the pool staying sustainable -- for
+        # ``selfish`` it would strictly cut its own over-extraction, which no
+        # rational selfish agent (in Olson's own F_i > C/V_g sense, its own
+        # V_g from "the pool survives" is not what a fixed-greed extractor is
+        # optimizing) would choose.
+        wealth_volunteer: int | None = None
+        if self.config.wealth_monitoring is not None:
+            wm = self.config.wealth_monitoring
+            avg_payoff_wm = sum(a.total_payoff for a in self.agents) / len(self.agents)
+            eligible = [
+                i
+                for i, a in enumerate(self.agents)
+                if a.active
+                and a.total_payoff > wm.threshold * avg_payoff_wm
+                and a.strategy.sanction_policy() is None
+                and a.strategy.name != "selfish"
+            ]
+            if eligible:
+                wealth_volunteer = max(eligible, key=lambda i: self.agents[i].total_payoff)
+
+        # Failed agents (agent_failure disturbance) or agents below the wealth
+        # floor request nothing; everyone else decides once per pool and is
+        # split by their own allocation_split.
         requests_a: list[float] = []
         requests_b: list[float] = []
         for i, agent in enumerate(self.agents):
-            if not agent.active:
+            if not agent.active or (wealth_floor is not None and agent.total_payoff < wealth_floor):
                 requests_a.append(0.0)
                 requests_b.append(0.0)
                 continue
@@ -536,7 +588,7 @@ class Simulation:
         # Scoped to the first pool's own overuse pattern (ADR-0016).
         vote_taken = self._maybe_vote(round_index)
         harvests_a, total_harvested_a, penalties_a = self._enforce(
-            harvests_a, self.config.resource, pool_side="a"
+            harvests_a, self.config.resource, pool_side="a", wealth_volunteer=wealth_volunteer
         )
         self._track_overuse(total_harvested_a)
 

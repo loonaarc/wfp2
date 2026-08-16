@@ -13,6 +13,7 @@ from .base import Strategy
 from .compensating import CompensatingCooperatorStrategy
 from .conditional import ConditionalCooperatorStrategy
 from .cooperative import CooperativeStrategy
+from .grim_trigger import GrimTriggerStrategy
 from .loner import LonerStrategy
 from .reputation import ReputationCooperatorStrategy
 from .sanctioning import SanctioningStrategy
@@ -64,3 +65,4 @@ register_strategy(SanctioningStrategy)
 register_strategy(CompensatingCooperatorStrategy)
 register_strategy(LonerStrategy)
 register_strategy(ReputationCooperatorStrategy)
+register_strategy(GrimTriggerStrategy)

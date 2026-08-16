@@ -1,6 +1,6 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E20. E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E23. E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
 voted agreement can substitute for pre-committed enforcement; E14–E16 and E20 shift to
@@ -19,11 +19,29 @@ fresh random draw, make an agent's outcome depend on its graph position (E19)? E
 by contrast, *is* folded into the complexity-axis sweep — a second, asymmetric
 resource pool grows the near-optimal set at several diversity levels, once a
 sanctioning-quota calibration bug (caught and fixed, see ADR-0016) was corrected.
-This is the narrative spine for the writeup; each claim links to its full experiment
-report and the code that produced it.*
+E21 adds an eighth strategy, `grim_trigger` (Friedman 1971) — cooperates exactly
+like `conditional_cooperator` but never forgives once triggered — and asks whether
+that permanence pays off (only in a narrow window) and whether a fixed, finite
+round budget changes what a permanent punishment costs (yes, almost perfectly
+linearly, confirming Fudenberg & Maskin's 1986 point empirically). E23 tests
+whether a wealth-based participation floor (Chen & Szolnoki 2016) protects the
+pool against free-riders the way it does on their spatial lattice — it doesn't:
+in this project's single shared pool, the gate excludes whoever sacrificed for
+the commons (a restrained cooperator, or a monitor paying its own enforcement
+cost), not whoever exploited it. E22 operationalizes Olson (1965)'s own formal
+result — a member volunteers to unilaterally provide a collective good exactly
+when its own share of the benefit clears the good's cost (`F_i > C/V_g`) — as
+wealth-triggered ad-hoc monitoring: the single wealthiest eligible agent
+enforces a quota once its own accumulated payoff clears a threshold. It is
+inert the instant a free-rider is present (their own dominant payoff inflates
+the population average so far that no cooperator ever clears the bar), but
+engages, and disproportionately burdens a shifting few, once wealth
+divergence exists at all. This is the narrative spine for the writeup;
+each claim links to its full experiment report and the code that produced it.*
 
-**Status:** 2026-08-16 · 7 strategies · 20 experiments built (E1–E20) · 136 tests ·
-results reproducible from `scripts/` and the committed `results/` data.
+**Status:** 2026-08-16 · 8 strategies · 23 experiments built (E1–E23) · 154
+tests · results reproducible from `scripts/` and the committed `results/`
+data.
 
 ---
 
@@ -128,14 +146,21 @@ flowchart TD
     E18["E18 — reputation (indirect reciprocity)<br/>partner-specific retaliation avoids E2's collapse"]
     E19["E19 — network reciprocity<br/>fixed graph position creates 20x payoff inequality"]
     E17["E17 — starting resource level (R0)<br/>conditional cooperator collapses iff R0 > K/2"]
+    E21["E21 — grim trigger<br/>a finite horizon makes permanent punishment costly"]
+    E23["E23 — wealth-based participation<br/>excludes monitors and cooperators, not free-riders"]
+    E22["E22 — wealth-triggered monitoring<br/>a free-rider suppresses it entirely"]
 
     E3 -.the cost E5 explains.-> E5
+    E17 -.same trigger, made permanent.-> E21
+    E3 -.the second-order free-rider, revisited.-> E23
     E3 -.same strategy, different starting condition.-> E17
     E3 -.the mechanism E7 confirms.-> E7
     E3 -.extended into a shock.-> E8
     E3 -.the flat baseline P4 restructures.-> E14
     E2 -.rediscovered inside one mechanism's own dial.-> E18
     E18 -.fixes the fresh-partner draw into a persistent graph.-> E19
+    E23 -.wealth as exclusion, now as recruitment.-> E22
+    E3 -.the second-order free-rider, a third angle.-> E22
 ```
 
 Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
@@ -157,7 +182,21 @@ direction as groups (E15). **E17** asks a different question about the same E3-e
 mechanisms: not "which population mix works" but "does the *same* population reach
 the same end regardless of where it starts" — and finds a sharp, previously-invisible
 limitation in `conditional_cooperator` (used since E2) that every earlier experiment's
-shared `R₀ = K/2` default happened to hide.
+shared `R₀ = K/2` default happened to hide. **E21** builds directly on that finding:
+a new strategy, `grim_trigger`, uses the identical decline trigger but never forgives
+— exposing, and then directly testing, exactly the "no return path" cost E17's own
+retrospective flagged as a real, separate concern. **E23** returns to E3/E5's own
+second-order free-rider question from a new angle: rather than *monitoring cost*
+eroding a monitor's payoff (E5), it asks what happens once *low* payoff itself
+becomes a reason to exclude an agent — and finds the exclusion lands on the monitors
+and the exploited, not the exploiters. **E22** approaches the same second-order
+free-rider question from the opposite direction — instead of *excluding* low-wealth
+agents (E23), it *recruits* high-wealth ones, operationalizing Olson (1965)'s own
+claim that whoever has the largest stake in a collective good ends up unilaterally
+funding it. It works, on a shifting few, exactly where E23's own free-rider-dominance
+problem also bit: a free-rider's payoff inflates the population average so
+completely that neither a wealth *floor* (E23) nor a wealth *trigger* (E22) ever
+targets the free-rider itself.
 
 ---
 
@@ -456,6 +495,137 @@ already test.
   by round 1. Every experiment since E2 has used `conditional_cooperator` starting at
   exactly the one point where this never shows up.
 
+## Grim trigger and the cost of a finite horizon (E21)
+
+*(Full report: [E21](experiments/E21-grim-trigger-finite-horizon.md). Mechanism:
+[ADR-0018](decisions/0018-grim-trigger-finite-horizon.md).)*
+
+Friedman (1971): a non-cooperative equilibrium can sustain a Pareto-improving
+outcome purely from the threat of *permanent* reversion to the one-shot (selfish)
+equilibrium after any deviation — "grim trigger," a genuine strategy-space gap this
+project's engine had, since every existing reciprocal strategy forgives at least
+implicitly. Fudenberg & Maskin (1986): finite horizons compound the problem of
+sustaining cooperation, because a permanent punishment only has as much of the
+game left to act on as remains. A new registered strategy, `grim_trigger`, makes
+both questions directly testable — without porting either paper's own discounting
+or incomplete-information machinery, which both papers' own follow-up sections
+say has no clean bachelor-scoped path.
+
+- **Forgiveness and permanence diverge only in a narrow window — and that's the
+  finding, not a limitation of the test.** Mixing one decline-sensitive agent among
+  seven plain `cooperative` ones, then hitting the population with a single, modest,
+  recoverable shock: with zero sensitive agents there's nothing to trigger; with two
+  or more, the shock provokes a self-reinforcing decline that never actually stops,
+  so `conditional_cooperator`'s fresh-every-round check never gets a chance to
+  notice recovery either. Only at exactly one sensitive agent does the rest of the
+  population have enough collective capacity to actually recover — and only there
+  does forgiveness matter at all.
+- **Where it matters, forgiveness wins cleanly.** `conditional_cooperator` returns
+  to the full healthy target (`welfare_efficiency = 0.991`) within one round of the
+  shock passing; `grim_trigger` never returns, settling into a permanently
+  depressed equilibrium (`0.986`) — a real, measurable cost for a threat that had
+  nothing left to deter, since the "decline" was an exogenous shock, not a
+  free-rider's choice.
+- **The finite horizon matters almost exactly as predicted, and the relationship is
+  close to perfectly linear.** For an all-`grim_trigger` population, welfare lost to
+  a permanent trigger scales with how much of the fixed 100-round game remains when
+  it fires — `0.151` if it fires at round 10 (90 rounds still ahead) up to `0.951`
+  at round 90 (only 10 left) — each round before the trigger banked near the
+  sustainable rate, each round after contributes close to nothing. A clean,
+  quantitative, empirical demonstration of "a permanent punishment only has as much
+  of the game left to act on as remains," with none of Fudenberg & Maskin's own
+  apparatus ported into the engine.
+- **The underlying collapse mechanism is the same one E17 found** — once triggered
+  agents' combined selfish-sized requests meet or exceed the current stock, the
+  pool empties toward zero in a single round, an absorbing state under logistic
+  regrowth. Grim trigger doesn't introduce a new failure mode; it removes the one
+  thing (forgiveness) that could have ended it once conditions genuinely improved.
+
+## Wealth-based participation: excluding the wrong people (E23)
+
+*(Full report: [E23](experiments/E23-wealth-based-participation.md). Mechanism:
+[ADR-0019](decisions/0019-wealth-based-participation.md).)*
+
+Chen & Szolnoki (2016): on a spatial lattice, gating participation on an
+agent's own accumulated wealth relative to its neighbourhood punishes
+defectors specifically, because a defector's *local* wealth erodes once its
+neighbours retaliate or die out. E23 asks whether the same gate — excluded
+from requesting (not enforcing) whenever `total_payoff` falls below a
+fraction of the *population's* current average — protects this project's
+single, well-mixed shared pool the same way. A previously-planned test
+combining the gate with E19's `NetworkConfig` was dropped after checking the
+engine directly: `network` only restricts reputation-partner selection, never
+the shared resource pool, so it would not have tested Chen & Szolnoki's
+local-exhaustion channel at all (see ADR-0019's Considered Options).
+
+- **It doesn't — because free-riders don't have low relative wealth here.**
+  In this project's well-mixed pool, a free-rider consistently *out-earns*
+  cooperators (E2/E3's own finding), the opposite of the spatial-lattice
+  case the mechanism was built for. The wealth floor never targets the
+  free-rider; there's nothing about their payoff that looks poor.
+- **Gate alone excludes the exploited majority.** With no sanctioning, the
+  gate drops welfare from `0.991` to `0.912` at exactly 1 free-rider — it
+  excludes the cooperators who kept contributing while the free-rider took
+  more, not the free-rider itself. At 2+ free-riders the gate has no
+  additional effect, because the cooperative majority was already
+  contributing 0 (E2's ratchet-to-collapse dynamic had already zeroed them
+  out).
+- **Gate plus sanctioning excludes the monitors instead.** Once enforcement
+  is present, welfare drops uniformly from `0.960` to `0.713` *at every
+  free-rider count tested* (0–6) — `monitoring_cost`, not free-rider
+  pressure, is what erodes a monitor's payoff below the population average,
+  so the wealth floor benches the very agents protecting the pool.
+- **The same second-order free-rider problem (E3/E5), seen from a new
+  angle.** Rather than monitoring cost eroding a monitor's payoff being the
+  whole story, E23 shows that *any* mechanism which reads "low payoff" as
+  "defector" will misfire in a well-mixed commons, because here it's
+  restraint and enforcement — not defection — that produce low payoff.
+
+## Wealth-triggered voluntary monitoring (E22)
+
+*(Full report: [E22](experiments/E22-wealth-triggered-monitoring.md). Mechanism:
+[ADR-0020](decisions/0020-wealth-triggered-voluntary-monitoring.md). Grounding:
+[paper-notes/1965-olson-logic-of-collective-action.md](paper-notes/1965-olson-logic-of-collective-action.md).)*
+
+Olson (1965): a group member has an individual incentive to unilaterally
+provide a collective good exactly when its own share of the group's benefit
+clears the good's cost relative to its total value (`F_i > C/V_g`) — and
+where members are unequal in size, the largest bears a disproportionate share
+of the burden ("exploitation of the great by the small"). The originally-
+sketched item-11 framing (a payoff-weighted vote on ADR-0011's
+collective-choice mechanism) turned out to have no basis in Olson's own
+model, which has no voting stage at all — E22 instead makes the single
+wealthiest agent with no intrinsic sanction policy volunteer as monitor each
+round its own accumulated payoff clears a threshold relative to the
+population's current average (ADR-0020).
+
+- **The mechanism is structurally inert in exactly the population it would
+  need to protect.** The instant a single free-rider is present, total
+  wealth-triggered monitoring cost paid drops to exactly `0.0` and welfare is
+  byte-identical with the mechanism on or off, at every free-rider count
+  tested (1–7). A free-rider's own dominant payoff (E2's standing finding)
+  inflates the *population average* so far above any single cooperator's own
+  wealth that no cooperator ever clears even a barely-above-average
+  threshold — E23's own free-rider-dominance problem, met from the opposite
+  direction: there a wealth *floor* engaged but targeted the wrong agents,
+  here a wealth *trigger* never fires at all.
+- **Without a free-rider, it engages purely from noise-induced wealth
+  divergence, and the burden concentrates on a shifting few.** In an
+  all-cooperative population, `decision_noise` is the only source of wealth
+  divergence (deterministic strategies never organically diverge); once
+  switched on, the top payer's average share of the total monitoring cost
+  paid (`0.328`) is 2.6× what a uniform rotation across 8 agents would
+  produce (`0.125`) — a real, measurable disproportion, Olson's prediction
+  holding directionally, though the top payer matches the single wealthiest
+  agent from an independent ungated run only 32% of the time, since the
+  trigger re-evaluates fresh every round and "who's ahead" shifts as the run
+  progresses.
+- **A mild, directionally consistent equalizing side effect.** Payoff Gini
+  is lower with the mechanism on than off in 36 of 50 seeds tested — taxing
+  whoever is currently ahead pulls them back toward the pack more often than
+  not, though the absolute effect is small in an already near-equal
+  all-cooperative population.
+
 ## Reputation: indirect reciprocity vs. blanket retaliation (E18)
 
 *(Full report: [E18](experiments/E18-reputation.md). Mechanism:
@@ -579,14 +749,27 @@ The standout open threads:
    ADR-0017) is also done — a settings-robustness check rather than a new
    axis (per its own scoping), it confirmed literal equifinality for a
    well-behaved population and found a sharp, previously-invisible collapse
-   threshold in `conditional_cooperator` at `R₀ > K/2`. Next up, per the
-   ranking in `thesis-direction-equifinality.md`: an uncertain/finite time
-   horizon (item 9), wealth-weighted collective choice (item 11), and
-   inequality-adaptive monitoring investment (item 12) — all still open.
-   E20's own follow-up (whether a cheaper monitoring-cost model recovers
-   diversity-1/2 parity with E14, since that gap is now understood to be the
-   doubled monitoring-cost tax, not a structural mismatch) is also still
-   open. Reputation/indirect reciprocity (**E18**, ADR-0014) and
+   threshold in `conditional_cooperator` at `R₀ > K/2`. The uncertain/finite
+   time horizon piece of item 9 is now done too (**E21**, ADR-0018,
+   `grim_trigger`) — item 9's other two sub-ideas (iterative renegotiation of
+   the rule; a dispute/conflict-resolution mechanic) remain open, logged
+   separately rather than forced into E21. Inequality-adaptive monitoring
+   investment (item 12) is also done (**E23**, ADR-0019, Chen & Szolnoki
+   2016) — the wealth gate excludes monitors and the exploited cooperative
+   majority, not free-riders, in this project's well-mixed pool.
+   Wealth-weighted collective choice (item 11) is done too (**E22**,
+   ADR-0020, Olson 1965) — re-scoped from a payoff-weighted vote (which has
+   no basis in Olson's own model) to wealth-triggered ad-hoc monitoring; it
+   is inert whenever a free-rider is present, and only engages, on a
+   disproportionate but shifting few, once wealth divergence exists at all
+   without one. **All five items from the ranked candidate list are now
+   built or explicitly scoped** — the one remaining open item is agent
+   entry/exit (item 10), whose own literature search (per the original plan)
+   has not yet turned up a clean, direct match and may end up deferred
+   rather than built. E20's own follow-up (whether a cheaper monitoring-cost model
+   recovers diversity-1/2 parity with E14, since that gap is now understood
+   to be the doubled monitoring-cost tax, not a structural mismatch) is also
+   still open. Reputation/indirect reciprocity (**E18**, ADR-0014) and
    network reciprocity (**E19**, ADR-0015, Nowak 2006 rule 4) are both
    *built*, but as standalone mechanism comparisons in the E1–E13 style, not
    folded into Phase 4's compositional sweep — deliberately: they test a
@@ -628,5 +811,8 @@ python scripts/experiment_starting_resource.py       # E17
 python scripts/experiment_reputation.py              # E18
 python scripts/experiment_network_reciprocity.py     # E19
 python scripts/experiment_multiple_resources.py      # E20
-pytest                                               # 136 tests
+python scripts/experiment_grim_trigger.py            # E21
+python scripts/experiment_wealth_participation.py    # E23
+python scripts/experiment_wealth_monitoring.py       # E22
+pytest                                               # 154 tests
 ```

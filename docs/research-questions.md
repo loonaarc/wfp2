@@ -77,6 +77,42 @@ current front-runner for the project's specific focus — not yet locked.
   average (20 seeds) vs. ~5 for agents on the far side, a >20× gap well-mixed
   reputation (SQ-5b) cannot produce; population-level sustainability barely
   moves, so the effect is distributional, not aggregate.
+- **SQ-5d** 🟢 Does making retaliation *permanent* (grim trigger, Friedman 1971:
+  never forgive once triggered) outperform `conditional_cooperator`'s
+  forgiving version, and does a fixed, finite round budget change what that
+  permanence costs (Fudenberg & Maskin 1986)? **→ Answered (E21): permanence
+  doesn't pay off where it can be tested** — the two strategies diverge only
+  in a narrow window (one sensitive agent among seven well-behaved ones,
+  hit by a one-time recoverable shock), and there, forgiveness wins cleanly
+  (`welfare_efficiency` 0.991 vs. 0.986). **Yes, the horizon matters** — for
+  an all-grim-trigger population, welfare lost to a permanent trigger scales
+  almost perfectly linearly with how much of the fixed 100-round game
+  remains when it fires (0.151 at round 10 up to 0.951 at round 90).
+- **SQ-5e** 🟢 Does gating participation on an agent's wealth relative to the
+  population average (Chen & Szolnoki 2016) protect the resource against
+  free-riders the way it protects their spatial public-goods lattice? **→
+  Answered (E23): no** — in this project's single, well-mixed pool,
+  free-riders consistently out-earn cooperators (the opposite of the
+  lattice case), so the gate excludes the exploited cooperative majority
+  (`welfare_efficiency` 0.991 → 0.912 at 1 free-rider, gate alone) or the
+  monitors themselves (0.960 → 0.713 uniformly across every free-rider
+  count, gate + sanctioning) — never the free-rider. The same second-order
+  free-rider problem (E3/E5), seen from a new angle: any rule that reads
+  "low payoff" as "defector" misfires where restraint and enforcement, not
+  defection, are what actually produce low payoff.
+- **SQ-5f** 🟢 Does a member with the largest share of a collective good's
+  benefit volunteer to unilaterally provide it (Olson 1965, `F_i > C/V_g`),
+  and does the largest member bear a disproportionate share of the burden
+  ("exploitation of the great by the small")? **→ Answered (E22): the
+  mechanism is inert whenever a free-rider is present** — a free-rider's own
+  dominant payoff inflates the population average so far that no cooperator
+  ever clears even a barely-above-average threshold, at every free-rider
+  count tested (1–7). **Without a free-rider, it does engage**, purely from
+  `decision_noise`-induced wealth divergence, and the burden concentrates on
+  a shifting few — the top payer's average share of total monitoring cost
+  paid (0.328) is 2.6× a uniform 8-way rotation (0.125), though it matches
+  the single wealthiest agent from an independent ungated run only 32% of
+  the time, since the trigger re-evaluates fresh every round.
 
 ### Communication (RQ-A)
 - **SQ-6** 🟢 Does broadcasting reduce exploitation / improve outcomes in mixed
@@ -208,3 +244,4 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-17 | starting resource level `R₀` sweep | ✅ `ResourceConfig.initial_level`, ADR-0017 + E17 |
 | SQ-5b | partner-specific reputation | ✅ `ReputationConfig`, ADR-0014 + E18 |
 | SQ-5c | fixed neighbour graph on partner selection | ✅ `NetworkConfig`, ADR-0015 + E19 |
+| SQ-5d | permanent (grim-trigger) retaliation | ✅ `grim_trigger` strategy, ADR-0018 + E21 |

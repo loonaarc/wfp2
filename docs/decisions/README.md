@@ -28,3 +28,6 @@ proposed decision and its trade-offs.
 | [0015](0015-network-reciprocity-fixed-neighbor-graph.md) | Network reciprocity as a fixed neighbour graph on reputation's partner selection | Accepted |
 | [0016](0016-multiple-resources-allocation-split.md) | Multiple resources / specialization via a second pool and a per-agent allocation split | Accepted |
 | [0017](0017-starting-resource-level-glue-sweep.md) | Starting resource level (R₀) as a settings-robustness sweep, not a new complexity axis | Accepted |
+| [0018](0018-grim-trigger-finite-horizon.md) | Grim trigger as a new strategy, and the cost of a finite horizon | Accepted |
+| [0019](0019-wealth-based-participation.md) | Wealth-based participation floor via a per-round relative-wealth request gate | Accepted |
+| [0020](0020-wealth-triggered-voluntary-monitoring.md) | Wealth-triggered ad-hoc voluntary monitoring, not a payoff-weighted vote | Accepted |

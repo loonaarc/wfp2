@@ -65,6 +65,32 @@ previously-invisible collapse threshold in `conditional_cooperator` (any
 `R₀ > K/2`) that every table above never encountered, because every sweep
 in this document happens to use the one starting level where it's invisible.
 
+**2026-08-16 E21 built, deliberately not added as a table row:** grim trigger
+(ADR-0018, [report](experiments/E21-grim-trigger-finite-horizon.md)) is a new
+*strategy* compared against `conditional_cooperator` at fixed, hand-picked
+compositions — the same shape as E18's reputation comparison, not a sweep
+over the composition space. See "Related but distinct" below.
+
+**2026-08-16 E23 built, deliberately not added as a table row:** the wealth
+participation floor (ADR-0019,
+[report](experiments/E23-wealth-based-participation.md)) is a per-round
+eligibility gate tested against a handful of free-rider counts, with and
+without sanctioning — again a mechanism question at fixed compositions, not
+a composition-space sweep. Its finding (the gate excludes monitors and the
+exploited cooperative majority, never the free-rider, in this project's
+well-mixed pool) is a *distributional* result in the same sense as E19's, not
+a near-optimal-set-size one. See "Related but distinct" below.
+
+**2026-08-17 E22 built, deliberately not added as a table row:**
+wealth-triggered voluntary monitoring (ADR-0020,
+[report](experiments/E22-wealth-triggered-monitoring.md)) is a rule-level
+comparison (mechanism on/off) at a handful of fixed free-rider counts and
+seeds — again a mechanism question at fixed compositions, not a
+composition-space sweep. Its finding (structurally inert whenever a
+free-rider is present; engages and disproportionately burdens a shifting
+few otherwise) is distributional, the same sense as E19/E23's own findings.
+See "Related but distinct" below.
+
 **Numbering caveat, resolved 2026-08-09:** `docs/literature-review.md` and
 two paper notes (Beven & Binley 1992/2014) independently referenced a
 *different*, still-unbuilt "E14" — a GLUE-methodology experiment about
@@ -374,13 +400,15 @@ hurts, but a specific, well-understood cost that shows up exactly where a
 homogeneous, generalist-monitored population pays for watching two things
 instead of one.
 
-## Related but distinct: reputation (E18) and network reciprocity (E19)
+## Related but distinct: reputation (E18), network reciprocity (E19), grim trigger (E21), wealth-based participation (E23), wealth-triggered monitoring (E22)
 
-Both are built and both are genuinely new mechanisms (see ADR-0014, ADR-0015)
-— but neither belongs in the count/fraction table above, and forcing them in
-would be exactly the mistake lesson 5 warns against: axis-count alone isn't
-evidence, the *mechanism* has to actually test "does the near-optimal set
-grow." E18 and E19 test a different pair of questions entirely:
+All five are built and all five are genuinely new mechanisms (see ADR-0014,
+ADR-0015, ADR-0018, ADR-0019, ADR-0020) — but none belongs in the
+count/fraction table above, and forcing them in would be exactly the mistake
+lesson 5 warns against: axis-count alone isn't evidence, the *mechanism* has
+to actually test "does the near-optimal set grow." All five test a strategy-
+or rule-level question at fixed, hand-picked compositions, not a sweep over
+the composition space:
 
 - **E14–E16 ask:** across a *fixed single run*, how many distinct
   *compositions/structures* clear a near-optimal welfare threshold? The unit
@@ -398,9 +426,28 @@ grow." E18 and E19 test a different pair of questions entirely:
   ~117 on average across 20 seeds while agents on the far side of the ring
   earn ~5, a >20× gap that well-mixed reputation (E18) cannot produce even
   in principle, since it has no notion of position at all. Population-level
-  sustainability, by contrast, is roughly flat across every degree tested
-  (0.12–0.14) — the near-optimal-*set-size* question this document otherwise
-  tracks barely moves.
+  sustainability, by contrast, is roughly flat across every degree tested.
+- **E21 asks:** does making retaliation *permanent* (never forgive once
+  triggered) outperform `conditional_cooperator`'s forgiving version, and
+  does a fixed, finite round budget change what that permanence costs? A
+  two-strategy comparison at fixed compositions (one sensitive agent among
+  seven, hit by a shock) plus a single-population timing sweep — not a
+  composition sweep.
+- **E23 asks:** does gating participation on an agent's wealth relative to
+  the population average protect the resource the way it protects a spatial
+  lattice (Chen & Szolnoki 2016)? A rule-level comparison (gate on/off,
+  with/without sanctioning) at a handful of fixed free-rider counts — its
+  finding is distributional in the same sense as E19's: the gate excludes
+  *specific agents* (monitors, exploited cooperators) rather than shrinking
+  or growing a near-optimal composition count.
+- **E22 asks:** does a member with the largest share of a collective good's
+  benefit volunteer to unilaterally provide it, and does it bear a
+  disproportionate share of the burden (Olson 1965)? A rule-level comparison
+  (mechanism on/off) at a handful of fixed free-rider counts and seeds — its
+  finding is distributional too: structurally inert whenever a free-rider is
+  present (the same free-rider-dominance problem E23 hits, from the opposite
+  direction), engaging on a shifting few otherwise, not shrinking or growing
+  a near-optimal composition count.
 
 **Why this matters for the equifinality conjecture specifically:** E19 is
 evidence about *inequality/luck*, not about *how many paths reach a good

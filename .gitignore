@@ -71,6 +71,12 @@ results/**
 !results/E19_network_reciprocity/**
 !results/E20_multiple_resources/
 !results/E20_multiple_resources/**
+!results/E21_grim_trigger/
+!results/E21_grim_trigger/**
+!results/E22_wealth_monitoring/
+!results/E22_wealth_monitoring/**
+!results/E23_wealth_participation/
+!results/E23_wealth_participation/**
 
 # OS / editor
 .DS_Store

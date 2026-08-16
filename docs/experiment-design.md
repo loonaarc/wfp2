@@ -18,9 +18,9 @@ reproducible and comparable. It is the contract every experiment should follow.
 
 ### Independent variables (things we vary)
 - **Information model:** `global` | `private` *(local/aggregated/outdated planned)*.
-- **Strategy composition:** counts of the seven strategies (`selfish`, `cooperative`,
+- **Strategy composition:** counts of the eight strategies (`selfish`, `cooperative`,
   `conditional_cooperator`, `compensating_cooperator`, `sanctioning`, `loner`,
-  `reputation_cooperator`) — see
+  `reputation_cooperator`, `grim_trigger`) — see
   [terminology.md](terminology.md#cooperation-mechanisms-the-strategies).
 - **Ecological knowledge:** `knowledge_bias` (cooperative / conditional strategies).
 - **Decision noise:** `decision_noise` (stochastic perturbation of requests).

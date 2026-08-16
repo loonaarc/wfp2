@@ -93,6 +93,22 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   baseline instantiates it. (Read critically: the essay's driving purpose is a
   coercive anti-overpopulation argument, and "commons" means an *unmanaged, open-access*
   resource — exactly the case Ostrom shows is not inevitable.)
+- 🟢 **Olson (1965), *The Logic of Collective Action: Public Goods and the
+  Theory of Groups*, Harvard University Press.** →
+  [note](paper-notes/1965-olson-logic-of-collective-action.md) *(ch. I read in
+  full, the theoretical core; later application chapters not read — see the
+  note's Read status)*. Formalizes why large groups do not voluntarily
+  organize for a common interest without coercion or a **selective
+  incentive**, and — the piece this project draws on — why unequal-sized
+  small groups show a **systematic tendency for "exploitation" of the great
+  by the small**: the member with the largest stake `F_i` in a collective
+  good bears a disproportionate share of its cost, since everyone smaller
+  free-rides on that member's own self-interested provision. **Acted on:
+  E22** (in progress) — re-scoped from an originally-sketched
+  payoff-weighted *vote* (which has no basis in Olson's own mechanism) to a
+  wealth-proportional willingness to *fund monitoring*, the actual shape of
+  Olson's `F_i > C/V_g` result; see the note's Relevance section and
+  ADR-0020.
 - 🟢 **Ostrom (1990), *Governing the Commons*, Cambridge University Press (280 pp).**
   → [note](paper-notes/1990-ostrom-governing-the-commons.md) *(read ch. 1 + the
   design-principles portion of ch. 3, incl. Table 3.1)*. Her **eight design
@@ -146,6 +162,18 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   punishes second-order free-riders. **Acted on: [E12](experiments/E12-pool-punishment.md)
   — it works**, sanctioning grows to ~100% instead of eroding (efficiency-for-stability
   trade-off confirmed).
+- 🟢 **Chen & Szolnoki (2016), "Individual wealth-based selection supports
+  cooperation in spatial public goods games", *Scientific Reports* 6, 32802.** →
+  [note](paper-notes/2016-chen-szolnoki-wealth-based-selection.md). A wealth
+  (accumulated payoff) threshold on participation self-corrects: sustained
+  defection erodes a defector's own future wealth (it exhausts the local
+  cooperators it free-rides on), so the gate disproportionately excludes
+  defectors, not cooperators — but the effect is shown only on a spatial
+  lattice, not a well-mixed population. **Acted on:
+  [E23](experiments/E23-wealth-based-participation.md)** — a wealth-gated
+  participation floor, tested with and without this project's own fixed
+  neighbour graph (E19) to check whether the spatial dependency actually
+  transfers.
 
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 

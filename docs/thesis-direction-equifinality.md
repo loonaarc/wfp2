@@ -318,27 +318,19 @@ without a worked formula the way the Nowak citations have:**
 
 **Still not grounded in anything read — would need a literature check first:**
 - Agent entry/exit — population turnover over a run, not just failure (E10).
-- **Wealth-weighted collective choice.** ADR-0011's collective-choice vote is
-  currently one-agent-one-vote. A variant where voting weight scales with
-  accumulated payoff would test whether a small high-payoff minority can
-  vote down enforcement that would otherwise pass, even while the broader
-  population's own production stays healthy — a real-referent test of
-  regulatory capture / plutocratic drift, in the same spirit as grounding
-  "specialization" in different boat types (see "Keeping the configuration
-  space principled" above). Would need its own citation (political economy
-  of capture — Olson-style collective-action literature is the obvious
-  first check) before it's as defensible as the Ostrom/Nowak-sourced axes.
-- **Inequality-adaptive monitoring investment.** The evolutionary-dynamics
-  machinery already built for E5/E11/E12 currently selects strategies on
-  raw fitness/payoff alone. Making that fitness function sensitive to
-  `payoff_gini` (already computed, see `docs/metrics.md`) rather than mean
-  payoff alone would test whether a population under-invests in monitoring
-  as inequality rises, and whether that erosion is self-reinforcing — less
-  monitoring widening the very inequality that suppressed it. Reuses
-  existing evolutionary machinery rather than inventing a new mechanism
-  (cheaper than it sounds), but — same caveat — not yet anchored to a
-  specific paper; would need a literature check (inequality/wealth-
-  concentration dynamics) first.
+
+**Grounded and built, since the last revision of this section:**
+- **Wealth-weighted collective choice** — built as **E22** (Olson 1965,
+  ADR-0020) — see item 11 in "Ranking the axes" below for the citation and
+  the design pivot away from the plutocratic-capture framing originally
+  sketched here.
+- **Inequality-adaptive monitoring investment** — built as **E23**
+  (Chen & Szolnoki 2016, ADR-0019) — see item 12 below. The original
+  "make the E5/E11/E12 fitness function `payoff_gini`-sensitive" framing
+  sketched in this paragraph was superseded once neither candidate paper
+  read for it matched that shape; the participation-gate mechanism actually
+  built reuses the engine's per-round request pipeline instead, not the
+  evolutionary-dynamics loop.
 
 ## Should the growth model itself be varied?
 
@@ -642,15 +634,49 @@ this ranking:**
    narrow on its own to show a trend by itself.
 9. **Iterative collective choice, conflict resolution, uncertain time
    horizon** — grounded (Ostrom principles 3/6; folk theorem) but thinner or
-   narrower in scope than the axes above; logged as follow-ups, not core.
+   narrower in scope than the axes above. The time-horizon piece is now
+   **built** (Friedman 1971's grim trigger, now
+   [E21](experiments/E21-grim-trigger-finite-horizon.md), ADR-0018): both
+   grounding papers' own follow-up sections were read closely before
+   scoping — Fudenberg & Maskin's (1986) discounting/incomplete-information
+   machinery has "no clean bachelor-scoped path" by its own admission, but
+   Friedman's paper names something concretely buildable (a permanent,
+   unforgiving strategy, a real gap this project's engine had). Built as a
+   new registered strategy, `grim_trigger`, tested two ways: does permanence
+   beat forgiveness (only in a narrow window, and it loses there), and does
+   a fixed, finite round budget change what a permanent punishment costs
+   (yes, almost perfectly linearly). The other two sub-ideas — iterative
+   renegotiation of the rule (Ostrom principle 3) and a dispute/
+   conflict-resolution mechanic (principle 6) — remain open, logged as their
+   own future candidates rather than folded into E21.
 10. **Agent entry/exit (turnover)** — still not grounded in anything read;
     would need a literature check before being as defensible as the others.
-11. **Wealth-weighted collective choice** — reuses existing machinery
-    (ADR-0011's vote), but the capture/plutocracy motivation isn't grounded
-    in a specific already-read paper yet.
-12. **Inequality-adaptive monitoring investment** — reuses existing
-    machinery (E5/E11/E12's evolutionary dynamics, `payoff_gini`), same
-    grounding gap as 11.
+11. **Wealth-weighted collective choice** — now **built** (Olson 1965,
+    [E22](experiments/E22-wealth-triggered-monitoring.md), ADR-0020), see
+    [paper-notes/1965-olson-logic-of-collective-action.md](paper-notes/1965-olson-logic-of-collective-action.md).
+    Olson's own formal result is the direct anchor: a group member's
+    incentive to unilaterally provide a collective good depends on `Fᵢ`, its
+    share of the group's total benefit — the member with the largest `Fᵢ`
+    (the "great") ends up bearing a disproportionate share of the burden,
+    a "systematic tendency for 'exploitation' of the great by the small'"
+    (p. 29). Not a plutocratic-capture story (a wealthy minority voting down
+    enforcement) as first sketched — Olson's own mechanism runs the other
+    way, predicting voluntary *over*-contribution by the wealthy, not a
+    wealth-weighted vote — so built as wealth-triggered ad-hoc monitoring
+    instead (see ADR-0020's Considered Options for the resulting design
+    pivot). Structurally inert whenever a free-rider is present (the same
+    free-rider-dominance problem E23/item 12 hits, from the opposite
+    direction); engages, and disproportionately burdens a shifting few,
+    once wealth divergence exists without one.
+12. **Inequality-adaptive monitoring investment** — now **built** (Chen &
+    Szolnoki 2016, [E23](experiments/E23-wealth-based-participation.md),
+    ADR-0019) — a pivot from the original "Gini-sensitive fitness" framing,
+    which had no direct match in the two candidate papers actually read (see
+    ADR-0019's Considered Options). Built as a wealth-relative participation
+    gate instead: in this project's well-mixed single pool it excludes
+    monitors and the exploited cooperative majority, never the free-rider —
+    the opposite of Chen & Szolnoki's own spatial-lattice result, where a
+    defector's local wealth genuinely erodes.
 
 **Numbering note:** E14 was briefly double-booked with a different,
 still-unbuilt GLUE/`R₀` experiment, since renumbered to **E17** — see

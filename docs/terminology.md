@@ -96,6 +96,16 @@ should link here rather than re-enumerate.
 - **Compensating cooperation** — the restraint counterpart to reciprocity: on detected
   over-extraction, **withhold** (harvest nothing) to let the pool recover. Tends to be
   the *most* exploited response. *(model term: `compensating_cooperator`.)*
+- **Grim trigger** — Friedman's (1971) non-cooperative supergame equilibrium:
+  cooperate exactly like `conditional_cooperator` (same over-extraction
+  detection, same one-round selfish grab) with one deliberate difference —
+  once triggered, **never returns to cooperation for the rest of the run**.
+  Where forgiveness has room to matter (a lone sensitive agent among a
+  well-behaved population, after a one-time recoverable shock), it costs
+  real welfare; a fixed, finite round budget also means an *earlier*
+  trigger costs far more cumulative welfare than a later one, since
+  permanent punishment has more of the game left to act on (E21, ADR-0018).
+  *(model term: `grim_trigger`.)*
 - **Sanctioning** — cooperate *and* enforce a rule: over-extraction is confiscated and
   the enforcer bears a monitoring cost. Caps every agent's harvest at a sustainable
   quota. *(model term: `sanctioning`, via `SanctionPolicy` + the engine's enforcement
@@ -140,6 +150,29 @@ should link here rather than re-enumerate.
   is structurally worse-matched to the slower pool (GovSim's own future
   work; E20, ADR-0016). *(model term: `SimulationConfig.second_resource`,
   `AgentSpec.allocation_split`.)*
+- **Wealth-based participation floor** — excludes an agent from *requesting*
+  (not enforcing) in a given round if its `total_payoff` falls below a
+  fraction of the population's own current average, recomputed fresh every
+  round. Modelled on Chen & Szolnoki (2016)'s spatial public-goods wealth
+  gate, which punishes defectors because a defector's *local* wealth erodes.
+  In this project's single, well-mixed pool free-riders out-earn
+  cooperators instead, so the gate excludes the exploited cooperative
+  majority or, once sanctioning is present, the monitors themselves —
+  never the free-rider (E23, ADR-0019). *(model term:
+  `SimulationConfig.wealth_floor_fraction`.)*
+- **Wealth-triggered voluntary monitoring** — the single active agent with no
+  intrinsic sanction policy, not `selfish`, whose own `total_payoff` exceeds
+  a configured multiple of the population's current average volunteers as
+  monitor for that round, re-evaluated fresh every round. Operationalizes
+  Olson (1965)'s formal result that a member unilaterally provides a
+  collective good exactly when its own share of the benefit clears the
+  good's cost (`F_i > C/V_g`), and that the largest such member bears a
+  disproportionate share of the burden ("exploitation of the great by the
+  small"). Structurally inert whenever a free-rider is present — a
+  free-rider's own dominant payoff inflates the population average so far
+  that no cooperator ever clears the bar; engages, on a shifting few, once
+  wealth divergence exists without one (E22, ADR-0020). *(model term:
+  `SimulationConfig.wealth_monitoring`, `WealthMonitoringConfig`.)*
 
 Related concepts:
 

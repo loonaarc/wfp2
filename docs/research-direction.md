@@ -154,9 +154,51 @@ supervisor feedback.
   legitimate first harvest from real over-extraction. Every experiment
   since E2 used this strategy at exactly the one starting point (`K/2`)
   where the bug never shows up.
-- ⏳ Next: see the ranked candidate list linked above — an uncertain/finite
-  time horizon, wealth-weighted collective choice, inequality-adaptive
-  monitoring investment, and agent entry/exit are all still open.
+- ✅ **Grim trigger / finite time horizon (E21, ADR-0018)** — the
+  best-grounded piece of item 9 (Friedman 1971's grim-trigger construction;
+  Fudenberg & Maskin 1986's finite-horizon point), narrowed to what's
+  actually buildable after both papers' own follow-up sections were read in
+  full — F&M's own discounting/incomplete-information machinery has no
+  clean bachelor-scoped path by its own admission. A new registered
+  strategy, `grim_trigger`, never forgives once triggered; forgiveness only
+  matters in a narrow window (and wins there), and welfare lost to a
+  permanent trigger scales almost perfectly linearly with how much of the
+  fixed round budget remains when it fires.
+- ✅ **Inequality-adaptive monitoring investment (E23, ADR-0019)** — item 12,
+  grounded in Chen & Szolnoki (2016)'s wealth-based participation gate
+  (spatial public-goods lattice) after the original "Gini-sensitive fitness"
+  framing had no direct literature match. Gates requesting (not enforcing)
+  on `total_payoff` falling below a fraction of the population's own current
+  average. In this project's single, well-mixed pool it does **not**
+  reproduce Chen & Szolnoki's result: free-riders consistently out-earn
+  cooperators here (the opposite of their lattice, where a defector's local
+  wealth erodes), so the gate excludes the exploited cooperative majority
+  (gate alone) or the monitors themselves (gate + sanctioning, since
+  `monitoring_cost` is what drives their payoff down) — never the
+  free-rider.
+- ✅ **Wealth-weighted collective choice (E22, ADR-0020)** — item 11,
+  grounded in Olson (1965), *The Logic of Collective Action*, read in full.
+  Olson's own model has no voting stage at all, so the originally-sketched
+  payoff-weighted vote (on ADR-0011's collective-choice mechanism) was
+  dropped once read against the source — his one formal result is that a
+  member volunteers to unilaterally provide a collective good exactly when
+  its own share of the benefit clears the good's cost (`F_i > C/V_g`), and
+  the largest such member bears a disproportionate share of the burden
+  ("exploitation of the great by the small"). Built as wealth-triggered
+  ad-hoc monitoring instead: the single wealthiest agent with no intrinsic
+  sanction policy volunteers once its own accumulated payoff clears a
+  threshold relative to the population's current average. It is
+  structurally inert the instant a free-rider is present (their own
+  dominant payoff inflates the population average out of reach), but
+  engages — and disproportionately burdens a shifting few — once wealth
+  divergence exists without one.
+- ⏳ Next: **all five items from the ranked candidate list are now built or
+  explicitly scoped.** Item 9's other two sub-ideas (iterative
+  renegotiation, a dispute mechanic) remain open, logged separately rather
+  than forced into E21. Agent entry/exit (item 10) is the one item whose own
+  literature search (per the original plan) has not yet turned up a clean,
+  direct match — it may end up deferred rather than built; see the ranking
+  doc's disclosed risk.
 
 ### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

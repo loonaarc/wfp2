@@ -374,7 +374,7 @@ available_strategies()  # → ["compensating_cooperator", "conditional_cooperato
                         #    "sanctioning", "selfish"]
 ```
 
-The full set of seven strategies (and what each does) is defined in
+The full set of eight strategies (and what each does) is defined in
 [terminology.md](terminology.md#cooperation-mechanisms-the-strategies); this section
 walks through `selfish` and `cooperative` as the core contrast.
 
