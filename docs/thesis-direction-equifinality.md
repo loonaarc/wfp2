@@ -369,13 +369,25 @@ explicitly, since it's a silent fixed assumption, not a derived result.
   robustness check is a good stretch goal if time allows post-Porto, not a
   requirement.
 
-## Should the starting condition (R₀) be varied?
+## Should the starting condition (R₀) be varied? — ✅ built, see E17
 
-A side-thought from the equifinality brainstorming, not (yet) a dedicated
-experiment: every experiment so far implicitly fixes the starting resource
-level `R₀` (as part of the setting `S`) without ever naming that choice —
-the same kind of silent fixed assumption as the logistic-growth question
-above.
+**Update, 2026-08-16: built as E17** (ADR-0017,
+[report](experiments/E17-starting-resource-level.md)), once the condition
+below ("revisit once the first complexity-axis experiment's design is
+actually committed") was satisfied five times over. Findings: literal
+equifinality (von Bertalanffy 1968) confirmed exactly for a well-behaved
+population; holds asymptotically once free-riders are present; and a sharp,
+previously-invisible collapse threshold turned up along the way —
+`conditional_cooperator` (used since E2) permanently empties the pool for
+any `R₀ > K/2`, because its decline-detection can't distinguish the
+population's own legitimate first harvest from real over-extraction. The
+original brainstorming below is kept for the record.
+
+A side-thought from the equifinality brainstorming, originally not a
+dedicated experiment: every experiment so far implicitly fixes the starting
+resource level `R₀` (as part of the setting `S`) without ever naming that
+choice — the same kind of silent fixed assumption as the logistic-growth
+question above.
 
 - **This is the single most literal test of this project's own founding
   citation for the term.** Von Bertalanffy's (1968) original definition of
@@ -407,9 +419,14 @@ above.
   `R₀` is a natural extra dimension to classify with the same
   behavioural/non-behavioural + limits-of-acceptability procedure, at
   effectively no extra methodological cost.
-- **Recommendation:** don't build a dedicated experiment for this now; note
-  it here as a candidate extra sweep dimension and revisit once the first
-  complexity-axis experiment's design is actually committed.
+- **Original recommendation (superseded, see the update above):** don't
+  build a dedicated experiment for this now; note it here as a candidate
+  extra sweep dimension and revisit once the first complexity-axis
+  experiment's design is actually committed. E17 ultimately used three
+  separate questions (a literal test, its limits, and a GLUE-style
+  composite crossed with E14's own composition space) rather than folding
+  `R₀` into a single existing experiment — see ADR-0017's Considered
+  Options for why a single blended sweep was rejected.
 
 ## Operationalizing "sufficient complexity" and "always"
 

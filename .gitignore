@@ -63,6 +63,8 @@ results/**
 !results/E15_groups_full_sweep/**
 !results/E16_boundaries_full_sweep/
 !results/E16_boundaries_full_sweep/**
+!results/E17_starting_resource/
+!results/E17_starting_resource/**
 !results/E18_reputation/
 !results/E18_reputation/**
 !results/E19_network_reciprocity/

@@ -48,6 +48,23 @@ methodological lesson (lesson 8) since the failure mode — a bug producing a
 plausible-looking negative result — is exactly the kind of thing this
 document exists to guard against.
 
+**2026-08-16 E17 built, deliberately not added as a table row:** the
+starting resource level `R₀` sweep (ADR-0017,
+[report](experiments/E17-starting-resource-level.md)) is a
+settings-robustness check, not a composition-space axis in this document's
+sense — it varies where a *fixed* population starts, not what the
+population *is*. Its own literal-equifinality question (von Bertalanffy
+1968: does a fixed population's steady state depend on its initial
+condition?) is a different claim from "does the near-optimal set grow,"
+kept separate for the same reason E18/E19 aren't table rows (see "Related
+but distinct" below) — though E17's own Q3 *does* reuse this document's
+count/fraction methodology, crossing `R₀` with E14's full composition space
+instead of adding it as a fourth dimension to the existing table. Its
+headline finding is nonetheless directly relevant here: a sharp,
+previously-invisible collapse threshold in `conditional_cooperator` (any
+`R₀ > K/2`) that every table above never encountered, because every sweep
+in this document happens to use the one starting level where it's invisible.
+
 **Numbering caveat, resolved 2026-08-09:** `docs/literature-review.md` and
 two paper notes (Beven & Binley 1992/2014) independently referenced a
 *different*, still-unbuilt "E14" — a GLUE-methodology experiment about

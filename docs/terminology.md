@@ -85,8 +85,14 @@ should link here rather than re-enumerate.
   observation. *(model term: `cooperative`.)*
 - **Reciprocity / conditional cooperation** — cooperate as long as others do; respond
   to *detected* over-extraction by **retaliating** (grabbing a selfish share).
-  Protects the individual from exploitation, but can accelerate collapse. *(model
-  term: `conditional_cooperator`.)*
+  Protects the individual from exploitation, but can accelerate collapse.
+  Detects "over-extraction" by comparing the observed stock to the previous
+  round's — which means starting *above* the healthy target (`R₀ > K/2`)
+  makes the population's own first, legitimate harvest look identical to a
+  free-rider's decline, permanently emptying the pool within two rounds even
+  with zero free-riders present (E17, ADR-0017) — every experiment before
+  E17 used this strategy at exactly the one starting point (`K/2`) where
+  that never shows up. *(model term: `conditional_cooperator`.)*
 - **Compensating cooperation** — the restraint counterpart to reciprocity: on detected
   over-extraction, **withhold** (harvest nothing) to let the pool recover. Tends to be
   the *most* exploited response. *(model term: `compensating_cooperator`.)*

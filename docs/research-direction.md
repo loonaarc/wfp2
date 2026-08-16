@@ -144,8 +144,19 @@ supervisor feedback.
   tuned to the asymmetry; specialist monitors are half the cost but
   consistently lower net welfare than generalists, because a specialist
   stops harvesting the pool it stops enforcing, not just enforcing it.
-- ⏳ Next: see the ranked candidate list linked above (`R₀` reserved as
-  **E17**).
+- ✅ **Starting resource level `R₀` (E17, ADR-0017)** — a settings-robustness
+  check, not a new axis (per its own explicit scoping): confirms literal
+  equifinality (von Bertalanffy 1968) exactly for a well-behaved population,
+  holds asymptotically once free-riders are present, and finds a sharp,
+  previously-invisible collapse threshold — any `R₀ > K/2` permanently
+  empties the pool for an all-`conditional_cooperator` population, because
+  its decline-detection heuristic can't distinguish the population's own
+  legitimate first harvest from real over-extraction. Every experiment
+  since E2 used this strategy at exactly the one starting point (`K/2`)
+  where the bug never shows up.
+- ⏳ Next: see the ranked candidate list linked above — an uncertain/finite
+  time horizon, wealth-weighted collective choice, inequality-adaptive
+  monitoring investment, and agent entry/exit are all still open.
 
 ### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

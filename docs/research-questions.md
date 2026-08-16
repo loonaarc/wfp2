@@ -129,6 +129,17 @@ current front-runner for the project's specific focus — not yet locked.
   shrinkage at every level — traced to a sanctioning-quota bug (a monitor
   enforcing the second, slower pool at the first pool's sustainable yield);
   caught and fixed, see ADR-0016.
+- **SQ-17** 🟢 Does a fixed population's final outcome actually not depend on
+  the starting resource level `R₀` (von Bertalanffy 1968's own literal
+  definition of equifinality), and does that hold once free-riders can drain
+  the pool from an already-fragile start? **→ Answered (E17): yes, exactly,
+  for a well-behaved population** (`50.0` final level regardless of `R₀`
+  from 1 to 95) **and yes, asymptotically, with free-riders present** (all
+  starting levels converge to the identical `16.667` given enough rounds) —
+  but with a sharp exception found along the way: any `R₀ > K/2` makes an
+  all-`conditional_cooperator` population collapse the pool permanently
+  within two rounds, since its decline-detection can't tell the
+  population's own legitimate first harvest from real over-extraction.
 
 ### Reproducibility & sensitivity (RQ-D)
 - **SQ-11** 🟢 How much do outcome metrics vary across random seeds for a fixed
@@ -194,5 +205,6 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-14 | group-scoped enforcement | ✅ `AgentSpec.group`, ADR-0012 + E15 |
 | SQ-15 | ungoverned outsider batch | ✅ `AgentSpec.governed=False`, ADR-0013 + E16 |
 | SQ-16 | second resource pool + per-agent split | ✅ `SimulationConfig.second_resource`, `AgentSpec.allocation_split`, ADR-0016 + E20 |
+| SQ-17 | starting resource level `R₀` sweep | ✅ `ResourceConfig.initial_level`, ADR-0017 + E17 |
 | SQ-5b | partner-specific reputation | ✅ `ReputationConfig`, ADR-0014 + E18 |
 | SQ-5c | fixed neighbour graph on partner selection | ✅ `NetworkConfig`, ADR-0015 + E19 |

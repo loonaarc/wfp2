@@ -1,27 +1,29 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E20 (E17 reserved). E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E20. E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
 voted agreement can substitute for pre-committed enforcement; E14–E16 and E20 shift to
 the equifinality/complexity-axis question — as the population, its governance
 structure, its boundary, and now its resources get structurally richer, does the set
-of near-optimal approaches grow? E18 and E19 are standalone mechanism comparisons
-(built, not folded into the complexity-axis sweep — see `complexity-synthesis.md`'s
-"Related but distinct" section for why): does conditioning retaliation on one
-partner's reputation, rather than the population's aggregate trend, avoid the
-collapse blanket retaliation causes (E18)? And does fixing that partner to a
-persistent graph neighbour, instead of a fresh random draw, make an agent's outcome
-depend on its graph position (E19)? E20, by contrast, *is* folded into the
-complexity-axis sweep — a second, asymmetric resource pool grows the near-optimal
-set at several diversity levels, once a sanctioning-quota calibration bug (caught
-and fixed, see ADR-0016) was corrected. This is the narrative spine for the
-writeup; each claim links to its full experiment report and the code that produced
-it.*
+of near-optimal approaches grow? E17 tests a different, complementary sense of the
+same founding term (von Bertalanffy 1968): not "do different population mixes reach
+similar ends," but "does a *fixed* population reach the same end regardless of where
+it started" — and turns up a real, previously-invisible strategy limitation along the
+way. E18 and E19 are standalone mechanism comparisons (built, not folded into the
+complexity-axis sweep — see `complexity-synthesis.md`'s "Related but distinct"
+section for why): does conditioning retaliation on one partner's reputation, rather
+than the population's aggregate trend, avoid the collapse blanket retaliation causes
+(E18)? And does fixing that partner to a persistent graph neighbour, instead of a
+fresh random draw, make an agent's outcome depend on its graph position (E19)? E20,
+by contrast, *is* folded into the complexity-axis sweep — a second, asymmetric
+resource pool grows the near-optimal set at several diversity levels, once a
+sanctioning-quota calibration bug (caught and fixed, see ADR-0016) was corrected.
+This is the narrative spine for the writeup; each claim links to its full experiment
+report and the code that produced it.*
 
-**Status:** 2026-08-16 · 7 strategies · 19 experiments built (E1–E20, E17
-reserved) · 131 tests · results reproducible from `scripts/` and the committed
-`results/` data.
+**Status:** 2026-08-16 · 7 strategies · 20 experiments built (E1–E20) · 136 tests ·
+results reproducible from `scripts/` and the committed `results/` data.
 
 ---
 
@@ -125,8 +127,10 @@ flowchart TD
 
     E18["E18 — reputation (indirect reciprocity)<br/>partner-specific retaliation avoids E2's collapse"]
     E19["E19 — network reciprocity<br/>fixed graph position creates 20x payoff inequality"]
+    E17["E17 — starting resource level (R0)<br/>conditional cooperator collapses iff R0 > K/2"]
 
     E3 -.the cost E5 explains.-> E5
+    E3 -.same strategy, different starting condition.-> E17
     E3 -.the mechanism E7 confirms.-> E7
     E3 -.extended into a shock.-> E8
     E3 -.the flat baseline P4 restructures.-> E14
@@ -149,7 +153,11 @@ per-group, then per-boundary, sweep on top of the flat population E1–E13 assum
 throughout. **E20** extends that same composition sweep with a second, asymmetric
 resource pool — once a sanctioning-quota calibration bug was caught and fixed
 (ADR-0016), it grows the near-optimal set at several diversity levels, the same
-direction as groups (E15).
+direction as groups (E15). **E17** asks a different question about the same E3-era
+mechanisms: not "which population mix works" but "does the *same* population reach
+the same end regardless of where it starts" — and finds a sharp, previously-invisible
+limitation in `conditional_cooperator` (used since E2) that every earlier experiment's
+shared `R₀ = K/2` default happened to hide.
 
 ---
 
@@ -412,6 +420,42 @@ own observation.
   disappointing, finding about richness not paying off; they were a
   miscalibration, caught only by hand-checking the exact enforced numbers.
 
+## Starting resource level: literal equifinality, and a hidden threshold (E17)
+
+*(Full report: [E17](experiments/E17-starting-resource-level.md). Mechanism:
+[ADR-0017](decisions/0017-starting-resource-level-glue-sweep.md).)*
+
+Every experiment so far implicitly fixed the starting resource level `R₀` at
+`K/2` without ever naming that choice. Von Bertalanffy (1968)'s own definition of
+equifinality — the founding citation for this whole thesis direction — is literally
+about this: an open system that reaches a steady state has a final value provably
+independent of its initial conditions. E17 tests that directly, distinct from (not a
+replacement for) the "different population mixes, comparable ends" sense E14–E16/E20
+already test.
+
+- **Confirmed exactly for a well-behaved population.** An all-`cooperative`
+  population's final resource level is `50.0` regardless of whether it starts at `1`
+  or `95` — a precise, direct empirical instance of the founding definition, not a
+  metaphorical resemblance.
+- **Holds for a population with free-riders too, but only asymptotically.** At the
+  usual 100-round budget, a catastrophic start (`R₀=1`) looks meaningfully behind a
+  healthy one (`15.06` vs. `16.72`) — but a follow-up check at 500 rounds shows both
+  converge to the identical `16.667`. The guarantee is real; this project's standard
+  round budget just isn't always long enough to see it.
+- **A sharp, previously-invisible limitation, found by testing the assumption
+  itself.** Crossing `R₀` with E14's own 495-composition space, the near-optimal
+  fraction swings from 0.774 (the default `R₀=50`, matching E14 exactly) down to
+  0.422 at `R₀=95`. The dominant, fully-traced cause: **any `R₀ > K/2` makes an
+  all-`conditional_cooperator` population collapse the pool permanently within two
+  rounds** — its own decline-detection heuristic can't tell "the population's own
+  legitimate first harvest, settling back toward the healthy target" from "a
+  free-rider over-extracted," because both look like the same drop between rounds.
+  `compensating_cooperator` shares the identical trigger but responds by withholding
+  rather than retaliating, so the same false alarm is harmless for it. The threshold
+  is a knife-edge, not a gradient: `R₀=50.0` is perfectly stable; `R₀=50.1` collapses
+  by round 1. Every experiment since E2 has used `conditional_cooperator` starting at
+  exactly the one point where this never shows up.
+
 ## Reputation: indirect reciprocity vs. blanket retaliation (E18)
 
 *(Full report: [E18](experiments/E18-reputation.md). Mechanism:
@@ -531,12 +575,18 @@ The standout open threads:
 
 1. **Remaining complexity axes (Phase 4, in progress):** population diversity
    (E14), groups (E15), boundaries (E16), and multiple resources /
-   specialization (E20) are done — plus `R₀` (starting resource level,
-   reserved as **E17**) as a smaller side-sweep, still open. E20's own
-   follow-up (whether a cheaper monitoring-cost model recovers diversity-1/2
-   parity with E14, since that gap is now understood to be the doubled
-   monitoring-cost tax, not a structural mismatch) is the standout next step
-   within Phase 4 itself. Reputation/indirect reciprocity (**E18**, ADR-0014) and
+   specialization (E20) are done. `R₀` (starting resource level, **E17**,
+   ADR-0017) is also done — a settings-robustness check rather than a new
+   axis (per its own scoping), it confirmed literal equifinality for a
+   well-behaved population and found a sharp, previously-invisible collapse
+   threshold in `conditional_cooperator` at `R₀ > K/2`. Next up, per the
+   ranking in `thesis-direction-equifinality.md`: an uncertain/finite time
+   horizon (item 9), wealth-weighted collective choice (item 11), and
+   inequality-adaptive monitoring investment (item 12) — all still open.
+   E20's own follow-up (whether a cheaper monitoring-cost model recovers
+   diversity-1/2 parity with E14, since that gap is now understood to be the
+   doubled monitoring-cost tax, not a structural mismatch) is also still
+   open. Reputation/indirect reciprocity (**E18**, ADR-0014) and
    network reciprocity (**E19**, ADR-0015, Nowak 2006 rule 4) are both
    *built*, but as standalone mechanism comparisons in the E1–E13 style, not
    folded into Phase 4's compositional sweep — deliberately: they test a
@@ -574,8 +624,9 @@ python scripts/experiment_binding_agreement.py       # E13
 python scripts/experiment_population_diversity.py    # E14
 python scripts/experiment_groups_full_sweep.py       # E15
 python scripts/experiment_boundaries_full_sweep.py   # E16
+python scripts/experiment_starting_resource.py       # E17
 python scripts/experiment_reputation.py              # E18
 python scripts/experiment_network_reciprocity.py     # E19
 python scripts/experiment_multiple_resources.py      # E20
-pytest                                               # 131 tests
+pytest                                               # 136 tests
 ```
