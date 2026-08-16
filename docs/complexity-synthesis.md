@@ -31,6 +31,23 @@ side, which is Monte Carlo *sampled* rather than enumerated (the full
 governed × outsider space is ~3.9M configurations) — see both experiments'
 own Method sections and the third and fourth lessons below.
 
+**2026-08-16 E20 addition:** multiple resources (second pool, `allocation_split`)
+joins the count/fraction table below as its own axis (row 4) — unlike
+reputation (E18) and network reciprocity (E19), it *is* a composition-space
+axis in this document's own sense (see lesson 5), not a strategy-level or
+distributional side question, so it gets a real row rather than a "Related but
+distinct" carve-out.
+
+**2026-08-16 correctness fix, same day:** the first version of this section
+reported E20 as "the first axis where the near-optimal set shrinks" — that
+was wrong, a miscalibrated sanctioning quota (see
+[ADR-0016](decisions/0016-multiple-resources-allocation-split.md) and
+[E20's own correctness-fix note](experiments/E20-multiple-resources.md)),
+not a real property of the axis. Corrected below, and kept as its own
+methodological lesson (lesson 8) since the failure mode — a bug producing a
+plausible-looking negative result — is exactly the kind of thing this
+document exists to guard against.
+
 **Numbering caveat, resolved 2026-08-09:** `docs/literature-review.md` and
 two paper notes (Beven & Binley 1992/2014) independently referenced a
 *different*, still-unbuilt "E14" — a GLUE-methodology experiment about
@@ -62,7 +79,7 @@ browser panel samples it too (56,020 configurations synchronously froze the
 tab). That's a demo-only rendering tradeoff, not a change to E15's reported
 result — see the same doc section's "Demo-only sampling" note.
 
-## Seven methodological lessons, learned the hard way — apply all seven to every axis added below
+## Eight methodological lessons, learned the hard way — apply all eight to every axis added below
 
 1. **Report count and fraction separately, never just one.** Adding a new
    axis whose new branch contributes zero passing configurations mechanically
@@ -148,6 +165,23 @@ result — see the same doc section's "Demo-only sampling" note.
    at each `m` to see whether axes interact — here they mostly don't,
    since opening's ~2× fraction cost stays roughly constant across `m`,
    i.e. close to additive rather than compounding.
+8. **A negative or complicating result needs a mechanism check before it's
+   trusted, not just a rerun — a bug can produce a result exactly as
+   plausible-looking as a real one.** E20's first draft reported "the
+   near-optimal set shrinks at every diversity level" and "the fragile pool
+   collapses regardless of monitor arrangement" — both had a clean-sounding
+   story attached (strategies size requests off capacity, not growth rate)
+   and both were wrong: a sanctioning agent's quota on the second pool was
+   silently using the *first* pool's sustainable yield (double what the
+   second pool could bear), caught only by hand-checking the exact
+   per-round enforced numbers against what they should have been, not by
+   the result "looking wrong" on its face — it didn't. After the fix, this
+   axis *exceeds* the single-pool baseline at two diversity levels instead
+   of trailing at all five (see the corrected chart below). The general
+   rule: a surprising, mechanistically-explicable negative finding is not
+   automatically a real one — it's exactly as easy to manufacture from a
+   bug as a true result is, so it earns extra scrutiny, not less, precisely
+   because it's explicable.
 
 ## Axes tested so far
 
@@ -156,18 +190,21 @@ result — see the same doc section's "Demo-only sampling" note.
 | 1 | Population-type diversity | [E14](experiments/E14-population-diversity.md) | 495 compositions across 5 strategies, `N=8` |
 | 2 | Groups (nested enforcement) | [ADR-0012](decisions/0012-nested-enterprise-groups.md), [E15](experiments/E15-groups.md) | `m ∈ {1, 2, 4}` |
 | 3 | Boundary (closed/open access) | [ADR-0013](decisions/0013-boundaries-via-groups-reuse.md), [E16](experiments/E16-boundaries.md) | `closed`, `open` |
+| 4 | Multiple resources (second pool + per-agent split) | [ADR-0016](decisions/0016-multiple-resources-allocation-split.md), [E20](experiments/E20-multiple-resources.md) | second pool off (E14 baseline) vs. on, `allocation_split=0.5` fixed |
 
 Not yet built (see the ranking in
 [thesis-direction-equifinality.md](thesis-direction-equifinality.md#ranking-the-axes-by-fit-not-by-build-cost)):
-multiple resources, specialization, communication as its own named axis
-(built, E6/E7, never formally ranked). A **revised** population-diversity
-axis (two booleans — enforcer present, reciprocal-vs-compensating response —
-instead of a raw type count) is E14's own recommended follow-up, ahead of
-either. Reputation (E18) and network reciprocity (E19) are also both
-built — see the "Related but distinct" section below for why neither is in
-the count/fraction table above: both test a genuinely different question
-than "does the near-optimal set grow," not this project's central
-equifinality conjecture directly.
+communication as its own named axis (built, E6/E7, never formally ranked). A
+**revised** population-diversity axis (two booleans — enforcer present,
+reciprocal-vs-compensating response — instead of a raw type count) is E14's
+own recommended follow-up. Multiple resources and specialization (row 4
+above) are now both built via E20 — specialization via the specialist-vs-
+generalist monitor-arrangement question in E20's own report, not a separate
+composition-sweep row of its own. Reputation (E18) and network reciprocity
+(E19) are also both built — see the "Related but distinct" section below for
+why neither is in the count/fraction table above: both test a genuinely
+different question than "does the near-optimal set grow," not this project's
+central equifinality conjecture directly.
 
 ## The chart: population-type diversity (E14)
 
@@ -266,6 +303,60 @@ shocked `welfare_efficiency`, no collapse, same ranking against 3 alternative
 compositions tested. Consistent with E8's own finding that shock recovery is
 driven by observation/self-correction, not enforcement.
 
+## The chart: multiple resources (E20) — richness that mostly helps, once correctly enforced
+
+Same 495 compositions as the E14 chart above (5 strategies, `N=8`), same
+`≥0.80` threshold — the only change is a second, slower-growing pool
+(`g=0.2` vs. pool A's `0.4`, same `K=100`) switched on, with every agent's
+`allocation_split` fixed at a uniform `0.5` (see
+[E20's report](experiments/E20-multiple-resources.md), Question C). **These
+numbers are post-fix** — see lesson 8 above and E20's own correctness-fix
+note for what the first (wrong) version of this table said and why:
+
+| diversity | E14 baseline (one pool) | E20 (second pool on, split=0.5) |
+| -: | -: | -: |
+| 1 | 4/5 (0.80) | 3/5 (0.60) |
+| 2 | 51/70 (0.73) | 49/70 (0.70) |
+| 3 | 153/210 (0.73) | **160/210 (0.76)** |
+| 4 | 140/175 (0.80) | **145/175 (0.83)** |
+| 5 | 35/35 (1.00) | 35/35 (1.00) |
+
+**By count and fraction, the near-optimal set *exceeds* the single-pool
+baseline at two of five diversity levels (3 and 4) and matches it at a
+third (5)** — closer in spirit to groups (E15, which grew the set) than to
+a "richness always costs" story. Only diversity 1–2 still lag, and
+diversity 1's shortfall is fully explained, not mysterious: of the five
+single-type populations, only all-`selfish` (unsustainable regardless of
+pools) and all-`sanctioning` (a real but *separate* finding — doubled
+monitoring cost from watching two pools pushes it just under the 0.80
+threshold, see E20's finding 3) fail; the same three cooperative-family
+types that pass at diversity 1 with one pool still pass here.
+
+**Why, mechanistically:** once a sanctioning agent's quota on the second
+pool actually reflects *that pool's* sustainable yield (not the first
+pool's, reused by mistake — the bug lesson 8 describes), the strategy
+repertoire turns out to be reasonably well-matched to a second, differently
+-growing pool after all. The registered strategies' *harvest* decision
+never needed to know a pool's growth rate in the first place (the "surplus
+above `K/2`" rule is self-correcting per pool regardless of `g` — confirmed
+directly: an all-cooperative population handles both pools fine at
+`allocation_split=0.5`, reaching `welfare_efficiency=0.963`, above E14's
+whole-pool ceiling). The only place growth rate actually mattered was the
+*enforcement* quota, and that was a fixable calibration bug, not a
+structural mismatch between the strategies and the richer environment.
+
+**What this means for the equifinality conjecture:** growth is not
+automatic, but it is also not rare — E15's groups axis and E20's multiple-
+resources axis are both genuine, mechanistically-grounded composition-space
+axes (lesson 5's bar), and both grow the near-optimal set at some levels
+once correctly measured. The one real complication multiple resources adds
+is narrower than first thought: a doubled monitoring cost for full
+double-coverage enforcement (E20's finding 3) is a genuine, mechanistic tax
+that a richer world can introduce — not a blanket statement that richness
+hurts, but a specific, well-understood cost that shows up exactly where a
+homogeneous, generalist-monitored population pays for watching two things
+instead of one.
+
 ## Related but distinct: reputation (E18) and network reciprocity (E19)
 
 Both are built and both are genuinely new mechanisms (see ADR-0014, ADR-0015)
@@ -308,14 +399,17 @@ reference, not folded into the count/fraction methodology.
 ## What's next
 
 Add a row/column here each time a new axis is built and tested against the
-existing ones — not a rewrite each time, an extension. Immediate follow-ups,
-per E15/E16's own: a matched same-space paired comparison (does a specific
-governed composition that passes closed *also* tend to pass open, rather
-than comparing aggregate fractions), then multiple resources or
-specialization as the next wholly new composition-space axis (network
-reciprocity and reputation are now both built, but — see "Related but
-distinct" above — as their own standalone mechanism comparisons, not as
-entries in this document's count/fraction table).
+existing ones — not a rewrite each time, an extension. Multiple resources
+(E20) is now built and in the table above, exceeding the single-pool
+baseline at two diversity levels once correctly enforced. Immediate
+follow-ups, per E15/E16's own: a matched same-space paired comparison (does
+a specific governed composition that passes closed *also* tend to pass
+open, rather than comparing aggregate fractions); whether a cheaper
+generalist-monitoring cost model (or specialist monitoring, cheaper by
+construction — E20's finding 3) recovers diversity-1/2 parity with E14 too
+(network reciprocity and reputation are still built as their own standalone
+mechanism comparisons, not entries in this document's count/fraction table
+— see "Related but distinct" above).
 
 **Optional research, deferred until all complexity axes are built**: redo the
 ceiling/argmax check above *under a disturbance* (resource shock, agent
@@ -323,11 +417,11 @@ failure) at every level, across the *full* space rather than a handful of
 hand-picked candidates — does the identical champion composition stay optimal
 once shocked, at every axis and every level, or does robustness itself trade
 off against peak `welfare_efficiency` somewhere in the space? Genuinely new
-compute (unlike the no-shock ceiling, which was free), so worth doing once
-the full composition-space axis roster (multiple resources, specialization —
-network reciprocity and reputation are standalone mechanism comparisons, not
-composition-space axes, see "Related but distinct" above) exists rather than
-repeating it after every single axis.
+compute (unlike the no-shock ceiling, which was free); with multiple
+resources (E20) now built alongside diversity/groups/boundary, this is worth
+doing on the current four-axis roster rather than repeating it after every
+single axis (network reciprocity and reputation are standalone mechanism
+comparisons, not composition-space axes, see "Related but distinct" above).
 
 **Optional research, no fixed timing**: an analytical (not simulated)
 derivation of the simplest observed pass/fail rules — e.g. E14's "any

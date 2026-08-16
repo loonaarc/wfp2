@@ -26,3 +26,4 @@ proposed decision and its trade-offs.
 | [0013](0013-boundaries-via-groups-reuse.md) | Boundaries (open access vs. closed community) via groups reuse — no new mechanism | Accepted |
 | [0014](0014-reputation-indirect-reciprocity.md) | Reputation (indirect reciprocity) as a partner-targeted, not population-wide, mechanism | Accepted |
 | [0015](0015-network-reciprocity-fixed-neighbor-graph.md) | Network reciprocity as a fixed neighbour graph on reputation's partner selection | Accepted |
+| [0016](0016-multiple-resources-allocation-split.md) | Multiple resources / specialization via a second pool and a per-agent allocation split | Accepted |

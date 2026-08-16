@@ -120,6 +120,20 @@ should link here rather than re-enumerate.
   ADR-0015). *(model term: `SimulationConfig.network`,
   `NetworkConfig.degree`; has no effect without `reputation` also
   configured.)*
+- **Multiple resources / allocation split** — a second, independent
+  `ResourcePool` an agent can also draw from; every registered strategy is
+  reused unchanged, called once per pool against that pool's own
+  observation, and the two results are scaled by the agent's fixed
+  `allocation_split` (`1.0` = pool A only, `0.0` = pool B only). A
+  sanctioning agent's enforcement reach — and cost — follows its own split,
+  so a pure specialist neither enforces nor pays to enforce the pool it
+  doesn't draw from. Diversifying across two deliberately asymmetric pools
+  (different growth rates, same capacity) unlocks welfare neither pool
+  alone can reach, but the same asymmetry means the existing strategy
+  repertoire — calibrated off a pool's *capacity*, not its *growth rate* —
+  is structurally worse-matched to the slower pool (GovSim's own future
+  work; E20, ADR-0016). *(model term: `SimulationConfig.second_resource`,
+  `AgentSpec.allocation_split`.)*
 
 Related concepts:
 

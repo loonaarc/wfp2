@@ -207,6 +207,15 @@ class AgentSpec:
             members are structurally excluded from every group's per-capita
             quota calculation, not silently included in the denominator and
             then left unconstrained anyway.
+        allocation_split: Only meaningful when
+            ``SimulationConfig.second_resource`` is configured (multiple
+            resources, ADR-0016): the fraction of this spec's agents' request
+            routed to the *first* pool, with the rest routed to the second.
+            ``1.0`` (the default) means "ignore the second pool entirely",
+            which is exactly today's single-resource behaviour — this field
+            is purely additive, the same way ``group``/``governed`` are.
+            ``0.5`` is an even generalist split; values near ``0`` or ``1``
+            specialise in one resource.
     """
 
     strategy: str
@@ -214,12 +223,15 @@ class AgentSpec:
     params: dict[str, Any] = field(default_factory=dict)
     group: int = 0
     governed: bool = True
+    allocation_split: float = 1.0
 
     def __post_init__(self) -> None:
         if self.count < 0:
             raise ValueError("count must be non-negative")
         if self.group < 0:
             raise ValueError("group must be non-negative")
+        if not 0 <= self.allocation_split <= 1:
+            raise ValueError("allocation_split must be in [0, 1]")
 
 
 @dataclass(frozen=True)
@@ -254,6 +266,14 @@ class SimulationConfig:
             selection (``None`` by default -- partner selection stays
             population-wide, exactly ADR-0014's original behaviour; see
             :class:`NetworkConfig` and ADR-0015).
+        second_resource: An optional second, independent renewable pool
+            (multiple resources / specialization, ADR-0016). ``None`` by
+            default, so existing experiments are unchanged and ``resource``
+            is the only pool. When set, each agent's own request is computed
+            once (unchanged, same ``Strategy.decide()`` every strategy
+            already has) against *each* pool's own observation and split
+            between them by its ``AgentSpec.allocation_split`` -- no strategy
+            code changes, only the engine learns to run two pools.
     """
 
     name: str = "unnamed"
@@ -268,6 +288,7 @@ class SimulationConfig:
     collective_choice: CollectiveChoiceConfig | None = None
     reputation: ReputationConfig | None = None
     network: NetworkConfig | None = None
+    second_resource: ResourceConfig | None = None
 
     def __post_init__(self) -> None:
         if self.rounds <= 0:
@@ -319,6 +340,10 @@ class SimulationConfig:
         reputation = ReputationConfig(**reputation_data) if reputation_data is not None else None
         network_data = data.pop("network", None)
         network = NetworkConfig(**network_data) if network_data is not None else None
+        second_resource_data = data.pop("second_resource", None)
+        second_resource = (
+            ResourceConfig(**second_resource_data) if second_resource_data is not None else None
+        )
         return cls(
             resource=resource,
             agents=agents,
@@ -326,6 +351,7 @@ class SimulationConfig:
             collective_choice=collective_choice,
             reputation=reputation,
             network=network,
+            second_resource=second_resource,
             **data,
         )
 

@@ -119,6 +119,16 @@ current front-runner for the project's specific focus — not yet locked.
   (boundaries, Ostrom principle 1) change the near-optimal-set size? **→ Answered
   (E16): yes, consistently but not catastrophically** — opening costs a ~2× fraction
   at every group count tested.
+- **SQ-16** 🟢 Does adding a second, asymmetric resource (a fixed per-agent
+  `allocation_split` across two pools with different growth rates) change the
+  near-optimal-set size? **→ Answered (E20): yes — grows it at several
+  diversity levels**, exceeding the single-pool count/fraction at diversity 3
+  (153/210 → 160/210) and 4 (140/175 → 145/175), matching it at 5 (35/35).
+  Only diversity 1–2 lag, fully explained by a doubled-monitoring-cost tax
+  (finding 3), not a general mismatch. A first pass found the opposite —
+  shrinkage at every level — traced to a sanctioning-quota bug (a monitor
+  enforcing the second, slower pool at the first pool's sustainable yield);
+  caught and fixed, see ADR-0016.
 
 ### Reproducibility & sensitivity (RQ-D)
 - **SQ-11** 🟢 How much do outcome metrics vary across random seeds for a fixed
@@ -183,5 +193,6 @@ current front-runner for the project's specific focus — not yet locked.
 | SQ-13 | full compositional sweep | ✅ `AgentSpec` composition sweep + E14 |
 | SQ-14 | group-scoped enforcement | ✅ `AgentSpec.group`, ADR-0012 + E15 |
 | SQ-15 | ungoverned outsider batch | ✅ `AgentSpec.governed=False`, ADR-0013 + E16 |
+| SQ-16 | second resource pool + per-agent split | ✅ `SimulationConfig.second_resource`, `AgentSpec.allocation_split`, ADR-0016 + E20 |
 | SQ-5b | partner-specific reputation | ✅ `ReputationConfig`, ADR-0014 + E18 |
 | SQ-5c | fixed neighbour graph on partner selection | ✅ `NetworkConfig`, ADR-0015 + E19 |

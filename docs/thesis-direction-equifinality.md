@@ -225,13 +225,11 @@ does it just make a *specific realization* of an unchanged structure go worse?
 
 Also not the same axis of difficulty: whether a candidate is cheap to test.
 `information_model` already has both `"global"` and `"private"` implemented in
-`config.py`, and population-composition, groups, boundaries, reputation, and
-network reciprocity are now built too (E14/E15/E16/E18/E19,
-ADR-0012/0013/0014/0015) — testing any of these is picking a value or
-running an existing sweep script. Multiple resources and specialization
-have no implemented code path yet (there is no `num_resources` field, no
-agent-role concept) — testing either means writing new mechanism first, not
-just choosing a value. See "Ranking the axes" below for which is which.
+`config.py`, and population-composition, groups, boundaries, reputation,
+network reciprocity, and multiple resources/specialization are all built
+now (E14/E15/E16/E18/E19/E20, ADR-0012/0013/0014/0015/0016) — testing any
+of these is picking a value or running an existing sweep script. See
+"Ranking the axes" below for which is which.
 
 ### Additional candidate axes (surfaced later, checked against already-read literature)
 
@@ -582,10 +580,19 @@ this ranking:**
    exact threshold transfers. An earlier evolutionary-dynamics
    operationalization (graph-structured replicator dynamics on E5/E11/E12)
    was built and rejected first — see ADR-0015's Considered Options.
-5. **Multiple resources** — upgraded from "an early hunch" to
-   citation-grounded: GovSim (2024) names "multiple resource types" and
-   "varying regeneration rates" directly as its own future work. Likely the
-   richest strategy space (diversify, specialise, switch) of any axis here.
+5. **Multiple resources** (built, now
+   [E20](experiments/E20-multiple-resources.md), ADR-0016) — was
+   citation-grounded before it was built: GovSim (2024) names "multiple
+   resource types" and "varying regeneration rates" directly as its own
+   future work. Two deliberately asymmetric pools (`g=0.4`/`0.2`, same `K`)
+   with a per-agent `allocation_split`, every existing strategy reused
+   unchanged. Unlike reputation/network, **folded directly into the
+   complexity-axis composition sweep** as row 4 (see
+   `complexity-synthesis.md`) — exceeding the single-pool near-optimal set
+   at two of five diversity levels once a sanctioning-quota calibration bug
+   (a monitor silently under-protecting the second, slower pool; caught and
+   fixed, see ADR-0016) was corrected. See item 7 below — specialization
+   was built together with this axis, not separately.
 6. **Reputation / indirect reciprocity** (built, Nowak & Sigmund 1998, now
    [E18](experiments/E18-reputation.md), ADR-0014) — grounded, though built
    as a partner-specific strategy comparison (`reputation_cooperator` vs.
@@ -604,9 +611,15 @@ this ranking:**
    picked up later — per-partner reputation tracking is close to the
    machinery a "does the population let itself be fooled" study would need
    anyway.
-7. **Specialization** — upgraded from "no grounding" to a named GovSim gap
-   ("different stakeholder interests"), though still without a worked
-   formula the way the Nowak-sourced axes above have.
+7. **Specialization** (built, now
+   [E20](experiments/E20-multiple-resources.md), ADR-0016) — was a named
+   GovSim gap ("different stakeholder interests") before it was built,
+   still without a worked formula the way the Nowak-sourced axes above
+   have. Operationalized as specialist-vs-generalist monitors (one
+   `allocation_split` per pool vs. `0.5` each): specialists cost exactly
+   half the raw monitoring fee but have consistently *lower* net welfare
+   than generalists, because a specialist stops harvesting the pool it
+   stops enforcing, not just enforcing it.
 8. **Information regime** (built, E1) — the original first example, but only
    two levels exist in the code (`global`/`private`) — cheap to report, too
    narrow on its own to show a trend by itself.
@@ -626,6 +639,15 @@ this ranking:**
 still-unbuilt GLUE/`R₀` experiment, since renumbered to **E17** — see
 [complexity-synthesis.md](complexity-synthesis.md)'s own "Numbering caveat"
 for the full history.
+
+**Ranking note:** items 5 (multiple resources) and 7 (specialization) are two
+separately-ranked entries above, split by reputation (6), but both were built
+together in a single experiment, **E20** — specialization is multiple
+resources' own monitor-arrangement question (specialist vs. generalist),
+not a separate mechanism requiring its own new engine code. They stay two
+list entries here because they were ranked independently before either was
+built and the ranking is a historical record, not because E20 is two
+unrelated experiments.
 
 ## Sweep design: staircase vs. full factorial
 

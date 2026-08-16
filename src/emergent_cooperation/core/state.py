@@ -38,6 +38,21 @@ class RoundRecord:
             failed).
         reputations: Per-agent reputation score as of the end of this round
             (ADR-0014), or ``()`` if reputation tracking isn't configured.
+        requested/harvested: An agent's *total* request/harvest this round,
+            summed across every pool it draws from -- this is what
+            payoff/Gini/welfare_efficiency already correctly consume
+            unchanged, whether there is one pool or two (multiple resources,
+            ADR-0016). ``requested_b``/``harvested_b`` below break that total
+            down by pool for diagnostics; they are not a second source of
+            truth for payoff accounting.
+        resource_start_b/resource_after_regen_b/resource_after_harvest_b/
+            collapsed_b: The second pool's own trajectory (multiple
+            resources, ADR-0016) -- ``None``/``False`` unless
+            ``SimulationConfig.second_resource`` is configured.
+        requested_b/harvested_b: Per-agent request/harvest against the
+            *second* pool specifically (diagnostic only -- already included
+            in ``requested``/``harvested`` above), or ``()`` if there is no
+            second pool.
     """
 
     round_index: int
@@ -52,6 +67,12 @@ class RoundRecord:
     vote_taken: bool = False
     collective_enforcement_active: bool = False
     reputations: tuple[float, ...] = ()
+    resource_start_b: float | None = None
+    resource_after_regen_b: float | None = None
+    resource_after_harvest_b: float | None = None
+    collapsed_b: bool = False
+    requested_b: tuple[float, ...] = ()
+    harvested_b: tuple[float, ...] = ()
 
     @property
     def total_requested(self) -> float:

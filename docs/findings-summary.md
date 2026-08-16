@@ -1,22 +1,26 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E19 (E17 reserved). E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E20 (E17 reserved). E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
-voted agreement can substitute for pre-committed enforcement; E14–E16 shift to the
-equifinality/complexity-axis question — as the population, its governance structure,
-and its boundary get structurally richer, does the set of near-optimal approaches
-grow? E18 and E19 are standalone mechanism comparisons (built, not folded into the
-complexity-axis sweep — see `complexity-synthesis.md`'s "Related but distinct"
-section for why): does conditioning retaliation on one partner's reputation, rather
-than the population's aggregate trend, avoid the collapse blanket retaliation
-causes (E18)? And does fixing that partner to a persistent graph neighbour, instead
-of a fresh random draw, make an agent's outcome depend on its graph position (E19)?
-This is the narrative spine for the writeup; each claim links to its full experiment
-report and the code that produced it.*
+voted agreement can substitute for pre-committed enforcement; E14–E16 and E20 shift to
+the equifinality/complexity-axis question — as the population, its governance
+structure, its boundary, and now its resources get structurally richer, does the set
+of near-optimal approaches grow? E18 and E19 are standalone mechanism comparisons
+(built, not folded into the complexity-axis sweep — see `complexity-synthesis.md`'s
+"Related but distinct" section for why): does conditioning retaliation on one
+partner's reputation, rather than the population's aggregate trend, avoid the
+collapse blanket retaliation causes (E18)? And does fixing that partner to a
+persistent graph neighbour, instead of a fresh random draw, make an agent's outcome
+depend on its graph position (E19)? E20, by contrast, *is* folded into the
+complexity-axis sweep — a second, asymmetric resource pool grows the near-optimal
+set at several diversity levels, once a sanctioning-quota calibration bug (caught
+and fixed, see ADR-0016) was corrected. This is the narrative spine for the
+writeup; each claim links to its full experiment report and the code that produced
+it.*
 
-**Status:** 2026-08-15 · 7 strategies · 18 experiments built (E1–E19, E17
-reserved) · 120 tests · results reproducible from `scripts/` and the committed
+**Status:** 2026-08-16 · 7 strategies · 19 experiments built (E1–E20, E17
+reserved) · 131 tests · results reproducible from `scripts/` and the committed
 `results/` data.
 
 ---
@@ -115,7 +119,8 @@ flowchart TD
         E14["E14 — population-type diversity<br/>raw diversity count is a weak, confounded proxy"]
         E15["E15 — groups (nested enforcement)<br/>near-optimal count grows, fraction still falls"]
         E16["E16 — boundaries (open access)<br/>opening costs ~2x fraction, not catastrophic"]
-        E14 --> E15 --> E16
+        E20["E20 — multiple resources<br/>near-optimal set grows at several diversity levels"]
+        E14 --> E15 --> E16 --> E20
     end
 
     E18["E18 — reputation (indirect reciprocity)<br/>partner-specific retaliation avoids E2's collapse"]
@@ -141,7 +146,10 @@ single shock (E8) to a shock plus free-riders (E9) to losing agents outright (E1
 — not "does it work" but "in how many different population/governance
 configurations does it (or something else) still work near-optimally," building a
 per-group, then per-boundary, sweep on top of the flat population E1–E13 assumed
-throughout.
+throughout. **E20** extends that same composition sweep with a second, asymmetric
+resource pool — once a sanctioning-quota calibration bug was caught and fixed
+(ADR-0016), it grows the near-optimal set at several diversity levels, the same
+direction as groups (E15).
 
 ---
 
@@ -302,11 +310,11 @@ And that enforcement is itself a **single point of failure**: lose the monitors 
 commons collapses (E10), where distributed self-correction would have degraded
 gracefully.
 
-## Complexity & equifinality: does the near-optimal set grow? (E14–E16 — Phase 4)
+## Complexity & equifinality: does the near-optimal set grow? (E14–E16, E20 — Phase 4)
 
 *(Full synthesis: [complexity-synthesis.md](complexity-synthesis.md). Reports:
 [E14](experiments/E14-population-diversity.md), [E15](experiments/E15-groups.md),
-[E16](experiments/E16-boundaries.md).)*
+[E16](experiments/E16-boundaries.md), [E20](experiments/E20-multiple-resources.md).)*
 
 E1–E13 ask *which mechanism works*. Phase 4 asks a different question: as the
 *setting* gets structurally richer — not harsher, richer — does the **count** of
@@ -330,14 +338,79 @@ distinct population/governance configurations that reach a near-optimal outcome
   — substantial, but far short of the near-total wipeout a single-adversarial-
   outsider reading first suggested; most outsiders, drawn from the full composition
   space, aren't actually threatening.
+- **E20 — multiple resources:** the identical 495-composition sweep, this
+  time with a second, slower-growing pool switched on and every agent
+  splitting effort evenly — **exceeds the single-pool near-optimal count and
+  fraction at two of five diversity levels and matches it at a third** (e.g.
+  diversity=3: 153/210 → 160/210; diversity=4: 140/175 → 145/175; diversity=5:
+  35/35 → 35/35). Only diversity 1–2 lag, and diversity 1's shortfall is fully
+  explained by a separate, already-understood cost (doubled monitoring fees
+  for full-coverage enforcement), not a general mismatch. A first version of
+  this result reported the opposite (shrinkage at every level) — traced to a
+  sanctioning-quota calibration bug (the quota enforced on the second pool was
+  silently reused from the first), fixed and documented in ADR-0016.
 
-**So: yes, by count — for the first time in this project, unconfoundedly — but
-proportionally harder to find by chance.** Both are true simultaneously; see
-`complexity-synthesis.md`'s methodological lessons for why reporting only one of
-the two would be misleading. Unlike E1–E13, which compare a handful of hand-picked
-configurations per experiment, E14–E16 exhaustively (or, once the space gets too
-large, Monte Carlo-) sweep the full composition space — a different kind of
-evidence (a measured set-size trend, not a point comparison).
+**So: richness tends to help, once correctly measured — and getting the
+measurement right matters as much as picking the axis.** Groups (E15) grow
+the near-optimal count unconfoundedly. Multiple resources (E20), once its
+enforcement bug was fixed, also grows it at several diversity levels. Both
+are genuine, mechanistically-grounded composition-space axes, tested with
+the same rigor; see `complexity-synthesis.md`'s methodological lessons —
+including a new one this axis added, that a plausible-looking negative
+result still needs a mechanism check before it's trusted. Unlike E1–E13,
+which compare a handful of hand-picked configurations per experiment,
+E14–E16 and E20 exhaustively (or, once the space gets too large, Monte
+Carlo-) sweep the full composition space — a different kind of evidence (a
+measured set-size trend, not a point comparison).
+
+## Multiple resources: diversifying effort, specialist vs. generalist monitors (E20)
+
+*(Full report: [E20](experiments/E20-multiple-resources.md). Mechanism:
+[ADR-0016](decisions/0016-multiple-resources-allocation-split.md).)*
+
+GovSim (Piatti et al., 2024) names "varying regeneration rates and multiple
+resource types" as its own future work. E20 adds a second, deliberately
+asymmetric pool (Pool A: `g=0.4`, "reliable"; Pool B: `g=0.2`, "fragile",
+same `K=100`) and a per-agent `allocation_split` — every existing strategy
+is reused completely unchanged, called once per pool against that pool's
+own observation.
+
+- **Diversifying across both pools unlocks welfare a single pool cannot
+  reach.** Concentrating entirely on pool A caps `welfare_efficiency` at
+  `0.667` against the combined denominator — pool B sits untouched, its own
+  sustainable yield never captured. Splitting evenly reaches `0.963` — 44%
+  more total welfare than the best single-pool strategy, simply by not
+  leaving a second sustainable resource idle.
+- **The welfare peak tracks the asymmetry, not the naive 50/50 midpoint.**
+  `allocation_split=0.75` (favouring the faster-growing pool) nearly matches
+  the `0.5` peak (`0.961` vs. `0.963`); `0.25` (favouring the slower pool)
+  drops to `0.842` — the optimal split is shaped by each pool's own growth
+  rate, not a symmetric compromise.
+- **Specialist monitors are cheaper but not welfare-better.** One monitor
+  per pool costs exactly half the raw monitoring fee of two generalists
+  that each watch both pools (40 vs. 80 over 100 rounds) — but net
+  `welfare_efficiency` is consistently several points *lower* for
+  specialists (e.g. 0.842 vs. 0.910 at 0 free-riders) at every free-rider
+  count tested, because a specialist doesn't just stop *enforcing* the pool
+  it ignores, it stops *harvesting* from it too.
+- **With a correctly-calibrated per-pool quota, neither pool collapses, at
+  any free-rider count tested (0–6), in either monitor arrangement.** A
+  first version of this finding reported the opposite — the fragile pool
+  collapsing at 5 free-riders regardless of arrangement — traced to a
+  sanctioning-quota bug (see below) that let a monitor enforce pool B at
+  pool A's sustainable yield, double what pool B could actually bear.
+- **Folded into Phase 4's composition sweep — unlike E18/E19 — this axis
+  exceeds the single-pool near-optimal set at two of five diversity levels
+  and matches it at a third** (see the Complexity & equifinality section
+  above and `complexity-synthesis.md`'s dedicated chart), once the same
+  quota bug was fixed. **A real bug, caught late, is worth naming plainly:**
+  a sanctioning agent's quota on the second pool was computed from the
+  *first* pool's sustainable yield, not its own — both the strategy
+  instance building it and the enforcement call using it were wrong (see
+  [ADR-0016](decisions/0016-multiple-resources-allocation-split.md)'s
+  second bug note). The pre-fix numbers looked like a coherent, if
+  disappointing, finding about richness not paying off; they were a
+  miscalibration, caught only by hand-checking the exact enforced numbers.
 
 ## Reputation: indirect reciprocity vs. blanket retaliation (E18)
 
@@ -457,16 +530,19 @@ complexity-axis candidates are in
 The standout open threads:
 
 1. **Remaining complexity axes (Phase 4, in progress):** population diversity
-   (E14), groups (E15), and boundaries (E16) are done. Next in the ranking:
-   multiple resources and specialization — plus `R₀` (starting resource level,
-   reserved as **E17**) as a smaller side-sweep. Reputation/indirect
-   reciprocity (**E18**, ADR-0014) and network reciprocity (**E19**,
-   ADR-0015, Nowak 2006 rule 4) are both *built*, but as standalone mechanism
-   comparisons in the E1–E13 style, not folded into Phase 4's compositional
-   sweep — deliberately: they test a different question (does a specific
-   mechanism avoid a known collapse / does graph position create inequality),
-   not "does the near-optimal set grow" (see
-   `complexity-synthesis.md`'s "Related but distinct" section).
+   (E14), groups (E15), boundaries (E16), and multiple resources /
+   specialization (E20) are done — plus `R₀` (starting resource level,
+   reserved as **E17**) as a smaller side-sweep, still open. E20's own
+   follow-up (whether a cheaper monitoring-cost model recovers diversity-1/2
+   parity with E14, since that gap is now understood to be the doubled
+   monitoring-cost tax, not a structural mismatch) is the standout next step
+   within Phase 4 itself. Reputation/indirect reciprocity (**E18**, ADR-0014) and
+   network reciprocity (**E19**, ADR-0015, Nowak 2006 rule 4) are both
+   *built*, but as standalone mechanism comparisons in the E1–E13 style, not
+   folded into Phase 4's compositional sweep — deliberately: they test a
+   different question (does a specific mechanism avoid a known collapse /
+   does graph position create inequality), not "does the near-optimal set
+   grow" (see `complexity-synthesis.md`'s "Related but distinct" section).
 2. **Disturbances (Phase 3):** the resource shock (E8/E9) and agent failure (E10)
    are in. Next — **communication failure** against the same interface;
    **monitor-redundancy** sweeps (how much redundancy buys back the single point of
@@ -500,5 +576,6 @@ python scripts/experiment_groups_full_sweep.py       # E15
 python scripts/experiment_boundaries_full_sweep.py   # E16
 python scripts/experiment_reputation.py              # E18
 python scripts/experiment_network_reciprocity.py     # E19
-pytest                                               # 120 tests
+python scripts/experiment_multiple_resources.py      # E20
+pytest                                               # 131 tests
 ```

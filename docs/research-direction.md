@@ -133,8 +133,19 @@ supervisor feedback.
   evolutionary-dynamics operationalization was tried first and rejected (see
   ADR-0015's Considered Options) once it became clear it couldn't produce the
   local payoff variance the mechanism actually depends on.
-- ⏳ Next: see the ranked candidate list linked above (multiple resources,
-  specialization; `R₀` reserved as **E17**).
+- ✅ **Multiple resources / specialization (E20, ADR-0016)** — unlike
+  reputation/network, folded directly into the complexity-axis composition
+  sweep as row 4 (see complexity-synthesis.md): exceeds the single-pool
+  near-optimal set at two of five diversity levels and matches it at a
+  third, once a sanctioning-quota calibration bug (a monitor enforcing the
+  second pool at the first pool's sustainable yield, caught and fixed — see
+  ADR-0016) was corrected. Diversifying effort across both pools still
+  unlocks 44% more welfare than concentrating on one when the split is
+  tuned to the asymmetry; specialist monitors are half the cost but
+  consistently lower net welfare than generalists, because a specialist
+  stops harvesting the pool it stops enforcing, not just enforcing it.
+- ⏳ Next: see the ranked candidate list linked above (`R₀` reserved as
+  **E17**).
 
 ### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

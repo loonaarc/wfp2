@@ -218,6 +218,8 @@
   .tag { font-size: 9px; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: 999px; padding: 1px 6px; font-weight: 700; }
   .tag.live { color: var(--accent); border-color: color-mix(in oklab, var(--accent) 45%, var(--border)); }
   .tile .v { font-family: var(--mono); font-size: 26px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .tile .v-sub { font-family: var(--mono); font-size: 13px; font-weight: 600; margin-top: 3px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+  .tile .v-sub .pill { margin-top: 0; white-space: nowrap; }
   .pill { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em; padding: 3px 10px; border-radius: 999px; margin-top: 6px; }
   .pill.good { color: var(--good); background: color-mix(in oklab, var(--good) 16%, transparent); }
   .pill.bad { color: var(--bad); background: color-mix(in oklab, var(--bad) 16%, transparent); }
@@ -280,6 +282,9 @@
   .cx-stair-sub { font-size: 11px; color: var(--muted); }
   .cx-stair-arrow { color: var(--muted); font-size: 15px; }
   .cx-stair-hint { font-size: 12px; color: var(--muted); margin: 10px 0 0; }
+  .cx-res-level-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .cx-res-level-row label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .cx-res-level-row select { width: auto; min-width: 260px; }
   .cx-outsider-link { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
   .cx-outsider-link button {
     font: inherit; color: var(--accent); background: none; border: 0; padding: 0;
@@ -513,7 +518,21 @@
                 </td>
               </tr>
               <tr>
-                <td></td><td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="res2">Second resource <span class="val" id="res2_v"></span></label>
+                    <select id="res2">
+                      <option value="off">off (one pool)</option>
+                      <option value="on">on — Pool B, g=0.2 (E20)</option>
+                    </select>
+                  </div>
+                </td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="split">Allocation split <span class="val" id="split_v">1.0</span></label>
+                    <input type="range" id="split" min="0" max="1" step="0.25" value="1.0" />
+                  </div>
+                </td>
                 <td data-scope="single">
                   <div class="field">
                     <label for="nettopo">Network topology <span class="val" id="nettopo_v"></span></label>
@@ -529,7 +548,15 @@
                     <input type="range" id="netdeg" min="2" max="6" step="2" value="2" />
                   </div>
                 </td>
-                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="monarr">Monitor arrangement <span class="val" id="monarr_v"></span></label>
+                    <select id="monarr">
+                      <option value="generalist">generalist (both pools)</option>
+                      <option value="specialist">specialist (one pool each)</option>
+                    </select>
+                  </div>
+                </td>
                 <td data-scope="evo">
                   <div class="field">
                     <label for="evo_str">Selection strength <span class="val" id="evo_str_v">0.30</span></label>
@@ -596,7 +623,7 @@
         </div>
 
         <div class="stage-col">
-          <div class="metrics">
+          <div class="metrics" id="metrics_single">
             <div class="card tile">
               <div class="k">Stock <span class="tag live" id="m_round">round 0</span></div>
               <div class="v" id="m_stock">—</div>
@@ -619,13 +646,44 @@
               <div class="v" id="m_welfare">—</div>
             </div>
           </div>
+          <!-- One self-contained card per pool, plus one final/combined card
+               -- rather than cramming a second pool's numbers as sub-lines
+               inside generically-labelled "Stock"/"Sustainability" cards
+               (E20). Only shown with a second resource on; the classic
+               single-pool layout above is untouched otherwise. -->
+          <div class="metrics" id="metrics_dual" style="display:none">
+            <div class="card tile">
+              <div class="k">Pool A · reliable <span class="tag live" id="m_round_a">round 0</span></div>
+              <div class="v" id="m_stock_a">—</div>
+              <div class="v-sub"><span id="m_sustain_a">—</span> <span class="pill" id="m_status_a">—</span></div>
+            </div>
+            <div class="card tile">
+              <div class="k">Pool B · fragile <span class="tag live" id="m_round_b">round 0</span></div>
+              <div class="v" id="m_stock_b">—</div>
+              <div class="v-sub"><span id="m_sustain_b">—</span> <span class="pill" id="m_status_b">—</span></div>
+            </div>
+            <div class="card tile">
+              <div class="k">Final <span class="tag">both pools</span></div>
+              <div class="v" id="m_welfare_d">—</div>
+              <div class="v-sub">welfare efficiency</div>
+              <div class="v-sub" style="margin-top:8px">harvest <span id="m_harvest_d">—</span> · gini <span id="m_gini_d">—</span></div>
+            </div>
+          </div>
           <p class="caption" id="metrics_caption"><b>Stock</b> tracks the current round as it plays;
             <b>Sustainability</b> (final stock ÷ capacity), <b>Fairness</b>,
             <b>Total harvest</b> and <b>Welfare efficiency</b> are the run's outcome at the end.
             Welfare efficiency is net payoff (harvest minus monitoring cost) relative to the
             maximum sustainable yield — 1.0 means the population earned exactly the sustainable
             benchmark; enforcement mechanisms score below 1.0 even at their best, since monitoring
-            itself costs something (see <a href="docs/metrics.md" target="_blank">docs/metrics.md</a>).</p>
+            itself costs something (see <a href="docs/metrics.md" target="_blank">docs/metrics.md</a>).
+            With a second resource on, the layout above switches to one card per pool plus a
+            <b>Final</b> card: <b>Harvest</b> and <b>Welfare efficiency</b> stay combined across
+            both pools (they're additive quantities, judged against both pools' combined
+            sustainable yield) — but each pool's own stock and sustainability get their own card,
+            since the two can and do fail independently (E20's own finding: the fragile pool
+            collapses well before the reliable one). Reporting one combined number there would
+            hide exactly the kind of collapse this project's own methodology says to report
+            separately, not average away.</p>
 
           <div class="card foot" id="stage_right_single">
             <div class="foot-row col">
@@ -693,14 +751,35 @@
             <span class="cx-stair-label"><span class="cx-stair-dot"></span>🕸️ + Network</span>
             <span class="cx-stair-sub">fixed neighbour graph, k=4 (E19)</span>
           </button>
+          <span class="cx-stair-arrow">→</span>
+          <button type="button" class="cx-stair" id="cx_stair_resources" aria-pressed="false">
+            <span class="cx-stair-label"><span class="cx-stair-dot"></span>💧 + Resources</span>
+            <span class="cx-stair-sub" id="cx_stair_resources_sub">balanced split across two pools (E20)</span>
+          </button>
+        </div>
+        <div class="cx-res-level-row" id="cx_res_level_row" style="display:none">
+          <label for="cx_res_level">Resources arrangement</label>
+          <select id="cx_res_level">
+            <option value="concentrated">concentrated — split=1.0, pool B left idle</option>
+            <option value="balanced" selected>balanced — split=0.5 for every agent</option>
+            <option value="specialized">specialized — half the population per pool</option>
+          </select>
         </div>
         <p class="cx-stair-hint">Toggle an axis on to stack it onto the comparison — each click
           re-runs the real engine live. Boundary builds on Groups, and Network builds on
-          Reputation, so switching either on turns its prerequisite on too. Reputation adds
+          Reputation, so switching either on turns its prerequisite on too; Resources is
+          independent and combines with any of the others. Reputation adds
           <code>reputation_cooperator</code> as a 6th composable type (harmless no-op for every
           composition that doesn't happen to use it — see the comment above
           <code>CX_DIVERSITY_TYPES</code>); Network additionally restricts its partner selection to
-          a fixed ring lattice instead of a fresh random draw each round (ADR-0014/0015).</p>
+          a fixed ring lattice instead of a fresh random draw each round (ADR-0014/0015). Resources
+          adds a second, fragile pool (g=0.2 vs. 0.4) and sweeps the arrangement dropdown above —
+          <b>concentrated</b> (every agent ignores pool B entirely — reproduces the single-pool
+          numbers, minus the combined-yield welfare denominator), <b>balanced</b> (every agent,
+          including any sanctioning ones, splits its effort 0.5/0.5), or <b>specialized</b> (each
+          composition's own agents split roughly half-and-half into pool-A-only and pool-B-only
+          specialists, by agent index within each type) — the welfare threshold is always judged
+          against both pools' combined sustainable yield (E20, ADR-0016).</p>
         <p class="cx-outsider-link">Related, not part of the ladder:
           <button type="button" id="cx_outsider_btn">boundary × outsider-type, full coverage (E16)</button>
         </p>
@@ -829,6 +908,11 @@
   "use strict";
   // ── model (validated against the Python engine) ─────────────────────────
   const K = 100, G = 0.4, INIT = 50, THRESH = 1.0, MSY = (G * K) / 4, SENS = 1e-9;
+  // Multiple resources (E20, ADR-0016): Pool B is deliberately asymmetric --
+  // same capacity, half the growth rate ("fragile," vs. Pool A's "reliable")
+  // -- so specialization is a real choice with real stakes, matching the
+  // Python script's own pool parameters exactly.
+  const G_B = 0.2, MSY_B = (G_B * K) / 4;
   // Nested enforcement (ADR-0012) and boundaries (ADR-0013): fixed outsider batch
   // size, matching the Python E15 experiment.
   const OUTSIDERS = 4;
@@ -946,33 +1030,45 @@
 
   function decide(kind, p, obs, st) {
     const n = Math.max(1, obs.n);
+    // Blind/private-info estimate of "my sustainable share" -- must use
+    // *this* observation's own pool MSY (obs.msy), not the module-level
+    // MSY constant, or a pool-B estimate would silently reuse pool A's
+    // sustainable yield (see the ADR-0016 fix note on obsB above). Falls
+    // back to the single-pool MSY constant when obs carries no msy field
+    // (every call site now sets one, but keep the fallback cheap/safe).
+    const myMsy = obs.msy ?? MSY;
     if (kind === "selfish") {
       const vis = obs.level !== null ? obs.level : obs.cap;
       return p.greed * vis / n;
     }
     if (kind === "cooperative" || kind === "sanctioning") {
-      if (obs.level !== null) return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
-      return p.restraint * p.kb * MSY / n;
+      if (obs.level !== null) return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
+      return p.restraint * p.kb * myMsy / n;
     }
     if (kind === "conditional_cooperator") {
       if (obs.level === null) {
+        // The broadcast signal is always pool-A's own total harvest
+        // (ADR-0016: broadcast stays pool-A-scoped), so it's compared
+        // against pool A's MSY here regardless of which pool this call is
+        // deciding for -- this is a read on population-wide behaviour, not
+        // a claim about the pool actually being harvested.
         if (obs.signal !== null && obs.signal > MSY + SENS) return p.dg * K / n;
-        return p.restraint * p.kb * MSY / n;
+        return p.restraint * p.kb * myMsy / n;
       }
       const declined = st.last !== null && obs.level < st.last - SENS;
       st.last = obs.level;
       if (declined) return p.dg * obs.level / n;
-      return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
+      return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
     }
     if (kind === "compensating_cooperator") {
       if (obs.level === null) {
         if (obs.signal !== null && obs.signal > MSY + SENS) return 0;
-        return p.restraint * p.kb * MSY / n;
+        return p.restraint * p.kb * myMsy / n;
       }
       const declined = st.last !== null && obs.level < st.last - SENS;
       st.last = obs.level;
       if (declined) return 0;
-      return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
+      return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
     }
     if (kind === "reputation_cooperator") {
       // ADR-0014: reacts to ONE randomly-assigned partner's reputation, not
@@ -980,10 +1076,10 @@
       const distrust = obs.partnerRep !== null && obs.partnerRep < 0;  // trust_threshold=0
       if (obs.level === null) {
         if (distrust) return p.dg * K / n;
-        return p.restraint * p.kb * MSY / n;
+        return p.restraint * p.kb * myMsy / n;
       }
       if (distrust) return p.dg * obs.level / n;
-      return p.restraint * Math.max(0, obs.level - p.tf * K) / n;
+      return p.restraint * Math.max(0, obs.level - p.tf * obs.cap) / n;
     }
     return 0;
   }
@@ -995,6 +1091,13 @@
       p: { greed: 1, restraint: 1, tf: 0.5, dg: 1, kb: s.kb ?? 1, mc: s.mc ?? 0.2 },
       isS: s.kind === "sanctioning", st: { last: null }, active: true,
       group: s.group ?? 0, governed: s.governed ?? true, reputation: 0,
+      // Multiple resources (E20, ADR-0016): split=1.0 (all request to pool A)
+      // is a no-op whenever the second pool is off. `st2` is a *separate*
+      // decline-tracking state for pool B's own decide() call -- sharing
+      // `st` between both pools would corrupt conditional/compensating's
+      // own "did the stock I'm watching decline" comparison for both,
+      // exactly the bug ADR-0016 caught and fixed in the Python engine.
+      split: s.split ?? 1.0, st2: { last: null },
     });
     const n = agents.length, rng = mulberry32(o.seed);
     // ADR-0012 allocation correction: a governed agent's own "fair share" and
@@ -1025,14 +1128,36 @@
       for (let d = 1; d <= half; d++) offsets.push(d);
       neighborsOf = agents.map((_, i) => offsets.map((d) => ((i + d) % n + n) % n));
     }
-    let level = o.init ?? INIT, lastTotal = 0;
+    let level = o.init ?? INIT, level2 = o.res2 ? (o.init ?? INIT) : null, lastTotal = 0;
     // Collective-choice vote state (E13): rounds observed as over-using so far,
-    // whether the vote has fired, and whether it passed.
+    // whether the vote has fired, and whether it passed. Stays scoped to pool
+    // A's own overuse pattern when a second pool exists (ADR-0016).
     let overuseRounds = 0, voteTaken = false, collectiveActive = false;
     const payoff = new Array(n).fill(0), frames = [];
+    // Nested enforcement (ADR-0012), generalised to one pool at a time: a
+    // monitor's quota only caps its own group, and (with a second pool,
+    // ADR-0016) only the pool(s) its own allocation_split gives it a stake
+    // in -- a pure pool-A specialist (split=1.0) neither enforces nor pays
+    // to enforce pool B, and vice versa. `poolSide` is null for the
+    // single-pool case (every active policy counts, exactly as before).
+    function enforcePool(h, pen, msyForQuota, poolSide) {
+      const eligible = (i) => poolSide === null ||
+        (poolSide === "a" ? agents[i].split > 0 : agents[i].split < 1);
+      for (const idxs of byGroup.values()) {
+        const hasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active && eligible(i));
+        if (!hasSanctioner && !collectiveActive) continue;
+        const q = msyForQuota / nGoverned;
+        for (const i of idxs) {
+          h[i] = Math.min(h[i], q);
+          if (agents[i].isS && agents[i].active && eligible(i)) pen[i] = agents[i].p.mc;
+        }
+      }
+    }
     for (let t = 0; t < o.rounds; t++) {
       level = regen(level);
+      if (o.res2) level2 = Math.min(K, Math.max(0, level2 + G_B * level2 * (1 - level2 / K)));
       // disturbance: a scheduled resource shock (deterministic; ADR-0008 / E8–E9)
+      // -- pool A only, matching collective-choice's own scope (ADR-0016).
       const shocked = o.shock > 0 && t === o.shockRound;
       if (shocked) level = Math.max(0, level * (1 - o.shock));
       // disturbance: agent failure — deactivate the first `failCount` agents (E10)
@@ -1041,7 +1166,7 @@
         let toFail = o.failCount;
         for (const a of agents) { if (toFail <= 0) break; if (a.active) { a.active = false; toFail--; failed = true; } }
       }
-      const afterRegen = level;  // post-regrowth, pre-harvest -- lets the ring animate grow-then-shrink
+      const afterRegen = level, afterRegen2 = o.res2 ? level2 : null;  // post-regrowth, pre-harvest -- lets the ring animate grow-then-shrink
       const heard = new Array(n).fill(false);  // who received the broadcast this round (per-agent roll)
       // Reputation pairing this round (E18, ADR-0014) -- who each agent was
       // paired with, whether that partner's score was actually revealed
@@ -1051,14 +1176,17 @@
       const partners = new Array(n).fill(null);
       const partnerSeen = new Array(n).fill(false);
       const partnerRepAtObs = new Array(n).fill(null);
-      const req = agents.map((a, i) => {
-        if (!a.active) return 0;  // a failed agent requests nothing
+      const reqA = new Array(n).fill(0), reqB = new Array(n).fill(0);
+      agents.forEach((a, i) => {
+        if (!a.active) return;  // a failed agent requests nothing (from either pool)
         let signal = null;
         if (o.broadcast > 0 && t > 0 && rng() < o.broadcast) { signal = lastTotal; heard[i] = true; }
         // Reputation (ADR-0014): pair with one random *other* agent this round
         // and, with probability repVisibility, reveal their current score --
         // both rng draws happen whenever reputation is on, regardless of the
         // visibility value, so sweeping visibility doesn't shift other draws.
+        // Computed once per agent per round regardless of pool count, same
+        // reasoning as the Python engine's own _observation_context split.
         let partnerRep = null;
         if (o.reputation && n > 1) {
           let partnerIdx;
@@ -1076,20 +1204,42 @@
             partnerRepAtObs[i] = partnerRep;
           }
         }
-        const obs = { level: o.info === "global" ? level : null, signal, n: a.governed ? nGoverned : n, cap: K, partnerRep };
-        let r = decide(a.kind, a.p, obs, a.st);
-        if (o.noise > 0) r *= 1 + (rng() * 2 - 1) * o.noise;
-        return Math.max(0, r);
+        const nObs = a.governed ? nGoverned : n;
+        const obsA = { level: o.info === "global" ? level : null, signal, n: nObs, cap: K, msy: MSY, partnerRep };
+        let rA = decide(a.kind, a.p, obsA, a.st);
+        if (o.noise > 0) rA *= 1 + (rng() * 2 - 1) * o.noise;
+        rA = Math.max(0, rA);
+        if (o.res2) {
+          // Pool B's own blind/private-info estimate must use pool B's own
+          // MSY, not pool A's reused wholesale -- the same class of bug
+          // fixed in the Python engine (ADR-0016): a strategy estimating
+          // "my sustainable share" while blind has to estimate it against
+          // the pool it's actually facing.
+          const obsB = { level: o.info === "global" ? level2 : null, signal, n: nObs, cap: K, msy: MSY_B, partnerRep };
+          let rB = decide(a.kind, a.p, obsB, a.st2);
+          if (o.noise > 0) rB *= 1 + (rng() * 2 - 1) * o.noise;
+          rB = Math.max(0, rB);
+          reqA[i] = rA * a.split;
+          reqB[i] = rB * (1 - a.split);
+        } else {
+          reqA[i] = rA;
+        }
       });
       if (o.reputation) {
-        // Scored from the raw request (intent), before rationing/enforcement --
-        // the only thing under the agent's own control (mirrors ADR-0014).
-        const fairShare = MSY / nGoverned;
-        agents.forEach((a, i) => { if (a.active) a.reputation += req[i] <= fairShare ? 1 : -1; });
+        // Scored from the raw *total* request (intent), before rationing/
+        // enforcement -- the only thing under the agent's own control
+        // (mirrors ADR-0014). With a second pool, the fair share is the sum
+        // of both pools' own sustainable yields (ADR-0016), so a
+        // well-behaved agent splitting a fair share across two resources
+        // isn't scored as if only pool A existed.
+        const fairShare = (o.res2 ? MSY + MSY_B : MSY) / nGoverned;
+        agents.forEach((a, i) => {
+          if (a.active) a.reputation += (reqA[i] + reqB[i]) <= fairShare ? 1 : -1;
+        });
       }
-      const tot = req.reduce((x, y) => x + y, 0);
-      let h = tot <= level || tot === 0 ? req.slice() : req.map((r) => (r * level) / tot);
-      const pen = new Array(n).fill(0);
+      const totA = reqA.reduce((x, y) => x + y, 0);
+      let hA = totA <= level || totA === 0 ? reqA.slice() : reqA.map((r) => (r * level) / totA);
+      const penA = new Array(n).fill(0);
       // Collective-choice vote (E13): tallied before enforcement so a passing
       // vote applies starting this very round; decided from rounds 0..t-1.
       let voted = false;
@@ -1098,30 +1248,30 @@
         voted = true;
         if (t > 0) collectiveActive = (overuseRounds / t) > COLLECTIVE_OVERUSE_THRESHOLD;
       }
-      // Nested enforcement (ADR-0012): a monitor's quota only caps its own group
-      // (AgentSpec.group), not the whole population — a group with no monitor of
-      // its own (including any open-access outsider group, ADR-0013) is left
-      // uncapped even if another group has one. Every agent defaults to group 0,
-      // so with `m=1` this reduces exactly to the original flat rule. The quota
-      // itself is scoped to nGoverned (allocation correction, 2026-08-08) --
-      // outsiders don't shrink it just by being instantiated.
-      for (const idxs of byGroup.values()) {
-        const groupHasSanctioner = idxs.some((i) => agents[i].isS && agents[i].active);  // a failed sanctioner stops enforcing
-        if (!groupHasSanctioner && !collectiveActive) continue;
-        const q = MSY / nGoverned;  // the *governed* population's yield, not the group's own size or literally everyone
-        for (const i of idxs) {
-          h[i] = Math.min(h[i], q);
-          if (agents[i].isS && agents[i].active) pen[i] = agents[i].p.mc;
-        }
+      enforcePool(hA, penA, MSY, o.res2 ? "a" : null);
+      if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually -- pool A only (ADR-0016)
+        agents.forEach((a, i) => { if (a.active && !a.isS) penA[i] += COLLECTIVE_COST_SHARE; });
       }
-      if (collectiveActive) {  // jointly-funded fee on everyone not already paying individually
-        agents.forEach((a, i) => { if (a.active && !a.isS) pen[i] += COLLECTIVE_COST_SHARE; });
+      const totalA = hA.reduce((x, y) => x + y, 0);
+      if (o.cvoteRound > 0 && totalA > MSY) overuseRounds++;
+
+      let hB = new Array(n).fill(0), penB = new Array(n).fill(0), totalB = 0;
+      if (o.res2) {
+        const totB = reqB.reduce((x, y) => x + y, 0);
+        hB = totB <= level2 || totB === 0 ? reqB.slice() : reqB.map((r) => (r * level2) / totB);
+        enforcePool(hB, penB, MSY_B, "b");
+        totalB = hB.reduce((x, y) => x + y, 0);
       }
-      const total = h.reduce((x, y) => x + y, 0);
-      if (o.cvoteRound > 0 && total > MSY) overuseRounds++;
+
+      const h = hA.map((x, i) => x + hB[i]);
+      const pen = penA.map((x, i) => x + penB[i]);
       h.forEach((x, i) => (payoff[i] += x - pen[i]));
-      level -= total; lastTotal = total;
+      level -= totalA; lastTotal = totalA;  // broadcast signal stays pool-A-scoped (ADR-0016)
+      if (o.res2) level2 -= totalB;
       frames.push({ harv: h, pen: pen.slice(), stock: level, afterRegen, collapsed: level <= THRESH,
+                    stockB: level2, afterRegenB: afterRegen2,
+                    collapsedB: o.res2 ? level2 <= THRESH : false,
+                    harvB: o.res2 ? hB.slice() : null,
                     shock: shocked, fail: failed, vote: voted, voteActive: collectiveActive,
                     heard, active: agents.map((a) => a.active),
                     reputations: o.reputation ? agents.map((a) => a.reputation) : null,
@@ -1131,7 +1281,7 @@
     }
     return {
       kinds: agents.map((a) => a.kind), groups: agents.map((a) => a.group), frames, payoff, n,
-      neighbors: neighborsOf,
+      neighbors: neighborsOf, hasRes2: !!o.res2,
     };
   }
   function gini(v) {
@@ -1157,7 +1307,14 @@
     const rounds = s.frames.length - 1;  // frame 0 is the synthetic pre-round frame
     if (rounds <= 0) return 0;
     const netTotal = s.payoff.reduce((a, b) => a + b, 0);
-    return netTotal / (MSY * rounds);
+    // Multiple resources (E20, ADR-0016): with a second pool, an agent's
+    // payoff already includes both pools' harvest (runSim sums them), so the
+    // denominator must include both pools' own sustainable yield too --
+    // dividing by MSY alone would read as "over 100% efficient" once Pool B
+    // contributes real, legitimate extra harvest the single-pool MSY was
+    // never meant to cover.
+    const msyTotal = s.hasRes2 ? MSY + MSY_B : MSY;
+    return netTotal / (msyTotal * rounds);
   }
 
   // ── regimes ─────────────────────────────────────────────────────────────
@@ -1196,6 +1353,8 @@
     "⭐ Reputation softens one free-rider (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 1.0 },
     "⭐ No visibility → reputation can't act (E18)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 0.0 },
     "🕸️ Fixed neighbours create winners and losers (E19)": { ctype: "reputation_cooperator", nsel: 1, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, repvis: 1.0, nettopo: "ring", netdeg: 2 },
+    "🌊 Diversifying beats concentrating (E20)": { ctype: "cooperative", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, res2: "on", split: 0.5 },
+    "⚖️ Specialist monitors: cheaper, not better (E20)": { ctype: "cooperative", nsel: 2, mon: 2, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 60, res2: "on", split: 0.5, monarr: "specialist" },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1206,11 +1365,16 @@
     shock: $("shock"), fail: $("fail"), cvote: $("cvote"), rounds: $("rounds"), seed: $("seed"),
     groups: $("groups"), boundary: $("boundary"), otype: $("otype"), repvis: $("repvis"),
     nettopo: $("nettopo"), netdeg: $("netdeg"),
+    res2: $("res2"), split: $("split"), monarr: $("monarr"),
     run: $("run"), back: $("back"), step: $("step"), scrub: $("scrub"), gscrub: $("gscrub"), tcount: $("tcount"),
     ring: $("ring"), traj: $("traj"), legend: $("legend"), regime_desc: $("regime_desc"),
     rep_pair_legend: $("rep_pair_legend"),
     m_sustain: $("m_sustain"), m_status: $("m_status"), m_gini: $("m_gini"),
     m_harvest: $("m_harvest"), m_stock: $("m_stock"), m_round: $("m_round"), m_welfare: $("m_welfare"),
+    metrics_single: $("metrics_single"), metrics_dual: $("metrics_dual"),
+    m_round_a: $("m_round_a"), m_stock_a: $("m_stock_a"), m_sustain_a: $("m_sustain_a"), m_status_a: $("m_status_a"),
+    m_round_b: $("m_round_b"), m_stock_b: $("m_stock_b"), m_sustain_b: $("m_sustain_b"), m_status_b: $("m_status_b"),
+    m_welfare_d: $("m_welfare_d"), m_harvest_d: $("m_harvest_d"), m_gini_d: $("m_gini_d"),
   };
   for (const name of Object.keys(REGIMES)) {
     const opt = document.createElement("option");
@@ -1237,6 +1401,12 @@
       mechanism: "<b>well-mixed (E18)</b> redraws the partner uniformly at random from the whole population every round — every agent has equal expected exposure to a free-rider, so no agent's outcome depends on its position. <b>fixed ring lattice (E19, ADR-0015)</b> restricts the partner to a fixed set of <i>k</i> neighbours (see 'Network degree'), built once from agent order and unchanged for the whole run — the same two agents keep meeting, so a free-rider's fixed neighbours can end up with a very different outcome than agents on the far side of the ring, something well-mixed pairing cannot produce (Nowak 2006, rule 4)." },
     netdeg: { summary: "Only matters with the fixed ring lattice topology — how many fixed neighbours (k) each agent has, k/2 on each side.",
       mechanism: "Lower k means fewer agents can ever be paired with a given free-rider — sparser exposure, but also a more extreme outcome for whoever the fixed neighbours actually are. This does not change the shared pool's own survival much (the free-rider's own harvest doesn't depend on the graph at all) — see E19 for why the effect is about who bears the cost, not whether the resource survives." },
+    res2: { summary: "Adds a second, independent resource pool (E20, ADR-0016) — Pool B, same capacity as the main pool but half the growth rate ('fragile' vs. the main pool's 'reliable').",
+      mechanism: "Every strategy is reused completely unchanged — the engine just calls decide() once against each pool's own observation. With Pool B on, 'Allocation split' controls how each agent's own request is divided between the two; concentrating on one pool alone (split=1 or 0) leaves the other's own sustainable yield completely uncaptured — splitting effort unlocks welfare a single pool can't reach (see E20)." },
+    split: { summary: "Only matters with a second pool on — the fraction of each agent's request routed to Pool A (the reliable one); the rest goes to Pool B.",
+      mechanism: "1.0 = pool A only (Pool B sits untouched, growing to full capacity — its own sustainable yield never harvested at all). 0.0 = pool B only, same problem in reverse. E20's own sweep found the combined-welfare peak isn't the naive 50/50 midpoint — it leans toward the faster-growing pool, since a cooperative agent's 'surplus above K/2' rule is more forgiving of over-allocation toward whichever pool regrows faster." },
+    monarr: { summary: "Only matters with a second pool on and at least one monitor — does each monitor watch both pools, or does each specialise in one?",
+      mechanism: "<b>generalist</b>: every monitor enforces (and pays monitoring_cost for) both pools — full redundant coverage, double the raw cost. <b>specialist</b>: monitors alternate, each enforcing and paying for exactly one pool — half the raw monitoring cost, full coverage, no redundancy. E20's own finding: specialists save real cost but don't win on *net* welfare — a specialist that ignores Pool B doesn't just stop enforcing it, it stops harvesting from it too, leaving some of that pool's own sustainable surplus uncaptured." },
     info: { summary: "Whether agents can see the current resource stock before deciding how much to harvest.",
       mechanism: "<b>global</b> feeds each agent the true current stock, so the cooperative rule can compute K/2 directly and self-correct after a shock. <b>private</b> blinds the agent to the stock; it falls back to the fixed estimate <code>kb × MSY / n</code> (see “Ecological knowledge” below), which cannot adapt if the real stock has moved." },
     kb: { summary: "How accurate a blind agent's fixed estimate of the sustainable yield is.",
@@ -1333,6 +1503,8 @@
     "⭐ Reputation softens one free-rider (E18)": "7 reputation cooperators + 1 selfish. Each reputation cooperator is paired with one random *other* agent every round and only distrusts (defects) if that specific partner's own score is bad — so with only 1 free-rider out of 8, most rounds pair a reputation cooperator with another trustworthy one, and it cooperates as normal. Sustained here at sustainability ≈ 0.29 (welfare_efficiency ≈ 0.60) — worse than 'Compensating tolerates a free-rider' (≈0.47, ≈1.00, pure restraint never grabs back) but nowhere near 'Reciprocity spirals against one' (E14, conditional cooperators: fully COLLAPSED, ≈0.00) — a genuine third point on that spectrum, not a repeat of either. Watch each agent's own reputation score (below its payoff, green while trusted, red once distrusted) diverge over the run (experiment E18, ADR-0014).",
     "⭐ No visibility → reputation can't act (E18)": "Identical population to the regime above, but 'Reputation visibility' is 0 — no reputation cooperator ever actually learns its partner's score. An unobserved partner defaults to trusted ('innocent until proven guilty'), so every reputation cooperator behaves exactly like a plain, unconditional cooperative agent — sustainability climbs back to ≈0.44 (welfare_efficiency ≈1.00), close to 'Compensating tolerates a free-rider''s own numbers. The mechanism still runs (watch the reputation scores keep updating round to round) but has no way to act on what it knows, since it never gets to look — full visibility actually costs some sustainability here, because seeing the free-rider clearly is also what lets a reputation cooperator occasionally grab back (experiment E18, ADR-0014).",
     "🕸️ Fixed neighbours create winners and losers (E19)": "Identical population to 'Reputation softens one free-rider', but 'Network topology' is now a fixed ring lattice (k=2) instead of a fresh random partner every round — watch the faint permanent lines connecting each agent to its two fixed neighbours. Only the free-rider's two ring neighbours can ever be paired with it; the other 5 agents never see it at all. In one representative run: the free-rider earns 152 while its two neighbours earn 66 and 84 (they occasionally distrust it and grab a selfish-sized share themselves — a real windfall, watch their red pairing lines) — but every agent on the far side of the ring is stuck at just 1.70, since their trusted neighbours never grab, and once the pool crashes there's rarely any surplus left to request at all. Sustainability (≈0.11) and welfare (≈0.56) barely differ from well-mixed reputation — the shared pool's survival doesn't depend on the graph — but *who bears the cost* changes completely, something well-mixed pairing cannot produce even in principle (experiment E19, ADR-0015).",
+    "🌊 Diversifying beats concentrating (E20)": "8 cooperative agents, split evenly (0.5) between two independent pools — Pool A (K=100, g=0.4, 'reliable') and Pool B (K=100, g=0.2, 'fragile', half the growth rate, shown top-right). Both are genuinely harvested — Pool B settles around 55, Pool A around 61 — welfare_efficiency ≈ 0.96 against the *combined* sustainable yield of both pools. Try dragging 'Allocation split' to 1.0 (pool A only): welfare_efficiency drops to ≈0.67 — Pool B just sits there, growing to full capacity, its own sustainable yield never captured at all. Splitting effort isn't about spreading risk — it's about not leaving a second sustainable resource on the table (experiment E20, ADR-0016).",
+    "⚖️ Specialist monitors: cheaper, not better (E20)": "2 of 8 agents are monitors, arranged as specialists — one watches (and pays to enforce) only Pool A, the other only Pool B — half the raw monitoring cost of a generalist pair that would each watch both pools. 2 selfish free-riders and 4 cooperative agents (split=0.5) fill the rest. welfare_efficiency ≈ 0.84 here; switch 'Monitor arrangement' to generalist with everything else unchanged and it climbs to ≈0.91 — cheaper monitoring doesn't win on *net* welfare, because a specialist that ignores a pool doesn't just stop enforcing it, it stops harvesting from it too, leaving some of that pool's own sustainable surplus uncaptured (experiment E20, ADR-0016).",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1368,6 +1540,17 @@
     els.netdeg.title = isNetwork
       ? "" : "No effect: network topology isn't 'fixed ring lattice'.";
     $("netdeg_v").textContent = els.netdeg.value;
+    // Multiple resources (E20, ADR-0016): split/monitor-arrangement only
+    // matter once a second pool actually exists.
+    const isRes2 = els.res2.value === "on";
+    $("res2_v").textContent = isRes2 ? "on" : "off";
+    els.split.disabled = !isRes2;
+    els.split.title = isRes2 ? "" : "No effect: second resource is off.";
+    $("split_v").textContent = (+els.split.value).toFixed(2);
+    els.monarr.disabled = !isRes2 || nmon === 0;
+    els.monarr.title = isRes2 && nmon > 0
+      ? "" : "No effect: needs a second resource and at least one monitor.";
+    $("monarr_v").textContent = els.monarr.value;
     const cshort = { cooperative: "cooperative", conditional_cooperator: "conditional",
                      compensating_cooperator: "compensating",
                      reputation_cooperator: "reputation" }[els.ctype.value];
@@ -1415,6 +1598,9 @@
     els.repvis.value = r.repvis ?? 1.0;
     els.nettopo.value = r.nettopo ?? "mixed";
     els.netdeg.value = r.netdeg ?? 2;
+    els.res2.value = r.res2 ?? "off";
+    els.split.value = r.split ?? 1.0;
+    els.monarr.value = r.monarr ?? "generalist";
     applying = false; syncLabels();
   }
   function toCustom() {
@@ -1443,11 +1629,11 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis", "netdeg"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "fail", "cvote", "repvis", "netdeg", "split"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
-  ["groups", "boundary", "otype", "nettopo"].forEach((k) =>
+  ["groups", "boundary", "otype", "nettopo", "res2", "monarr"].forEach((k) =>
     els[k].addEventListener("change", () => { toCustom(); scheduleRun(); }));
 
   // ── run + animation state ───────────────────────────────────────────────
@@ -1484,12 +1670,26 @@
     const nsel = +els.nsel.value, nmon = +els.mon.value;
     const ncoop = Math.max(0, 8 - nsel - nmon);
     const kind = els.ctype.value, kb = +els.kb.value;
+    // Multiple resources (E20, ADR-0016): allocation_split default 1.0 (all
+    // request to pool A) is a no-op whenever the second resource is off --
+    // every existing regime is completely unaffected. With it on, a
+    // "specialist" monitor arrangement alternates each individual monitor
+    // between a pure pool-A split (1.0) and a pure pool-B split (0.0)
+    // instead of sharing the population's own dial, mirroring the Python
+    // script's exact one-monitor-per-pool arrangement.
+    const res2On = els.res2 && els.res2.value === "on";
+    const splitVal = +(els.split ? els.split.value : 1.0);
+    const monArr = els.monarr ? els.monarr.value : "generalist";
     // Monitors first, so an agent_failure disturbance (which fails the first agents)
     // removes the enforcers — the E10 "enforcer fails" case.
     const roster = [];
-    for (let i = 0; i < nmon; i++) roster.push({ kind: "sanctioning" });
-    for (let i = 0; i < ncoop; i++) roster.push({ kind, kb });
-    for (let i = 0; i < nsel; i++) roster.push({ kind: "selfish" });
+    for (let i = 0; i < nmon; i++) {
+      let split = res2On ? splitVal : 1.0;
+      if (res2On && monArr === "specialist") split = i % 2 === 0 ? 1.0 : 0.0;
+      roster.push({ kind: "sanctioning", split });
+    }
+    for (let i = 0; i < ncoop; i++) roster.push({ kind, kb, split: res2On ? splitVal : 1.0 });
+    for (let i = 0; i < nsel; i++) roster.push({ kind: "selfish", split: res2On ? splitVal : 1.0 });
     // Nested enforcement (ADR-0012): partition the 8 governed agents, in the same
     // order, into `m` equal groups. m=1 (default) reproduces the flat rule exactly.
     const m = +(els.groups ? els.groups.value : 1) || 1;
@@ -1502,7 +1702,10 @@
       // governed:false -- ADR-0012's allocation correction (2026-08-08):
       // outsiders are excluded from the governed population's own quota
       // denominator, not counted in it and then left unconstrained anyway.
-      specs.push({ kind: ok, count: OUTSIDERS, kb: 1, group: m, governed: false });
+      specs.push({
+        kind: ok, count: OUTSIDERS, kb: 1, group: m, governed: false,
+        split: res2On ? splitVal : 1.0,
+      });
     }
     return specs;
   }
@@ -1519,6 +1722,9 @@
     s.maxCum = Math.max(1, ...s.cum[s.cum.length - 1]);
     s.frames.unshift({ harv: new Array(s.n).fill(0), stock: opts.init ?? INIT,
                        afterRegen: opts.init ?? INIT, collapsed: false,
+                       stockB: opts.res2 ? (opts.init ?? INIT) : null,
+                       afterRegenB: opts.res2 ? (opts.init ?? INIT) : null,
+                       collapsedB: false, harvB: opts.res2 ? new Array(s.n).fill(0) : null,
                        active: new Array(s.n).fill(true),
                        reputations: opts.reputation ? new Array(s.n).fill(0) : null,
                        partners: opts.reputation ? new Array(s.n).fill(null) : null,
@@ -1541,17 +1747,43 @@
       repVisibility: +els.repvis.value,
       network: els.ctype.value === "reputation_cooperator" && els.nettopo.value === "ring"
         ? +els.netdeg.value : null,
+      res2: els.res2 && els.res2.value === "on",
     };
     sim = buildDisplaySim(specs, opts);
     const final = sim.frames[sim.frames.length - 1];
     const m = { sustain: final.stock / K, collapsed: sim.frames.some((f) => f.collapsed),
                 gini: gini(sim.payoff), harvest: sim.frames.reduce((a, f) => a + f.harv.reduce((x, y) => x + y, 0), 0) };
-    els.m_sustain.textContent = m.sustain.toFixed(2);
-    els.m_status.className = "pill " + (m.collapsed ? "bad" : "good");
-    els.m_status.textContent = m.collapsed ? "COLLAPSED" : "SUSTAINED";
-    setGini(m.gini);
-    els.m_harvest.textContent = Math.round(m.harvest);
-    els.m_welfare.textContent = welfareEfficiency(sim).toFixed(2);
+    const welfare = welfareEfficiency(sim);
+    // Stock/Sustainability/collapse-status are per-pool, not averaged: the two
+    // pools fail independently (E20's own finding), so a single combined
+    // number would hide a Pool B collapse behind a healthy Pool A reading.
+    // Total harvest/Welfare efficiency stay combined -- they're genuinely
+    // additive quantities, unlike "is this pool OK." One card per pool plus
+    // a Final card, not sub-lines crammed into generically-labelled tiles.
+    if (sim.hasRes2) {
+      els.metrics_single.style.display = "none";
+      els.metrics_dual.style.display = "grid";
+      const sustainB = final.stockB / K;
+      const collapsedB = sim.frames.some((f) => f.collapsedB);
+      els.m_sustain_a.textContent = "sustainability " + m.sustain.toFixed(2);
+      els.m_status_a.className = "pill " + (m.collapsed ? "bad" : "good");
+      els.m_status_a.textContent = m.collapsed ? "COLLAPSED" : "SUSTAINED";
+      els.m_sustain_b.textContent = "sustainability " + sustainB.toFixed(2);
+      els.m_status_b.className = "pill " + (collapsedB ? "bad" : "good");
+      els.m_status_b.textContent = collapsedB ? "COLLAPSED" : "SUSTAINED";
+      els.m_welfare_d.textContent = welfare.toFixed(2);
+      els.m_harvest_d.textContent = Math.round(m.harvest);
+      els.m_gini_d.textContent = m.gini === null ? "n/a" : m.gini.toFixed(2);
+    } else {
+      els.metrics_single.style.display = "grid";
+      els.metrics_dual.style.display = "none";
+      els.m_sustain.textContent = m.sustain.toFixed(2);
+      els.m_status.className = "pill " + (m.collapsed ? "bad" : "good");
+      els.m_status.textContent = m.collapsed ? "COLLAPSED" : "SUSTAINED";
+      setGini(m.gini);
+      els.m_harvest.textContent = Math.round(m.harvest);
+      els.m_welfare.textContent = welfare.toFixed(2);
+    }
     els.scrub.max = sim.frames.length - 1;
     buildLegend();
     drawTraj();
@@ -1591,27 +1823,52 @@
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2, cy = size / 2;
     const f = sim.frames[frame], n = sim.n;
+    const hasRes2 = mode !== "evolution" && f.stockB !== null && f.stockB !== undefined;
     if (frame !== harvestPopFrame) { harvestPopFrame = frame; harvestPopAt = performance.now(); }
     const ringR = size * 0.34;
     // Pool grows (regeneration) then shrinks (harvest) within each round's
     // display window, instead of jumping straight to the post-harvest level --
-    // reuses the same per-frame age timer as the harvest pop.
+    // reuses the same per-frame age timer as the harvest pop. Shared by both
+    // pools (E20) via the stock/afterRegen field names, so Pool B gets the
+    // identical animated treatment as Pool A, not a static circle -- neither
+    // pool reads as the "real" one and the other a footnote.
     const poolAge = performance.now() - harvestPopAt;
     const easeInOut = (x) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
-    let displayStock = f.stock, poolPhase = null;
-    // round 0 is the synthetic "before anything happened" frame -- nothing
-    // regrew or got harvested yet, so it should just sit still, not play the
-    // regrow/harvest animation against itself.
-    if (frame > 0 && f.afterRegen !== undefined) {
-      const prevStock = sim.frames[frame - 1].stock;
-      const tp = Math.min(1, poolAge / POOL_ANIM_MS);
-      if (tp < 1) poolPhase = tp < 0.5 ? "regrow" : "harvest";
-      displayStock = tp < 0.5
-        ? prevStock + (f.afterRegen - prevStock) * easeInOut(tp / 0.5)
-        : f.afterRegen + (f.stock - f.afterRegen) * easeInOut((tp - 0.5) / 0.5);
+    function poolDisplay(stockKey, afterRegenKey) {
+      let displayStock = f[stockKey], phase = null;
+      // round 0 is the synthetic "before anything happened" frame -- nothing
+      // regrew or got harvested yet, so it should just sit still, not play
+      // the regrow/harvest animation against itself.
+      if (frame > 0 && f[afterRegenKey] !== undefined && f[afterRegenKey] !== null) {
+        const prevStock = sim.frames[frame - 1][stockKey];
+        const tp = Math.min(1, poolAge / POOL_ANIM_MS);
+        if (tp < 1) phase = tp < 0.5 ? "regrow" : "harvest";
+        displayStock = tp < 0.5
+          ? prevStock + (f[afterRegenKey] - prevStock) * easeInOut(tp / 0.5)
+          : f[afterRegenKey] + (f[stockKey] - f[afterRegenKey]) * easeInOut((tp - 0.5) / 0.5);
+      }
+      return { displayStock, phase };
     }
+    const { displayStock, phase: poolPhase } = poolDisplay("stock", "afterRegen");
     const ratio = displayStock / K;
-    const poolR = size * (0.07 + 0.20 * Math.sqrt(Math.max(0, ratio)));
+    let displayStockB = 0, ratioB = 0, poolPhaseB = null;
+    if (hasRes2) {
+      const rb = poolDisplay("stockB", "afterRegenB");
+      displayStockB = Math.max(0, rb.displayStock);
+      ratioB = displayStockB / K;
+      poolPhaseB = rb.phase;
+    }
+    // Both pools sit centred, side by side, flanking the ring's own centre,
+    // when a second one exists -- not one dominant circle plus a small
+    // satellite badge (E20): neither pool should read as an afterthought.
+    // Slightly smaller than the solo formula so two circles fit without
+    // colliding even at both pools' maximum stock.
+    const poolAX = hasRes2 ? cx - size * 0.205 : cx, poolAY = cy;
+    const poolBX = cx + size * 0.205, poolBY = cy;
+    const poolR = hasRes2
+      ? size * (0.045 + 0.115 * Math.sqrt(Math.max(0, ratio)))
+      : size * (0.07 + 0.20 * Math.sqrt(Math.max(0, ratio)));
+    const poolRB = size * (0.045 + 0.115 * Math.sqrt(Math.max(0, ratioB)));
 
     // agent positions -- one ring, but laid out in actual visual clusters
     // (a real angular gap between groups), not just adjacency with a tick
@@ -1841,35 +2098,89 @@
     }
 
     // harvest lines (single-run detail only; too busy for 40 evolving agents)
+    // -- with a second pool, each agent can draw a line to *either* pool
+    // (or both), sized independently by how much of its own harvest came
+    // from that specific pool, so it's visible which resource each agent
+    // actually drew from this round, not just a combined total (E20).
     if (mode !== "evolution") {
-      const maxH = Math.max(1e-6, ...f.harv);
-      for (let i = 0; i < n; i++) {
-        const h = f.harv[i]; if (h <= 1e-6) continue;
-        ctx.strokeStyle = css("--muted");
-        ctx.globalAlpha = 0.12 + 0.5 * (h / maxH);
-        ctx.lineWidth = 1 + 6 * (h / maxH);
-        ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(cx, cy); ctx.stroke();
+      if (hasRes2) {
+        const harvB = f.harvB || new Array(n).fill(0);
+        const harvA = f.harv.map((x, i) => Math.max(0, x - harvB[i]));
+        const maxH = Math.max(1e-6, ...harvA, ...harvB);
+        for (let i = 0; i < n; i++) {
+          if (harvA[i] > 1e-6) {
+            ctx.strokeStyle = css("--muted");
+            ctx.globalAlpha = 0.12 + 0.5 * (harvA[i] / maxH);
+            ctx.lineWidth = 1 + 6 * (harvA[i] / maxH);
+            ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(poolAX, poolAY); ctx.stroke();
+          }
+          if (harvB[i] > 1e-6) {
+            ctx.strokeStyle = css("--muted");
+            ctx.globalAlpha = 0.12 + 0.5 * (harvB[i] / maxH);
+            ctx.lineWidth = 1 + 6 * (harvB[i] / maxH);
+            ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(poolBX, poolBY); ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+      } else {
+        const maxH = Math.max(1e-6, ...f.harv);
+        for (let i = 0; i < n; i++) {
+          const h = f.harv[i]; if (h <= 1e-6) continue;
+          ctx.strokeStyle = css("--muted");
+          ctx.globalAlpha = 0.12 + 0.5 * (h / maxH);
+          ctx.lineWidth = 1 + 6 * (h / maxH);
+          ctx.beginPath(); ctx.moveTo(pos[i][0], pos[i][1]); ctx.lineTo(cx, cy); ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = 1;
     }
 
-    // pool
-    const grad = ctx.createRadialGradient(cx, cy - poolR * 0.3, poolR * 0.2, cx, cy, poolR);
-    grad.addColorStop(0, poolColor(Math.min(1, ratio + 0.15)));
-    grad.addColorStop(1, poolColor(ratio));
-    ctx.fillStyle = grad;
-    ctx.beginPath(); ctx.arc(cx, cy, poolR, 0, 2 * Math.PI); ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,.92)";
-    ctx.font = `600 ${Math.round(size*0.037)}px ${css("--mono")}`;
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(displayStock.toFixed(2), cx, cy);
-
-    // explicit phase label -- regrowth happens first, then harvest; make the
-    // sequence readable, not just inferable from the animation's motion.
-    if (mode !== "evolution" && poolPhase) {
-      ctx.font = `700 ${Math.round(size * 0.02)}px ${css("--mono")}`;
-      ctx.fillStyle = poolPhase === "regrow" ? css("--good") : css("--bad");
-      ctx.fillText(poolPhase === "regrow" ? "↑ regrowing" : "↓ harvesting", cx, cy + size * 0.075);
+    // pool(s) -- both painted through the same routine, so Pool B (when
+    // present, E20) gets identical visual treatment to Pool A: same gradient
+    // health colour, same animated regrow/harvest cycle, same phase label.
+    // Only the size and an identifying caption differ.
+    function paintPool(x, y, r, val, ratioVal, phase, label, valueFontFrac, phaseOffset) {
+      const grad = ctx.createRadialGradient(x, y - r * 0.3, r * 0.2, x, y, r);
+      grad.addColorStop(0, poolColor(Math.min(1, ratioVal + 0.15)));
+      grad.addColorStop(1, poolColor(ratioVal));
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = "rgba(255,255,255,.92)";
+      ctx.font = `600 ${Math.round(size * valueFontFrac)}px ${css("--mono")}`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(val.toFixed(2), x, y);
+      if (label) {
+        ctx.font = `700 ${Math.round(size * 0.0155)}px ${css("--sans")}`;
+        ctx.fillStyle = css("--muted");
+        ctx.fillText(label, x, y - r - size * 0.026);
+      }
+      // explicit phase label -- regrowth happens first, then harvest; make
+      // the sequence readable, not just inferable from the animation's
+      // motion.
+      if (mode !== "evolution" && phase) {
+        ctx.font = `700 ${Math.round(size * (hasRes2 ? 0.016 : 0.02))}px ${css("--mono")}`;
+        ctx.fillStyle = phase === "regrow" ? css("--good") : css("--bad");
+        ctx.fillText(phase === "regrow" ? "↑ regrowing" : "↓ harvesting", x, y + phaseOffset);
+      }
+    }
+    paintPool(poolAX, poolAY, poolR, displayStock, ratio, poolPhase,
+              hasRes2 ? "Pool A · reliable" : null,
+              hasRes2 ? 0.028 : 0.037, hasRes2 ? size * 0.05 : size * 0.075);
+    if (f.collapsed && hasRes2) {
+      ctx.fillStyle = css("--bad");
+      ctx.font = `700 ${Math.round(size * 0.013)}px ${css("--sans")}`;
+      ctx.textAlign = "center";
+      ctx.fillText("collapsed", poolAX, poolAY + poolR + size * 0.03);
+    }
+    if (hasRes2) {
+      paintPool(poolBX, poolBY, poolRB, displayStockB, ratioB, poolPhaseB,
+                "Pool B · fragile", 0.026, size * 0.045);
+      if (f.collapsedB) {
+        ctx.fillStyle = css("--bad");
+        ctx.font = `700 ${Math.round(size * 0.013)}px ${css("--sans")}`;
+        ctx.textAlign = "center";
+        ctx.fillText("collapsed", poolBX, poolBY + poolRB + size * 0.03);
+      }
     }
 
     // resource shock: a lightning bolt across the pool, pop-fading the same
@@ -1884,12 +2195,12 @@
         ctx.lineJoin = "round"; ctx.lineCap = "round";
         const bs = poolR * 1.3;
         ctx.beginPath();
-        ctx.moveTo(cx + bs * 0.12, cy - bs);
-        ctx.lineTo(cx - bs * 0.22, cy - bs * 0.08);
-        ctx.lineTo(cx + bs * 0.05, cy - bs * 0.08);
-        ctx.lineTo(cx - bs * 0.12, cy + bs);
-        ctx.lineTo(cx + bs * 0.22, cy + bs * 0.1);
-        ctx.lineTo(cx - bs * 0.05, cy + bs * 0.1);
+        ctx.moveTo(poolAX + bs * 0.12, poolAY - bs);
+        ctx.lineTo(poolAX - bs * 0.22, poolAY - bs * 0.08);
+        ctx.lineTo(poolAX + bs * 0.05, poolAY - bs * 0.08);
+        ctx.lineTo(poolAX - bs * 0.12, poolAY + bs);
+        ctx.lineTo(poolAX + bs * 0.22, poolAY + bs * 0.1);
+        ctx.lineTo(poolAX - bs * 0.05, poolAY + bs * 0.1);
         ctx.closePath();
         ctx.stroke();
         ctx.restore();
@@ -2014,18 +2325,42 @@
         ctx.globalAlpha = 1;
         // "+N this round" -- stays invisible during the regrow phase, pops in
         // exactly as the harvest (shrink) phase starts, so it's clearly tied
-        // to "this is what got taken," not a generic per-round flicker.
-        const h = f.harv[i];
-        if (!dead && h > 0.15) {
+        // to "this is what got taken," not a generic per-round flicker. With
+        // two pools, popped once per pool the agent actually drew from
+        // (E20), positioned along that specific harvest line -- so it's
+        // legible which pool each amount came from, not just the total.
+        if (!dead) {
           const age = performance.now() - harvestPopAt;
           const op = harvestEventOpacity(age);
           if (op > 0) {
-            const mx = pos[i][0] + (cx - pos[i][0]) * 0.32, my = pos[i][1] + (cy - pos[i][1]) * 0.32;
-            ctx.font = `700 ${Math.round(size * 0.024)}px ${css("--mono")}`;
-            ctx.fillStyle = stratColor(sim.kinds[i]);
-            ctx.globalAlpha = op * (0.55 + 0.45 * Math.min(1, h / 10));
-            ctx.fillText(`+${h.toFixed(2)}`, mx, my);
-            ctx.globalAlpha = 1;
+            if (hasRes2) {
+              const hB = f.harvB ? f.harvB[i] : 0;
+              const hA = Math.max(0, f.harv[i] - hB);
+              ctx.fillStyle = stratColor(sim.kinds[i]);
+              if (hA > 0.15) {
+                const mx = pos[i][0] + (poolAX - pos[i][0]) * 0.32, my = pos[i][1] + (poolAY - pos[i][1]) * 0.32;
+                ctx.font = `700 ${Math.round(size * 0.021)}px ${css("--mono")}`;
+                ctx.globalAlpha = op * (0.55 + 0.45 * Math.min(1, hA / 10));
+                ctx.fillText(`+${hA.toFixed(2)}`, mx, my);
+              }
+              if (hB > 0.15) {
+                const mx = pos[i][0] + (poolBX - pos[i][0]) * 0.32, my = pos[i][1] + (poolBY - pos[i][1]) * 0.32;
+                ctx.font = `700 ${Math.round(size * 0.021)}px ${css("--mono")}`;
+                ctx.globalAlpha = op * (0.55 + 0.45 * Math.min(1, hB / 10));
+                ctx.fillText(`+${hB.toFixed(2)}`, mx, my);
+              }
+              ctx.globalAlpha = 1;
+            } else {
+              const h = f.harv[i];
+              if (h > 0.15) {
+                const mx = pos[i][0] + (cx - pos[i][0]) * 0.32, my = pos[i][1] + (cy - pos[i][1]) * 0.32;
+                ctx.font = `700 ${Math.round(size * 0.024)}px ${css("--mono")}`;
+                ctx.fillStyle = stratColor(sim.kinds[i]);
+                ctx.globalAlpha = op * (0.55 + 0.45 * Math.min(1, h / 10));
+                ctx.fillText(`+${h.toFixed(2)}`, mx, my);
+                ctx.globalAlpha = 1;
+              }
+            }
           }
         }
         // "-N" monitoring/collective cost paid this round -- offset
@@ -2052,9 +2387,18 @@
 
     els.scrub.value = frame;
     els.tcount.textContent = `round ${frame} / ${sim.frames.length - 1}`;
-    els.m_round.textContent = "round " + frame;
-    els.m_stock.textContent = f.stock.toFixed(2);
-    els.m_stock.style.color = f.collapsed ? css("--bad") : "";
+    if (sim.hasRes2) {
+      els.m_round_a.textContent = "round " + frame;
+      els.m_stock_a.textContent = f.stock.toFixed(2);
+      els.m_stock_a.style.color = f.collapsed ? css("--bad") : "";
+      els.m_round_b.textContent = "round " + frame;
+      els.m_stock_b.textContent = Math.max(0, f.stockB).toFixed(2);
+      els.m_stock_b.style.color = f.collapsedB ? css("--bad") : "";
+    } else {
+      els.m_round.textContent = "round " + frame;
+      els.m_stock.textContent = f.stock.toFixed(2);
+      els.m_stock.style.color = f.collapsed ? css("--bad") : "";
+    }
     drawTrajMarker();
   }
 
@@ -2510,12 +2854,48 @@
   function cxLevels() {
     return cxState.reputation ? CX_DIVERSITY_LEVELS_REP : CX_DIVERSITY_LEVELS;
   }
-  // The extra SimulationConfig options the "+ Reputation"/"+ Network" toggles
-  // need on top of CX_OPTS -- {} when neither is on, so every existing sweep
-  // path is unaffected unless the toggle is actually active.
+  // The extra SimulationConfig options the "+ Reputation"/"+ Network"/
+  // "+ Resources" toggles need on top of CX_OPTS -- {} when none are on, so
+  // every existing sweep path is unaffected unless a toggle is actually active.
   function cxExtraOpts() {
-    if (!cxState.reputation) return {};
-    return { reputation: true, repVisibility: 1.0, network: cxState.network ? CX_NETWORK_DEGREE : null };
+    const opts = {};
+    if (cxState.reputation) {
+      opts.reputation = true;
+      opts.repVisibility = 1.0;
+      opts.network = cxState.network ? CX_NETWORK_DEGREE : null;
+    }
+    if (cxState.resources) opts.res2 = true;
+    return opts;
+  }
+  const CX_RESOURCE_SPLIT = 0.5; // "balanced" level's split -- matches E20's own
+                                  // generalist-arrangement reading (every agent, including
+                                  // sanctioning ones, draws from both pools evenly).
+  // Apply the active "+ Resources" arrangement to every spec -- a no-op
+  // (returns specs unchanged) when Resources is off, so this never perturbs
+  // the other four axes' own sweeps. Three levels, selected via
+  // #cx_res_level, directly answer "sweep the split" and "vary
+  // specialization" as one combined axis rather than a single fixed value:
+  // concentrated (split=1.0, pool B exists but is never touched -- the
+  // Q1-style "leave a resource idle" endpoint), balanced (split=0.5, the
+  // original single-value behaviour), and specialized (each type's own
+  // agent count divides roughly half-and-half into pool-A-only and
+  // pool-B-only specialists -- E20's own Q2 "specialist monitors" question,
+  // generalized from just the monitors to every agent in the composition).
+  function cxApplySplit(specs) {
+    if (!cxState.resources) return specs;
+    if (cxState.resLevel === "concentrated") {
+      return specs.map((s) => ({ ...s, split: 1.0 }));
+    }
+    if (cxState.resLevel === "specialized") {
+      const out = [];
+      for (const s of specs) {
+        const nA = Math.ceil(s.count / 2), nB = s.count - nA;
+        if (nA > 0) out.push({ ...s, count: nA, split: 1.0 });
+        if (nB > 0) out.push({ ...s, count: nB, split: 0.0 });
+      }
+      return out;
+    }
+    return specs.map((s) => ({ ...s, split: CX_RESOURCE_SPLIT }));  // "balanced"
   }
 
   function cxSpecs(m, k, boundary, outsiderType) {
@@ -2535,7 +2915,8 @@
     // CX_ROUNDS here, not CX_ROUNDS + 1.
     const opts = extraOpts ? { ...CX_OPTS, ...extraOpts } : CX_OPTS;
     const sim = runSim(specs, opts);
-    return sim.payoff.reduce((a, b) => a + b, 0) / (MSY * CX_ROUNDS);
+    const msyTotal = cxState.resources ? MSY + MSY_B : MSY;
+    return sim.payoff.reduce((a, b) => a + b, 0) / (msyTotal * CX_ROUNDS);
   }
   function cxPasses(we) { return we >= CX_THRESHOLD; }
 
@@ -2579,7 +2960,7 @@
       const outsiderComp = outsiderComps[Math.floor(rng() * outsiderComps.length)];
       specs.push(...cxSpecsFromComposition(outsiderComp, types, m, false));
     }
-    return cxPasses(cxWelfareEfficiency(specs, extraOpts));
+    return cxPasses(cxWelfareEfficiency(cxApplySplit(specs), extraOpts));
   }
 
   // Each preset returns { series: [{label,color,points:[{x,count,tested}]}], table: {headers, rows} }.
@@ -2676,7 +3057,7 @@
         const diversity = composition.filter((c) => c > 0).length;
         const bucket = byLevel.get(diversity);
         bucket.tested++;
-        if (cxPasses(cxWelfareEfficiency(specs, extraOpts))) bucket.count++;
+        if (cxPasses(cxWelfareEfficiency(cxApplySplit(specs), extraOpts))) bucket.count++;
       }
       const rows = [];
       for (const d of levels) {
@@ -2796,6 +3177,7 @@
     $("cx_stair_boundary").disabled = disabled || false;
     $("cx_stair_reputation").disabled = disabled || false;
     $("cx_stair_network").disabled = disabled || false;
+    $("cx_stair_resources").disabled = disabled || false;
     $("cx_outsider_btn").disabled = disabled;
   }
   function cxRun(kind) {
@@ -2839,6 +3221,25 @@
             "that don't happen to use it are unaffected (a no-op for every strategy that doesn't read " +
             "partner_reputation).";
       }
+      if (cxState.resources) {
+        const resExplain = {
+          concentrated: "every agent's entire request goes to pool A (split=1.0) -- pool B exists " +
+            "but sits untouched, so its own sustainable yield is never captured. Every composition " +
+            "fails by construction here (0/N at every diversity level) -- with pool B's yield never " +
+            "captured, the best possible welfare_efficiency against the *combined* denominator is " +
+            "MSY_A/(MSY_A+MSY_B) = 0.667, always below the 0.80 threshold, regardless of composition. " +
+            "Not a bug -- the same finding as E20's own Q1 (concentrating leaves real value on the table)",
+          balanced: "every agent (including any sanctioning ones) splits 0.50 of its effort onto " +
+            "a second, fragile pool (g=0.2 vs. 0.4)",
+          specialized: "each composition's own agent counts divide roughly half-and-half into " +
+            "pool-A-only and pool-B-only specialists (split=1.0/0.0), generalizing E20's own " +
+            "specialist-monitor question to every agent, not just monitors -- and, consistent with " +
+            "that finding, protection per pool is weaker than balanced's full-coverage generalists",
+        };
+        caption += ` Resources is on (${cxState.resLevel} arrangement): ${resExplain[cxState.resLevel]}, ` +
+          "and the threshold is judged against both pools' combined sustainable yield " +
+          "(E20, ADR-0016).";
+      }
       $("cx_caption").textContent = caption;
       $("cx_status").textContent = `Done -- threshold welfare_efficiency ≥ ${CX_THRESHOLD.toFixed(2)} (provisional).`;
       cxBusy = false;
@@ -2856,7 +3257,15 @@
   // within whichever shape is active (a 6th composable type, optionally
   // restricted to a fixed neighbour graph -- see cxTypes()/cxExtraOpts()
   // above), not a fourth shape, so they never change `kind` itself.
-  const cxState = { groups: false, boundary: false, reputation: false, network: false };
+  const cxState = {
+    groups: false, boundary: false, reputation: false, network: false,
+    resources: false, resLevel: "balanced",
+  };
+  const CX_RES_LEVEL_LABEL = {
+    concentrated: "concentrated split (1.0, pool B idle)",
+    balanced: "balanced split (0.5) across two pools",
+    specialized: "specialized: half the population per pool",
+  };
   function cxKindFromState() {
     if (cxState.boundary) return "groups_boundary";
     if (cxState.groups) return "groups";
@@ -2872,10 +3281,17 @@
     setActive("cx_stair_boundary", cxState.boundary);
     setActive("cx_stair_reputation", cxState.reputation);
     setActive("cx_stair_network", cxState.network);
+    setActive("cx_stair_resources", cxState.resources);
+    $("cx_res_level_row").style.display = cxState.resources ? "flex" : "none";
+    $("cx_stair_resources_sub").textContent = cxState.resources
+      ? CX_RES_LEVEL_LABEL[cxState.resLevel] + " (E20)"
+      : "concentrated / balanced / specialized (E20)";
   }
   $("cx_stair_diversity").addEventListener("click", () => {
     cxState.groups = false; cxState.boundary = false;
     cxState.reputation = false; cxState.network = false;
+    cxState.resources = false; cxState.resLevel = "balanced";
+    $("cx_res_level").value = "balanced";
     cxSyncStairUI();
     cxRun(cxKindFromState());
   });
@@ -2905,6 +3321,17 @@
     cxState.network = !cxState.network;
     cxSyncStairUI();
     cxRun(cxKindFromState());
+  });
+  $("cx_stair_resources").addEventListener("click", () => {
+    // independent of every other axis -- no prerequisite, combines with any of them
+    cxState.resources = !cxState.resources;
+    cxSyncStairUI();
+    cxRun(cxKindFromState());
+  });
+  $("cx_res_level").addEventListener("change", () => {
+    cxState.resLevel = $("cx_res_level").value;
+    cxSyncStairUI();
+    if (cxState.resources) cxRun(cxKindFromState());
   });
   $("cx_outsider_btn").addEventListener("click", () => cxRun("outsider_type"));
   cxSyncStairUI();

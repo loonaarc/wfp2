@@ -67,6 +67,8 @@ results/**
 !results/E18_reputation/**
 !results/E19_network_reciprocity/
 !results/E19_network_reciprocity/**
+!results/E20_multiple_resources/
+!results/E20_multiple_resources/**
 
 # OS / editor
 .DS_Store

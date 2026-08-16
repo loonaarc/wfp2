@@ -76,7 +76,12 @@ class Agent:
         """Registered name of this agent's strategy."""
         return self.strategy.name
 
-    def decide(self, observation: Observation, rng: np.random.Generator) -> float:
+    def decide(
+        self,
+        observation: Observation,
+        rng: np.random.Generator,
+        strategy: Strategy | None = None,
+    ) -> float:
         """Return the agent's requested consumption for the round.
 
         If ``decision_noise`` is positive, the strategy's request is perturbed by a
@@ -84,8 +89,17 @@ class Agent:
         RNG, so the outcome depends reproducibly on the seed. The request is clamped
         to be non-negative; enforcing feasibility against the shared stock is the
         engine's responsibility, not the agent's.
+
+        Args:
+            observation: This agent's view of the world for the round.
+            rng: This agent's own reproducible random stream.
+            strategy: Overrides ``self.strategy`` for this call only (multiple
+                resources, ADR-0016) -- used to run a *second*, independent
+                strategy instance against the second pool's own observation,
+                so stateful strategies' per-round trend-tracking stays scoped
+                to one pool instead of alternating between two.
         """
-        request = self.strategy.decide(observation, rng)
+        request = (strategy or self.strategy).decide(observation, rng)
         if self.decision_noise > 0.0:
             request *= 1.0 + rng.uniform(-self.decision_noise, self.decision_noise)
         return max(0.0, float(request))
