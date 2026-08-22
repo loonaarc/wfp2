@@ -316,9 +316,6 @@ without a worked formula the way the Nowak citations have:**
   stakeholder interests" as an unaddressed extension — a real, if thinner,
   anchor for a specialization axis.
 
-**Still not grounded in anything read — would need a literature check first:**
-- Agent entry/exit — population turnover over a run, not just failure (E10).
-
 **Grounded and built, since the last revision of this section:**
 - **Wealth-weighted collective choice** — built as **E22** (Olson 1965,
   ADR-0020) — see item 11 in "Ranking the axes" below for the citation and
@@ -331,6 +328,12 @@ without a worked formula the way the Nowak citations have:**
   read for it matched that shape; the participation-gate mechanism actually
   built reuses the engine's per-round request pipeline instead, not the
   evolutionary-dynamics loop.
+- **Agent entry/exit** — built as **E24** (Duffy & Lafky 2015, ADR-0021) —
+  see item 10 below. Was explicitly flagged as the weakest-grounded
+  candidate, with initial searches finding no clean match; a second,
+  targeted search (this axis's own required first step) found a genuine,
+  on-point lab-experiment citation instead of the deferral the plan's own
+  disclosed risk anticipated.
 
 ## Should the growth model itself be varied?
 
@@ -649,8 +652,21 @@ this ranking:**
    renegotiation of the rule (Ostrom principle 3) and a dispute/
    conflict-resolution mechanic (principle 6) — remain open, logged as their
    own future candidates rather than folded into E21.
-10. **Agent entry/exit (turnover)** — still not grounded in anything read;
-    would need a literature check before being as defensible as the others.
+10. **Agent entry/exit (turnover)** — now **built** (Duffy & Lafky 2015,
+    [E24](experiments/E24-agent-turnover.md), ADR-0021), see
+    [paper-notes/2015-duffy-lafky-birth-death-public-good.md](paper-notes/2015-duffy-lafky-birth-death-public-good.md).
+    Flagged from the start as the weakest-grounded candidate — a second,
+    targeted search (this axis's own required first step, per the approved
+    plan) found a genuine, on-point lab-experiment citation: staggered
+    overlapping-generations turnover significantly flattens the usual decay
+    of public-goods contributions. This project's fixed strategies don't
+    decay from experience except `grim_trigger` (E21), whose permanent lock
+    never resets on its own — built as a new `agent_turnover` disturbance
+    resetting a fraction of agents' own decline memory at a scheduled round.
+    Recovers E21's own "no return path" population completely, but only if
+    the reset comes soon enough (welfare crosses over into a net loss past a
+    certain delay); verified as a byte-for-byte no-op wherever there is no
+    memory to reset.
 11. **Wealth-weighted collective choice** — now **built** (Olson 1965,
     [E22](experiments/E22-wealth-triggered-monitoring.md), ADR-0020), see
     [paper-notes/1965-olson-logic-of-collective-action.md](paper-notes/1965-olson-logic-of-collective-action.md).

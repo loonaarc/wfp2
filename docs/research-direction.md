@@ -192,13 +192,23 @@ supervisor feedback.
   dominant payoff inflates the population average out of reach), but
   engages — and disproportionately burdens a shifting few — once wealth
   divergence exists without one.
-- ⏳ Next: **all five items from the ranked candidate list are now built or
-  explicitly scoped.** Item 9's other two sub-ideas (iterative
-  renegotiation, a dispute mechanic) remain open, logged separately rather
-  than forced into E21. Agent entry/exit (item 10) is the one item whose own
-  literature search (per the original plan) has not yet turned up a clean,
-  direct match — it may end up deferred rather than built; see the ranking
-  doc's disclosed risk.
+- ✅ **Agent entry/exit (E24, ADR-0021)** — item 10, the one item flagged
+  from the start as the weakest-grounded candidate. A second, targeted
+  literature search (this axis's own required first step) found Duffy &
+  Lafky (2015), *"Birth, death and public good provision"* — a lab
+  experiment showing staggered overlapping-generations turnover flattens
+  the usual decay of public-goods contributions. This project's fixed
+  strategies don't decay from experience except `grim_trigger` (E21), whose
+  permanent lock never resets on its own. Built as a new `agent_turnover`
+  disturbance that resets a fraction of agents' own decline memory at a
+  scheduled round: it recovers E21's own "no return path" population
+  completely, but only if the reset comes soon enough — welfare falls
+  steadily the longer the population was left stuck, crossing over into a
+  net loss relative to doing nothing at all past a certain point. Verified
+  as a byte-for-byte no-op wherever there is no memory to reset.
+- ⏳ Next: **all five items from the ranked candidate list are now built.**
+  Item 9's other two sub-ideas (iterative renegotiation, a dispute
+  mechanic) remain open, logged separately rather than forced into E21.
 
 ### Phase 5 — Consolidation (thesis)
 Statistical evaluation, scalability testing, automated experiment batches, and

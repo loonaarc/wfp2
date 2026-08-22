@@ -49,6 +49,10 @@ class CompensatingCooperatorStrategy(Strategy):
         self.sensitivity = sensitivity
         self._last_level: float | None = None
 
+    def reset_state(self) -> None:
+        """Forget the last observed level, as if a fresh agent took this role (E24)."""
+        self._last_level = None
+
     def decide(self, observation: Observation, rng: np.random.Generator) -> float:
         """Cooperate unless over-extraction is detected; then withhold (harvest 0)."""
         n = max(1, observation.num_agents)

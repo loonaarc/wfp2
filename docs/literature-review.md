@@ -174,6 +174,18 @@ and sets up the communication phase. It is bachelor-feasible and literature-grou
   participation floor, tested with and without this project's own fixed
   neighbour graph (E19) to check whether the spatial dependency actually
   transfers.
+- 🟢 **Duffy & Lafky (2015), "Birth, death and public good provision",
+  *Experimental Economics* 19, 317–341.** →
+  [note](paper-notes/2015-duffy-lafky-birth-death-public-good.md). A lab
+  experiment: replacing a fixed cohort with staggered overlapping-generations
+  turnover (new subjects entering as old ones exit) significantly flattens
+  the well-known decay of public-goods contributions over time, for both
+  fresh entrants *and* existing members — not a simple "restart effect,"
+  more likely reciprocity reinjected by each new, still-optimistic entrant.
+  **Acted on: E24** — a new `agent_turnover` disturbance periodically resets
+  a fraction of agents' own decline-tracking state, tested against whether
+  it can rescue a `grim_trigger` population from E21's own "no return path"
+  permanent lock-in.
 
 ## 3. Information, ecological knowledge, and communication in CPR/MAS
 

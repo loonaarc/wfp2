@@ -173,6 +173,18 @@ should link here rather than re-enumerate.
   that no cooperator ever clears the bar; engages, on a shifting few, once
   wealth divergence exists without one (E22, ADR-0020). *(model term:
   `SimulationConfig.wealth_monitoring`, `WealthMonitoringConfig`.)*
+- **Agent turnover** — a disturbance that resets a fraction of agents' own
+  per-round decline-tracking memory at a scheduled round, as if a fresh
+  individual took over that role — same strategy, same parameters, no
+  memory of any prior decline or trigger. Agents stay active and keep their
+  accumulated `total_payoff`; only their strategy's internal state (and
+  reputation) is cleared. Modelled on Duffy & Lafky (2015)'s finding that
+  staggered overlapping-generations turnover flattens the usual decay of
+  public-goods contributions. A verified no-op for strategies with no such
+  memory (`cooperative`, `selfish`, `sanctioning`); recovers a permanently
+  triggered `grim_trigger` agent completely, provided the reset comes soon
+  enough to be worth its own cost (E24, ADR-0021). *(model term:
+  `DisturbanceConfig(kind="agent_turnover")`, `Strategy.reset_state()`.)*
 
 Related concepts:
 
@@ -212,6 +224,11 @@ Related concepts:
   scheduled round: they stop requesting, harvesting, and (if a sanctioner) enforcing.
   Tests tolerance to agent loss (E10). *(model term: `disturbances.AgentFailure`;
   `Agent.active`.)*
+- **Agent turnover** — a disturbance that *replaces*, rather than removes: agents
+  stay active, but a fraction have their strategy's memory reset to a fresh,
+  untriggered state at a scheduled round. Tests whether a population can recover
+  from a permanent lock (E24). *(model term: `disturbances.AgentTurnover`; see
+  "Agent turnover" under Cooperation mechanisms above for the full mechanism.)*
 - **Recovery time** — rounds after a shock until the stock returns to ≥ 90% of its
   pre-shock level; undefined (right-censored) if it never does. *(model term: the
   `recovery_time` metric.)*

@@ -91,6 +91,16 @@ free-rider is present; engages and disproportionately burdens a shifting
 few otherwise) is distributional, the same sense as E19/E23's own findings.
 See "Related but distinct" below.
 
+**2026-08-17 E24 built, deliberately not added as a table row:** agent
+turnover (ADR-0021, [report](experiments/E24-agent-turnover.md)) is a
+timing-sensitivity sweep and a no-op verification at fixed compositions —
+again a mechanism question (can resetting an agent's memory recover a
+triggered population, and does timing matter), not a composition-space
+sweep. Its finding (full recovery of a triggered `grim_trigger` agent,
+provided the reset comes soon enough; a verified no-op wherever there is no
+memory to reset) is about a single agent's history, not the size of a
+near-optimal composition set. See "Related but distinct" below.
+
 **Numbering caveat, resolved 2026-08-09:** `docs/literature-review.md` and
 two paper notes (Beven & Binley 1992/2014) independently referenced a
 *different*, still-unbuilt "E14" — a GLUE-methodology experiment about
@@ -400,13 +410,13 @@ hurts, but a specific, well-understood cost that shows up exactly where a
 homogeneous, generalist-monitored population pays for watching two things
 instead of one.
 
-## Related but distinct: reputation (E18), network reciprocity (E19), grim trigger (E21), wealth-based participation (E23), wealth-triggered monitoring (E22)
+## Related but distinct: reputation (E18), network reciprocity (E19), grim trigger (E21), wealth-based participation (E23), wealth-triggered monitoring (E22), agent turnover (E24)
 
-All five are built and all five are genuinely new mechanisms (see ADR-0014,
-ADR-0015, ADR-0018, ADR-0019, ADR-0020) — but none belongs in the
+All six are built and all six are genuinely new mechanisms (see ADR-0014,
+ADR-0015, ADR-0018, ADR-0019, ADR-0020, ADR-0021) — but none belongs in the
 count/fraction table above, and forcing them in would be exactly the mistake
 lesson 5 warns against: axis-count alone isn't evidence, the *mechanism* has
-to actually test "does the near-optimal set grow." All five test a strategy-
+to actually test "does the near-optimal set grow." All six test a strategy-
 or rule-level question at fixed, hand-picked compositions, not a sweep over
 the composition space:
 
@@ -448,6 +458,12 @@ the composition space:
   present (the same free-rider-dominance problem E23 hits, from the opposite
   direction), engaging on a shifting few otherwise, not shrinking or growing
   a near-optimal composition count.
+- **E24 asks:** can resetting an agent's own memory, as if a fresh
+  individual took over its role (Duffy & Lafky 2015), recover a population
+  stuck in a permanent `grim_trigger` lock? A single-composition timing
+  sweep plus a no-op verification across a handful of free-rider counts —
+  its finding is about whether *one already-triggered agent* recovers, and
+  how quickly, not about the size of a composition set at all.
 
 **Why this matters for the equifinality conjecture specifically:** E19 is
 evidence about *inequality/luck*, not about *how many paths reach a good

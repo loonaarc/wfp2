@@ -77,6 +77,8 @@ results/**
 !results/E22_wealth_monitoring/**
 !results/E23_wealth_participation/
 !results/E23_wealth_participation/**
+!results/E24_agent_turnover/
+!results/E24_agent_turnover/**
 
 # OS / editor
 .DS_Store

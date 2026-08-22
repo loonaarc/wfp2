@@ -67,3 +67,14 @@ class Strategy(ABC):
         this to make the engine enforce a harvest quota (see ADR-0005).
         """
         return None
+
+    def reset_state(self) -> None:
+        """Clear any per-round memory, as if a fresh individual took this role.
+
+        The default is a no-op. Strategies that track history across rounds
+        (``conditional_cooperator``, ``compensating_cooperator``,
+        ``grim_trigger``) override this to clear it, for the ``agent_turnover``
+        disturbance (E24, ADR-0021) — a strategy with no memory has nothing to
+        reset, so turnover is a verified no-op wherever this isn't overridden.
+        """
+        return None

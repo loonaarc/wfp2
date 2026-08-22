@@ -19,7 +19,7 @@ import yaml
 INFORMATION_MODELS = ("global", "private")
 
 # Environmental disturbances the engine knows how to apply (see :mod:`disturbances`).
-DISTURBANCE_KINDS = ("resource_shock", "agent_failure")
+DISTURBANCE_KINDS = ("resource_shock", "agent_failure", "agent_turnover")
 
 
 @dataclass(frozen=True)
@@ -35,12 +35,20 @@ class DisturbanceConfig:
         kind: One of :data:`DISTURBANCE_KINDS`. ``"resource_shock"`` removes a
             fraction of the standing stock in a single round (a "pulse" shock);
             ``"agent_failure"`` deactivates a fraction of the agents (they stop
-            requesting, harvesting, and — if a sanctioner — enforcing).
+            requesting, harvesting, and — if a sanctioner — enforcing);
+            ``"agent_turnover"`` (E24, ADR-0021) resets a fraction of agents'
+            own per-round strategy memory to a fresh, untriggered state — as
+            if a new individual took over that role, per Duffy & Lafky
+            (2015)'s overlapping-generations finding — without deactivating
+            them or touching accumulated payoff.
         round: Zero-based round at which the disturbance fires.
         magnitude: Kind-specific size, always a fraction in ``(0, 1]``. For
             ``"resource_shock"`` it is the fraction of the stock removed (``0.7`` =
             lose 70%); for ``"agent_failure"`` it is the fraction of agents that fail
-            (``0.25`` = one in four; agents fail in index/spec order).
+            (``0.25`` = one in four; agents fail in index/spec order); for
+            ``"agent_turnover"`` it is the fraction of agents reset, starting
+            from a deterministic rotation offset (``round % num_agents``) so
+            repeated turnover events touch different agents over time.
     """
 
     kind: str = "resource_shock"

@@ -516,7 +516,12 @@
                     <input type="range" id="bcast" min="0" max="1" step="0.1" value="0" />
                   </div>
                 </td>
-                <td></td>
+                <td data-scope="single">
+                  <div class="field">
+                    <label for="turnover">Agent turnover round <span class="val" id="turnover_v">off</span></label>
+                    <input type="range" id="turnover" min="0" max="95" step="5" value="0" />
+                  </div>
+                </td>
                 <td data-scope="single">
                   <div class="field">
                     <label for="otype">Outsider type</label>
@@ -1202,6 +1207,17 @@
         let toFail = o.failCount;
         for (const a of agents) { if (toFail <= 0) break; if (a.active) { a.active = false; toFail--; failed = true; } }
       }
+      // disturbance: agent turnover — reset every agent's own decline-tracking
+      // memory, as if a fresh individual took over each role (E24, ADR-0021).
+      // A no-op for strategies with nothing to reset (verified in the Python
+      // engine's own test suite).
+      if (o.turnoverRound != null && t === o.turnoverRound) {
+        for (const a of agents) {
+          a.st = { last: null, triggered: false };
+          a.st2 = { last: null, triggered: false };
+          a.reputation = 0;
+        }
+      }
       const afterRegen = level, afterRegen2 = o.res2 ? level2 : null;  // post-regrowth, pre-harvest -- lets the ring animate grow-then-shrink
       const heard = new Array(n).fill(false);  // who received the broadcast this round (per-agent roll)
       // Reputation pairing this round (E18, ADR-0014) -- who each agent was
@@ -1420,6 +1436,7 @@
     "⏳ Grim trigger: a finite horizon has a price (E21)": { ctype: "grim_trigger", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 50, shock: 0.15, shockround: 30 },
     "💸 A wealth floor excludes the monitors, not free-riders (E23)": { ctype: "cooperative", nsel: 0, mon: 2, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 50, wealthfloor: 0.9 },
     "🎩 The wealthy volunteer to monitor — until a free-rider shows up (E22)": { ctype: "cooperative", nsel: 0, mon: 0, info: "global", kb: 1, noise: 0.15, bcast: 0, rounds: 100, init: 50, wealthmonitor: 1.02 },
+    "🔁 Turnover changes nothing here — there's nothing to reset (E24)": { ctype: "cooperative", mon: 4, nsel: 4, info: "global", kb: 1, noise: 0, bcast: 0, rounds: 100, init: 50, turnover: 50 },
   };
 
   // ── DOM ─────────────────────────────────────────────────────────────────
@@ -1427,7 +1444,7 @@
   const els = {
     regime: $("regime"), ctype: $("ctype"), mon: $("mon"), nsel: $("nsel"), info: $("info"),
     kb: $("kb"), init: $("init"), noise: $("noise"), bcast: $("bcast"),
-    shock: $("shock"), shockround: $("shockround"), fail: $("fail"), cvote: $("cvote"), wealthfloor: $("wealthfloor"), wealthmonitor: $("wealthmonitor"), rounds: $("rounds"), seed: $("seed"),
+    shock: $("shock"), shockround: $("shockround"), fail: $("fail"), cvote: $("cvote"), wealthfloor: $("wealthfloor"), wealthmonitor: $("wealthmonitor"), turnover: $("turnover"), rounds: $("rounds"), seed: $("seed"),
     groups: $("groups"), boundary: $("boundary"), otype: $("otype"), repvis: $("repvis"),
     nettopo: $("nettopo"), netdeg: $("netdeg"),
     res2: $("res2"), split: $("split"), monarr: $("monarr"),
@@ -1494,6 +1511,8 @@
       mechanism: "Recomputed fresh every round (an agent can drop out and rejoin as its own wealth moves) — not the same as agent failure, which is permanent. Chen &amp; Szolnoki (2016) found this self-corrects against free-riders on a spatial lattice, since a defector's own local resource base shrinks from its own defection. In this demo's single shared pool, that channel doesn't exist: a free-rider's request scales with the same global stock everyone draws from, so it never ends up poor — instead the gate excludes whoever sacrificed for the pool (a restrained cooperator, or a monitor paying its own monitoring cost), and welfare gets <i>worse</i>, not better. Try it with monitors on: it's the monitors who stop requesting once their own enforcement cost outpaces their harvest (experiment E23, ADR-0019)." },
     wealthmonitor: { summary: "The single wealthiest non-selfish, non-monitor agent volunteers to enforce a quota, unpaid and uncoerced, once its own accumulated payoff clears this multiple of the population's current average.",
       mechanism: "Olson (1965): a group member has an individual incentive to unilaterally provide a collective good exactly when its own share of the group's benefit clears the good's cost — and the largest member ends up bearing a disproportionate share of the burden (\"exploitation of the great by the small\"). Recomputed fresh every round, scoped to whoever isn't already a designated monitor and isn't selfish (enforcement would cap a free-rider's own over-extraction too, a pure loss). With deterministic strategies, same-type agents never organically diverge in wealth — turn on Decision noise to see it engage. With even one selfish free-rider present, its own dominant payoff inflates the population average so far that no cooperator ever clears the bar: the mechanism is inert in exactly the population it would need to protect (experiment E22, ADR-0020)." },
+    turnover: { summary: "At this round, every agent's own decline-tracking memory is wiped clean, as if a fresh individual took over each role — same strategy, same parameters, no memory of any prior trigger.",
+      mechanism: "Duffy & Lafky (2015): replacing a fixed group with staggered turnover (new members entering as old ones exit) flattens the usual decay of public-goods contributions. Most strategies here have nothing to reset — try it with 'grim trigger' selected and a shock scheduled before this round: the trigger clears and harvesting returns to normal immediately. But timing matters — the longer the population was stuck before the reset, the more welfare was already lost and can't be bought back (experiment E24, ADR-0021)." },
     groups: { summary: "Splits the 8 governed agents into this many separately-monitored groups, instead of one flat population.",
       mechanism: "A monitor's quota now only caps <b>its own group's</b> members, computed as that group's fair share of the <i>governed</i> population's sustainable yield (<code>MSY / 8</code>, not divided by the group's own size, and not diluted by any open-access outsiders either — so full coverage always reaches the same result no matter how many groups there are or whether the boundary is open). A group with no monitor of its own is left completely uncapped by enforcement, even if another group has one — unlike the flat model, one monitor no longer protects everyone. At 1 group this is identical to the original flat rule (ADR-0012)." },
     boundary: { summary: "Whether the community can exclude outsiders from the shared pool entirely.",
@@ -1580,6 +1599,7 @@
     "⏳ Grim trigger: a finite horizon has a price (E21)": "8 grim trigger agents — identical to conditional cooperator, except once it detects a decline it never forgives, for the rest of the run (Friedman 1971's 'grim trigger': permanent reversion after any deviation, no return path). A modest one-off shock (−15%) hits at round 30 (see 'Shock round'), which is enough to trigger a permanent, population-wide selfish grab that empties the pool for good — welfare_efficiency ≈ 0.38 over the full 100-round run. Drag 'Shock round' later — 50 → ≈0.58, 70 → ≈0.78, 90 → ≈0.98 — and welfare climbs almost exactly linearly with how little of the fixed round budget is left for the permanent punishment to act on: a direct, measurable demonstration of Fudenberg & Maskin's (1986) point that finite horizons change what a punishment costs, without any of their discounting machinery — just a mechanical rule that never forgives, tested against a clock (experiment E21, ADR-0018).",
     "💸 A wealth floor excludes the monitors, not free-riders (E23)": "6 plain cooperative agents + 2 sanctioning monitors, no free-riders at all — 'Wealth floor' set to 0.9 (any agent below 90% of the population's own current average payoff can't request that round). welfare_efficiency ≈ 0.71 here; drag 'Wealth floor' back to 0 (off) and it climbs to ≈0.96, stock settling at the healthy target (50) instead of drifting to ≈75. Nobody is a free-rider in this population, so who gets excluded? The monitors — paying a monitoring cost every round leaves them poorer than everyone else, even though they're the ones protecting the pool, so a 'low wealth = suspect' filter locks out exactly the wrong agents and enforcement quietly stops. Chen & Szolnoki (2016) found wealth-gating self-corrects against free-riders on a spatial lattice, where defection erodes a defector's own *local* resource base; this demo's shared pool has no such channel, so the gate instead tracks who sacrificed for the commons, not who exploited it (experiment E23, ADR-0019).",
     "🎩 The wealthy volunteer to monitor — until a free-rider shows up (E22)": "8 plain cooperative agents, no free-riders, 'Decision noise' at 0.15 (the only source of wealth inequality here — deterministic agents never organically diverge) and 'Wealth monitor' set to 1.02× the population average. welfare_efficiency ≈ 0.99 — a whisper below the noiseless 1.00, the small cost of protection nobody actually asked for: watch a few agents' net payoff pull briefly ahead, then dip back down as they take a turn paying to enforce a quota — Olson's (1965) own claim that whoever has the largest stake in a shared good ends up unilaterally funding it, 'the exploitation of the great by the small.' Now drag 'Selfish agents' up to just 1: welfare stays ≈0.99, identical to the mechanism being off — a single free-rider earns so much more than everyone else that it drags the population average up far above what any cooperator could ever reach, so nobody ever looks 'wealthy enough' to volunteer. The mechanism is inert in exactly the population it would need to protect (experiment E22, ADR-0020).",
+    "🔁 Turnover changes nothing here — there's nothing to reset (E24)": "4 monitors + 4 selfish, the same 'Enforcement holds' population as E3 — but at round 50, 'Agent turnover' wipes every agent's own decline-tracking memory clean, as if a fresh individual took over each role. Nothing happens: welfare_efficiency is identical with the turnover round on or off. Set 'Cooperator type' back to 'conditional (retaliate)' or 'grim trigger' with a shock scheduled (see 'Resource shock' and 'Shock round') and turnover starts to matter — Duffy & Lafky (2015) found that overlapping-generations turnover flattens the usual decay of public-goods contributions, and the only thing in this engine that can 'decay' at all is a strategy with memory of a past decline. `cooperative` and `sanctioning` don't track any history, so there's nothing turnover could possibly reset — a verified, byte-for-byte no-op, not a weak effect (experiment E24, ADR-0021). The full report shows turnover fully recovering a triggered grim-trigger agent — that needs a mixed population (1 grim-trigger among cooperators) this simple panel can't dial in directly; see the write-up for the exact numbers.",
   };
   const updateRegimeDesc = () => { els.regime_desc.textContent = REGIME_DESC[els.regime.value] || ""; };
 
@@ -1652,6 +1672,7 @@
     $("cvote_v").textContent = +els.cvote.value === 0 ? "off" : "round " + els.cvote.value;
     $("wealthfloor_v").textContent = +els.wealthfloor.value === 0 ? "off" : (+els.wealthfloor.value).toFixed(2);
     $("wealthmonitor_v").textContent = +els.wealthmonitor.value === 0 ? "off" : (+els.wealthmonitor.value).toFixed(2);
+    $("turnover_v").textContent = +els.turnover.value === 0 ? "off" : "round " + els.turnover.value;
     $("rounds_v").textContent = els.rounds.value;
     $("seed_v").textContent = els.seed.value;
     updatePanelSummary();
@@ -1672,6 +1693,7 @@
     els.cvote.value = r.cvote ?? 0;
     els.wealthfloor.value = r.wealthfloor ?? 0;
     els.wealthmonitor.value = r.wealthmonitor ?? 0;
+    els.turnover.value = r.turnover ?? 0;
     els.rounds.value = r.rounds ?? 40;
     els.groups.value = r.groups ?? 1;
     els.boundary.value = r.boundary ?? "closed";
@@ -1710,7 +1732,7 @@
   };
   els.nsel.addEventListener("input", () => { clampPop("nsel"); toCustom(); syncLabels(); scheduleRun(); });
   els.mon.addEventListener("input", () => { clampPop("mon"); toCustom(); syncLabels(); scheduleRun(); });
-  ["kb", "init", "noise", "bcast", "shock", "shockround", "fail", "cvote", "wealthfloor", "wealthmonitor", "repvis", "netdeg", "split"].forEach((k) =>
+  ["kb", "init", "noise", "bcast", "shock", "shockround", "fail", "cvote", "wealthfloor", "wealthmonitor", "turnover", "repvis", "netdeg", "split"].forEach((k) =>
     els[k].addEventListener("input", () => { toCustom(); scheduleRun(); }));
   ["rounds", "seed"].forEach((k) =>
     els[k].addEventListener("input", () => { syncLabels(); scheduleRun(); }));
@@ -1823,6 +1845,7 @@
       rounds, seed: +els.seed.value, init,
       shock: +els.shock.value, shockRound: Math.round(rounds * (+els.shockround.value / 100)),
       failCount: +els.fail.value, failRound: Math.round(rounds * 0.5),
+      turnoverRound: +els.turnover.value > 0 ? +els.turnover.value : null,
       cvoteRound: +els.cvote.value,
       reputation: els.ctype.value === "reputation_cooperator",
       repVisibility: +els.repvis.value,

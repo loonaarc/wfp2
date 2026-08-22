@@ -31,3 +31,4 @@ proposed decision and its trade-offs.
 | [0018](0018-grim-trigger-finite-horizon.md) | Grim trigger as a new strategy, and the cost of a finite horizon | Accepted |
 | [0019](0019-wealth-based-participation.md) | Wealth-based participation floor via a per-round relative-wealth request gate | Accepted |
 | [0020](0020-wealth-triggered-voluntary-monitoring.md) | Wealth-triggered ad-hoc voluntary monitoring, not a payoff-weighted vote | Accepted |
+| [0021](0021-agent-turnover-disturbance.md) | Agent turnover as a new disturbance kind, resetting strategy state only | Accepted |

@@ -68,12 +68,55 @@ class AgentFailure:
         return fired
 
 
+class AgentTurnover:
+    """A fraction of agents' own strategy memory reset at a scheduled round.
+
+    At round :attr:`round`, :attr:`fraction` of the *active* agents, starting
+    from a deterministic rotation offset (``round_index % len(agents)``),
+    each have their strategy's :meth:`~..strategies.base.Strategy.reset_state`
+    called and their reputation cleared -- as if a fresh individual, with no
+    memory of any prior decline or trigger, took over that role (Duffy &
+    Lafky 2015's overlapping-generations turnover; E24, ADR-0021). Unlike
+    :class:`AgentFailure`, the agent stays active and keeps its accumulated
+    ``total_payoff`` -- this models a *replacement*, not a loss. The
+    rotation offset is a pure function of the round, not shared cursor state,
+    so multiple scheduled turnover events naturally touch different agents
+    without needing cross-instance coordination.
+    """
+
+    def __init__(self, round: int, fraction: float) -> None:
+        """Create a turnover event firing once at ``round``, resetting ``fraction`` of agents."""
+        self.round = round
+        self.fraction = fraction
+
+    def apply(self, round_index: int, pool: ResourcePool, agents: list) -> bool:
+        """Reset the strategy state of a rotating fraction of agents on the scheduled round."""
+        if round_index != self.round:
+            return False
+        n = len(agents)
+        if n == 0:
+            return False
+        to_reset = max(1, round(self.fraction * n))
+        offset = round_index % n
+        fired = False
+        for j in range(to_reset):
+            agent = agents[(offset + j) % n]
+            if not getattr(agent, "active", True):
+                continue
+            agent.strategy.reset_state()
+            agent.reputation = 0
+            fired = True
+        return fired
+
+
 def _build_one(config: DisturbanceConfig):
     """Construct the concrete disturbance for one :class:`DisturbanceConfig`."""
     if config.kind == "resource_shock":
         return ResourceShock(round=config.round, magnitude=config.magnitude)
     if config.kind == "agent_failure":
         return AgentFailure(round=config.round, fraction=config.magnitude)
+    if config.kind == "agent_turnover":
+        return AgentTurnover(round=config.round, fraction=config.magnitude)
     # Unreachable: DisturbanceConfig validates kind against DISTURBANCE_KINDS.
     raise ValueError(f"unsupported disturbance kind: {config.kind!r}")
 

@@ -10,8 +10,10 @@ random draw), so a run stays a pure function of ``(config, seed)``: the shock is
 part of the configuration, not a source of hidden randomness. See ADR-0008.
 
 Implemented kinds: :class:`~emergent_cooperation.disturbances.shocks.ResourceShock`
-(a pulse loss of stock) and
-:class:`~emergent_cooperation.disturbances.shocks.AgentFailure` (agents dropping out).
+(a pulse loss of stock),
+:class:`~emergent_cooperation.disturbances.shocks.AgentFailure` (agents dropping out),
+and :class:`~emergent_cooperation.disturbances.shocks.AgentTurnover` (agents'
+own strategy memory reset, as if replaced by a fresh individual; E24, ADR-0021).
 Communication failure and misleading information are the next kinds to add against
 the same interface.
 """
@@ -21,7 +23,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from ..core.config import DisturbanceConfig
-from .shocks import AgentFailure, ResourceShock, build_disturbances
+from .shocks import AgentFailure, AgentTurnover, ResourceShock, build_disturbances
 
 
 @runtime_checkable
@@ -45,6 +47,7 @@ class Disturbance(Protocol):
 
 __all__ = [
     "AgentFailure",
+    "AgentTurnover",
     "Disturbance",
     "DisturbanceConfig",
     "ResourceShock",

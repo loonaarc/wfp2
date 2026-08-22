@@ -1,6 +1,6 @@
 # Findings Summary — Emergent Cooperation in a Common-Pool Resource
 
-*A consolidated synthesis of experiments E1–E23. E1–E7 study the calm
+*A consolidated synthesis of experiments E1–E24. E1–E7 study the calm
 commons; E8–E10 are the resilience phase (disturbances); E11–E13 are thesis-track
 follow-ups probing whether monitoring can be made evolutionarily stable and whether a
 voted agreement can substitute for pre-committed enforcement; E14–E16 and E20 shift to
@@ -36,10 +36,16 @@ enforces a quota once its own accumulated payoff clears a threshold. It is
 inert the instant a free-rider is present (their own dominant payoff inflates
 the population average so far that no cooperator ever clears the bar), but
 engages, and disproportionately burdens a shifting few, once wealth
-divergence exists at all. This is the narrative spine for the writeup;
-each claim links to its full experiment report and the code that produced it.*
+divergence exists at all. E24 asks whether resetting an agent's own memory —
+as if a fresh individual took over its role (Duffy & Lafky 2015's
+overlapping-generations turnover) — can recover a population `grim_trigger`
+(E21) left permanently stuck: yes, completely, but only if the reset comes
+soon enough — past a point, the welfare already lost while waiting outweighs
+what a full recovery can buy back. This is the narrative spine for the
+writeup; each claim links to its full experiment report and the code that
+produced it.*
 
-**Status:** 2026-08-16 · 8 strategies · 23 experiments built (E1–E23) · 154
+**Status:** 2026-08-17 · 8 strategies · 24 experiments built (E1–E24) · 162
 tests · results reproducible from `scripts/` and the committed `results/`
 data.
 
@@ -149,6 +155,7 @@ flowchart TD
     E21["E21 — grim trigger<br/>a finite horizon makes permanent punishment costly"]
     E23["E23 — wealth-based participation<br/>excludes monitors and cooperators, not free-riders"]
     E22["E22 — wealth-triggered monitoring<br/>a free-rider suppresses it entirely"]
+    E24["E24 — agent turnover<br/>recovers a triggered population, if soon enough"]
 
     E3 -.the cost E5 explains.-> E5
     E17 -.same trigger, made permanent.-> E21
@@ -161,6 +168,7 @@ flowchart TD
     E18 -.fixes the fresh-partner draw into a persistent graph.-> E19
     E23 -.wealth as exclusion, now as recruitment.-> E22
     E3 -.the second-order free-rider, a third angle.-> E22
+    E21 -.no return path -- until now.-> E24
 ```
 
 Reading it: **E1–E3 is the spine** — each experiment fixes the previous one's
@@ -196,7 +204,12 @@ claim that whoever has the largest stake in a collective good ends up unilateral
 funding it. It works, on a shifting few, exactly where E23's own free-rider-dominance
 problem also bit: a free-rider's payoff inflates the population average so
 completely that neither a wealth *floor* (E23) nor a wealth *trigger* (E22) ever
-targets the free-rider itself.
+targets the free-rider itself. **E24** returns to the one loose end E21 left
+open: a permanently triggered `grim_trigger` population has "no return path"
+within the engine as E21 left it — E24 adds an external intervention
+(resetting an agent's own memory, as if replaced by a fresh individual, per
+Duffy & Lafky 2015) and shows it *can* recover the population completely,
+though only if the intervention comes soon enough to be worth its own cost.
 
 ---
 
@@ -626,6 +639,48 @@ population's current average (ADR-0020).
   not, though the absolute effect is small in an already near-equal
   all-cooperative population.
 
+## Agent turnover: can a fresh start undo a permanent trigger? (E24)
+
+*(Full report: [E24](experiments/E24-agent-turnover.md). Mechanism:
+[ADR-0021](decisions/0021-agent-turnover-disturbance.md). Grounding:
+[paper-notes/2015-duffy-lafky-birth-death-public-good.md](paper-notes/2015-duffy-lafky-birth-death-public-good.md).)*
+
+Duffy & Lafky (2015): replacing a fixed cohort with staggered overlapping-
+generations turnover (new members entering as old ones exit) significantly
+flattens the usual decay of public-goods contributions. This project's
+fixed strategies don't decay from experience — except `grim_trigger` (E21),
+whose permanent lock never resets on its own ("no return path," ADR-0018). A
+new `agent_turnover` disturbance resets a fraction of agents' own per-round
+decline memory at a scheduled round, as if a fresh individual took over
+their role, without deactivating them or touching accumulated payoff.
+
+- **Turnover recovers a triggered `grim_trigger` agent completely, every
+  time it was applied — but only if it comes soon enough.** In E21's own
+  "narrow window" scenario (1 sensitive agent among 7 cooperative, hit by a
+  one-time recoverable shock), a turnover event fully restores the pool to
+  its healthy target (`50.0`) regardless of how late it fires, but welfare
+  falls steadily the longer the population was left stuck first — the two
+  curves (turnover vs. never intervening) cross at exactly 29 rounds after
+  the shock in this scenario: any earlier and the population ends up
+  strictly better off than doing nothing; any later and it ends up worse
+  off, purely from the welfare already lost while waiting.
+- **The direct dual of E21's own finding.** E21 showed welfare lost to a
+  permanent trigger scales almost linearly with how much of the fixed round
+  budget remains when it fires. E24 shows the same linear-in-time logic
+  applies to *undoing* one: welfare recovered scales with how much of the
+  triggered period is cut short — the same fixed-budget opportunity cost,
+  read from the other end.
+- **A verified, byte-for-byte no-op wherever there is nothing to reset.**
+  Every tested `cooperative`/`sanctioning` configuration (0–3 free-riders)
+  produces identical payoffs whether a repeating turnover schedule is
+  switched on or off — the mechanism only ever matters for strategies with
+  genuine per-round memory, exactly as its design predicts, not a
+  general-purpose "helps the pool" dial.
+- **Item 10 resolved a disclosed risk.** Agent entry/exit was flagged from
+  the start of this session's 5-axis undertaking as the one item that might
+  end up deferred for lack of grounding — a second, targeted literature
+  search (as promised) found a genuine, on-point citation instead.
+
 ## Reputation: indirect reciprocity vs. blanket retaliation (E18)
 
 *(Full report: [E18](experiments/E18-reputation.md). Mechanism:
@@ -762,11 +817,14 @@ The standout open threads:
    no basis in Olson's own model) to wealth-triggered ad-hoc monitoring; it
    is inert whenever a free-rider is present, and only engages, on a
    disproportionate but shifting few, once wealth divergence exists at all
-   without one. **All five items from the ranked candidate list are now
-   built or explicitly scoped** — the one remaining open item is agent
-   entry/exit (item 10), whose own literature search (per the original plan)
-   has not yet turned up a clean, direct match and may end up deferred
-   rather than built. E20's own follow-up (whether a cheaper monitoring-cost model
+   without one. Agent entry/exit (item 10) is done too (**E24**, ADR-0021,
+   Duffy & Lafky 2015) — a second, targeted literature search (the
+   disclosed risk from the original plan) found a genuine citation; built as
+   an `agent_turnover` disturbance that resets a triggered `grim_trigger`
+   agent's own memory, recovering E21's own "no return path" population
+   completely, provided the reset comes soon enough to be worth its cost.
+   **All five items from the ranked candidate list are now built.** E20's
+   own follow-up (whether a cheaper monitoring-cost model
    recovers diversity-1/2 parity with E14, since that gap is now understood
    to be the doubled monitoring-cost tax, not a structural mismatch) is also
    still open. Reputation/indirect reciprocity (**E18**, ADR-0014) and
@@ -814,5 +872,6 @@ python scripts/experiment_multiple_resources.py      # E20
 python scripts/experiment_grim_trigger.py            # E21
 python scripts/experiment_wealth_participation.py    # E23
 python scripts/experiment_wealth_monitoring.py       # E22
-pytest                                               # 154 tests
+python scripts/experiment_agent_turnover.py          # E24
+pytest                                               # 162 tests
 ```

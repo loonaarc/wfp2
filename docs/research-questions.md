@@ -113,6 +113,19 @@ current front-runner for the project's specific focus — not yet locked.
   paid (0.328) is 2.6× a uniform 8-way rotation (0.125), though it matches
   the single wealthiest agent from an independent ungated run only 32% of
   the time, since the trigger re-evaluates fresh every round.
+- **SQ-5g** 🟢 Can resetting an agent's own memory — as if a fresh
+  individual took over its role (Duffy & Lafky 2015's overlapping-
+  generations turnover) — recover a population `grim_trigger` (E21) left
+  permanently stuck, and does timing matter? **→ Answered (E24): yes,
+  completely, but only if it comes soon enough.** In E21's own "narrow
+  window" scenario, a turnover event fully restores the pool to its healthy
+  target regardless of how late it fires, but welfare falls steadily the
+  longer the population was left stuck first — the two curves (turnover vs.
+  never intervening) cross at exactly 29 rounds after the shock in this
+  scenario, the direct dual of E21's own finding that welfare lost to a
+  permanent trigger scales with how much of the fixed round budget remains
+  when it fires. Verified as a byte-for-byte no-op for every strategy
+  without per-round decline memory (`cooperative`, `sanctioning`).
 
 ### Communication (RQ-A)
 - **SQ-6** 🟢 Does broadcasting reduce exploitation / improve outcomes in mixed

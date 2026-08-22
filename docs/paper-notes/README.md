@@ -51,6 +51,7 @@ One analysed note per paper. Start from [`_template.md`](_template.md).
 | [2010-balliet-communication-meta-analysis](2010-balliet-communication-meta-analysis.md) | 🟢 | Communication→cooperation effect *d*≈1.01; measures cooperation not resource (E6 angle) |
 | [2010-sigmund-social-learning-institutions](2010-sigmund-social-learning-institutions.md) | 🟢 | Pool vs peer punishment; 2nd-order punishment stabilises — acted on in E12 (works: sanctioning →~100%) |
 | [2014-beven-binley-glue-20-years-on](2014-beven-binley-glue-20-years-on.md) | 🟢 | Aleatory vs epistemic error; limits-of-acceptability refinement; revisited case study rejects the model outright — refines the GLUE plan for E17 (equifinality direction) |
+| [2015-duffy-lafky-birth-death-public-good](2015-duffy-lafky-birth-death-public-good.md) | 🟢 | Staggered overlapping-generations turnover flattens public-goods contribution decay, for entrants and incumbents alike — grounds E24's agent-turnover disturbance |
 | [2016-chen-szolnoki-wealth-based-selection](2016-chen-szolnoki-wealth-based-selection.md) | 🟢 | Wealth-gated participation self-corrects against defectors on a spatial lattice — grounds E23's participation floor |
 | [2016-oliehoek-amato-dec-pomdps](2016-oliehoek-amato-dec-pomdps.md) | 🟢 | Dec-POMDP formalism to define our info models; justifies rule-based agents (solver chapters out of scope) |
 | [2016-schill-cooperation-not-enough](2016-schill-cooperation-not-enough.md) | 🟢 | Cooperation ≠ sustainability; you also need ecological knowledge (reframes our info axis) |

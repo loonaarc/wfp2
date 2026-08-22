@@ -59,6 +59,11 @@ class GrimTriggerStrategy(Strategy):
         self._last_level: float | None = None
         self._triggered: bool = False
 
+    def reset_state(self) -> None:
+        """Clear the permanent trigger, as if a fresh, never-provoked agent took this role (E24)."""
+        self._last_level = None
+        self._triggered = False
+
     def decide(self, observation: Observation, rng: np.random.Generator) -> float:
         """Cooperate until a decline is ever detected; defect for good after."""
         n = max(1, observation.num_agents)
